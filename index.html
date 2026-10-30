@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mai - bạn trò chuyện AI</title>
+<style>
+  :root { --bg:#f3efe8; --ink:#2b2a33; --skin:#ffe0cc; --hair:#3b2a4a; --cheek:#ffb3b3; --accent:#5b6cff; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center;
+         background:var(--bg); color:var(--ink); font-family: system-ui, "Segoe UI", sans-serif; }
+  #stage { width:min(360px,90vw); margin-top:16px; }
+  svg { width:100%; height:auto; overflow:visible; }
+  #bubble { min-height:56px; max-width:min(560px,92vw); margin:8px 16px; padding:12px 16px;
+            background:#fff; border-radius:16px; line-height:1.5; }
+  #status { width:min(560px,92vw); min-height:20px; height:auto; padding:0 12px; text-align:center;
+            font-size:13px; line-height:1.4; opacity:.7; overflow-wrap:anywhere; }
+  #controls { display:flex; gap:8px; margin:8px; flex-wrap:wrap; justify-content:center; width:min(560px,92vw); }
+  #text { flex:1; min-width:180px; padding:10px 12px; border:1px solid #bbb; border-radius:10px; font-size:16px; }
+  button { padding:10px 16px; border:0; border-radius:10px; background:var(--accent); color:#fff; font-size:16px; cursor:pointer; }
+  button.rec { background:#e0405a; }
+  button:focus-visible, #text:focus-visible { outline:3px solid #222; outline-offset:2px; }
+  #speech-controls { width:min(560px,92vw); display:flex; gap:8px; margin:0 8px 8px; justify-content:flex-end; }
+  #speech-toggle, #stop-speaking { padding:7px 12px; color:#4b4b55; background:#fff; border:1px solid #ddd; font-size:14px; }
+  #speech-toggle[aria-pressed="true"] { color:#3545d0; border-color:var(--accent); }
+  #stop-speaking[hidden] { display:none; }
+  #mode-panel { width:min(560px,92vw); display:flex; gap:8px; margin-top:12px; padding:4px; background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.08); }
+  .mode-btn { flex:1; color:#4b4b55; background:#f0f0f5; }
+  .mode-btn.active { color:#fff; background:var(--accent); }
+  #send { display:none; }
+  #clear-history { width:min(560px,92vw); margin-top:-4px; padding:8px 12px; color:#666; background:#fff; border:1px solid #ddd; }
+  body.chat-mode #mic { display:none; }
+  body.chat-mode #send { display:inline-block; }
+  body.voice-mode #text, body.voice-mode #send { display:none; }
+
+  /* ---- Cử chỉ ---- */
+  #body-g { transform-origin:200px 380px; transform-box:view-box; }
+  #head-g { transform-origin:200px 250px; transform-box:view-box; }
+  #arm-r  { transform-origin:300px 340px; transform-box:view-box; }
+  .idle #body-g { animation: breathe 4s ease-in-out infinite; }
+  .nod #head-g { animation: nod .9s ease-in-out 2; }
+  .think #head-g { transform: rotate(-6deg); transition: transform .4s; }
+  .wave #arm-r { animation: wave .5s ease-in-out 4; }
+  .surprised #head-g { animation: pop .5s ease-out 1; }
+  .sad #head-g { transform: translateY(6px) rotate(3deg); transition: transform .4s; }
+  .laugh #head-g { animation: shake .25s linear 6; }
+  @keyframes breathe { 50% { transform: translateY(3px); } }
+  @keyframes nod { 50% { transform: translateY(10px) rotate(2deg); } }
+  @keyframes wave { 0%,100% { transform: rotate(-20deg); } 50% { transform: rotate(25deg); } }
+  @keyframes pop { 40% { transform: scale(1.06); } }
+  @keyframes shake { 50% { transform: translateY(-4px); } }
+  #arm-r { transform: rotate(-20deg); }
+  #eyes { transform-origin:200px 250px; transform-box:view-box; animation: blink 4.5s infinite; }
+  @keyframes blink { 0%,94%,100% { transform:scaleY(1);} 97% { transform:scaleY(.08);} }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+
+  /* ---- Biểu cảm (đổi miệng, lông mày, má) ---- */
+  .face-smile .mouth-rest, .face-laugh .mouth-rest { d: path("M178 296 Q200 316 222 296"); }
+  .face-sad .mouth-rest { d: path("M180 306 Q200 292 220 306"); }
+  .face-surprised .mouth-rest { d: path("M190 300 Q200 318 210 300 Q200 288 190 300"); }
+  .face-sad .brow-l { transform: rotate(-10deg); } .face-sad .brow-r { transform: rotate(10deg); }
+  .brow-l, .brow-r { transform-box:fill-box; transform-origin:center; transition: transform .3s; }
+  .face-surprised .brow-l, .face-surprised .brow-r { transform: translateY(-8px); }
+  .blush { opacity:0; transition: opacity .4s; }
+  .face-smile .blush, .face-laugh .blush { opacity:.7; }
+  #mouth-open { opacity:0; }
+</style>
+</head>
+<body class="chat-mode">
+<div id="mode-panel" aria-label="Chọn chế độ chat">
+  <button id="mode-chat" class="mode-btn active" type="button">Chat chữ</button>
+  <button id="mode-voice" class="mode-btn" type="button">Voice mic</button>
+</div>
+<div id="stage" class="idle">
+  <svg viewBox="0 0 400 480" role="img" aria-label="Nhân vật Mai">
+    <g id="body-g">
+      <path d="M90 480 Q90 360 200 350 Q310 360 310 480Z" fill="#7b86ff"/>
+      <rect x="180" y="320" width="40" height="40" fill="var(--skin)"/>
+      <g id="arm-r"><rect x="296" y="330" width="30" height="110" rx="15" fill="#7b86ff"/>
+        <circle cx="311" cy="440" r="18" fill="var(--skin)"/></g>
+      <rect x="74" y="350" width="30" height="120" rx="15" fill="#7b86ff"/>
+      <g id="head-g">
+        <ellipse cx="200" cy="230" rx="118" ry="130" fill="var(--hair)"/>
+        <ellipse cx="200" cy="250" rx="88" ry="98" fill="var(--skin)"/>
+        <path d="M112 232 Q120 140 200 138 Q280 140 288 232 Q250 180 200 178 Q150 180 112 232Z" fill="var(--hair)"/>
+        <g id="eyes">
+          <ellipse cx="165" cy="252" rx="10" ry="14" fill="#222"/>
+          <ellipse cx="235" cy="252" rx="10" ry="14" fill="#222"/>
+          <circle cx="168" cy="247" r="3.5" fill="#fff"/><circle cx="238" cy="247" r="3.5" fill="#fff"/>
+        </g>
+        <rect class="brow-l" x="148" y="222" width="34" height="5" rx="2.5" fill="var(--hair)"/>
+        <rect class="brow-r" x="218" y="222" width="34" height="5" rx="2.5" fill="var(--hair)"/>
+        <ellipse class="blush" cx="140" cy="285" rx="16" ry="9" fill="var(--cheek)"/>
+        <ellipse class="blush" cx="260" cy="285" rx="16" ry="9" fill="var(--cheek)"/>
+        <path class="mouth-rest" d="M182 298 Q200 308 218 298" fill="none" stroke="#a33" stroke-width="4" stroke-linecap="round"/>
+        <ellipse id="mouth-open" cx="200" cy="300" rx="14" ry="4" fill="#8a2a3a"/>
+      </g>
+    </g>
+  </svg>
+</div>
+<div id="status" aria-live="polite">Bấm "Bắt đầu" để chào Mai</div>
+<div id="bubble" aria-live="polite">Mai đang chờ bạn.</div>
+<div id="controls">
+  <button id="mic" type="button">Nói chuyện</button>
+  <input id="text" placeholder="Nhập tin nhắn và gửi cho Mai" aria-label="Tin nhắn">
+  <button id="send" type="button">Gửi</button>
+</div>
+<div id="speech-controls">
+  <button id="speech-toggle" type="button" aria-pressed="true">🔊 Đọc câu trả lời: Bật</button>
+  <button id="stop-speaking" type="button" hidden>Dừng đọc</button>
+</div>
+<button id="clear-history" type="button">Xóa lịch sử chat</button>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), mouth = $("mouth-open"), statusEl = $("status"), bubble = $("bubble");
+let history = [];
+try {
+  const savedHistory = JSON.parse(localStorage.getItem("mai-chat-history") || "[]");
+  if (Array.isArray(savedHistory)) {
+    history = savedHistory.filter((message) =>
+      message && ["user", "assistant"].includes(message.role) && typeof message.content === "string"
+    ).slice(-20);
+  }
+} catch {
+  history = [];
+}
+
+async function checkHistoryConnection() {
+  try {
+    const response = await fetch("/api/history/status");
+    const data = await response.json();
+    if (response.ok && data.connected) {
+      bubble.textContent = `Mai đã kết nối ${data.entries} mục dữ liệu Lịch sử Việt Nam.`;
+    }
+  } catch {
+    // Không chặn cuộc trò chuyện nếu tệp dữ liệu tạm thời không truy cập được.
+  }
+}
+checkHistoryConnection();
+
+function saveHistory() {
+  history = history.slice(-20);
+  localStorage.setItem("mai-chat-history", JSON.stringify(history));
+}
+
+let speaking = false, mouthTimer = null, busy = false, currentAudio = null, currentAudioUrl = null, finishCurrentSpeech = null, speechGeneration = 0, textRevealFrame = 0;
+let interactionMode = "chat";
+const speechToggle = $("speech-toggle");
+const stopSpeakingButton = $("stop-speaking");
+let chatSpeechEnabled = localStorage.getItem("mai-chat-speak") !== "false";
+
+function updateSpeechControls() {
+  speechToggle.setAttribute("aria-pressed", String(chatSpeechEnabled));
+  speechToggle.textContent = chatSpeechEnabled ? "🔊 Đọc câu trả lời: Bật" : "🔇 Đọc câu trả lời: Tắt";
+  stopSpeakingButton.hidden = !speaking;
+}
+
+function stopSpeaking() {
+  speechGeneration++;
+  if (currentAudio) currentAudio.pause();
+  if (finishCurrentSpeech) finishCurrentSpeech();
+  stopTextReveal();
+  speechSynthesis.cancel();
+  speaking = false;
+  stopMouth();
+  updateSpeechControls();
+}
+
+speechToggle.addEventListener("click", () => {
+  chatSpeechEnabled = !chatSpeechEnabled;
+  localStorage.setItem("mai-chat-speak", String(chatSpeechEnabled));
+  if (!chatSpeechEnabled && interactionMode === "chat") stopSpeaking();
+  updateSpeechControls();
+});
+stopSpeakingButton.addEventListener("click", stopSpeaking);
+updateSpeechControls();
+
+/* ---------- Cử chỉ ---------- */
+const GESTURES = ["nod","think","wave","surprised","sad","laugh"];
+const FACES = { smile:"face-smile", laugh:"face-laugh", sad:"face-sad", surprised:"face-surprised" };
+
+function clearState() {
+  stage.className = "idle";
+}
+function playGesture(tag) {
+  stage.classList.remove(...GESTURES, ...Object.values(FACES));
+  if (FACES[tag]) stage.classList.add(FACES[tag]);
+  if (GESTURES.includes(tag)) {
+    void stage.offsetWidth; // khởi động lại animation
+    stage.classList.add(tag);
+  }
+  if (tag === "smile") stage.classList.add("face-smile");
+}
+
+/* ---------- Mấp máy môi (theo thời gian nói) ---------- */
+function startMouth() {
+  clearInterval(mouthTimer);
+  mouthTimer = setInterval(() => {
+    const open = 2 + Math.random() * 16;
+    mouth.setAttribute("ry", open);
+    mouth.setAttribute("rx", 10 + Math.random() * 8);
+    mouth.style.opacity = 1;
+  }, 110);
+  document.querySelector(".mouth-rest").style.opacity = 0;
+}
+function stopMouth() {
+  clearInterval(mouthTimer);
+  mouth.style.opacity = 0;
+  document.querySelector(".mouth-rest").style.opacity = 1;
+}
+
+function stopTextReveal(text = null) {
+  cancelAnimationFrame(textRevealFrame);
+  textRevealFrame = 0;
+  if (text !== null) bubble.textContent = text;
+}
+
+function revealTextWithAudio(text, audio) {
+  const words = text.match(/\S+\s*/g) || [];
+  let visibleWords = 0;
+
+  const update = () => {
+    const duration = Number.isFinite(audio.duration) && audio.duration > 0
+      ? audio.duration
+      : words.length / 4;
+    const targetWords = Math.min(words.length, Math.floor((audio.currentTime / duration) * words.length));
+    if (targetWords > visibleWords) {
+      visibleWords = targetWords;
+      bubble.textContent = words.slice(0, visibleWords).join("");
+    }
+    if (!audio.paused && !audio.ended) textRevealFrame = requestAnimationFrame(update);
+  };
+
+  bubble.textContent = "";
+  cancelAnimationFrame(textRevealFrame);
+  textRevealFrame = requestAnimationFrame(update);
+}
+
+/* ---------- Giọng đọc Google gTTS ---------- */
+function playAudio(audioBlob, text) {
+  currentAudioUrl = URL.createObjectURL(audioBlob);
+  const audioUrl = currentAudioUrl;
+  const audio = new Audio(audioUrl);
+  currentAudio = audio;
+  return new Promise((resolve, reject) => {
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      if (currentAudio === audio) currentAudio = null;
+      if (currentAudioUrl === audioUrl) currentAudioUrl = null;
+      URL.revokeObjectURL(audioUrl);
+      finishCurrentSpeech = null;
+      stopTextReveal(finished && audio.ended ? text : null);
+      speaking = false;
+      stopMouth();
+      updateSpeechControls();
+      resolve();
+    };
+    finishCurrentSpeech = finish;
+    const fail = () => {
+      if (finished) return;
+      finished = true;
+      if (currentAudio === audio) currentAudio = null;
+      if (currentAudioUrl === audioUrl) currentAudioUrl = null;
+      URL.revokeObjectURL(audioUrl);
+      finishCurrentSpeech = null;
+      stopTextReveal();
+      speaking = false;
+      stopMouth();
+      updateSpeechControls();
+      reject(new Error("Không phát được âm thanh gTTS."));
+    };
+    audio.onplay = () => {
+      speaking = true;
+      statusEl.textContent = "Mai đang nói";
+      revealTextWithAudio(text, audio);
+      updateSpeechControls();
+      startMouth();
+    };
+    audio.onended = finish;
+    audio.onerror = fail;
+    audio.play().catch(() => {
+      fail();
+    });
+  });
+}
+
+function playAudioStream(stream, text) {
+  if (!window.MediaSource || !MediaSource.isTypeSupported("audio/mpeg")) {
+    return new Response(stream).blob().then((blob) => playAudio(blob, text));
+  }
+
+  const mediaSource = new MediaSource();
+  currentAudioUrl = URL.createObjectURL(mediaSource);
+  const audioUrl = currentAudioUrl;
+  const audio = new Audio(audioUrl);
+  const reader = stream.getReader();
+  currentAudio = audio;
+
+  return new Promise((resolve, reject) => {
+    let finished = false;
+    let sourceBuffer;
+    let playbackStarted = false;
+    const cleanup = () => {
+      if (currentAudio === audio) currentAudio = null;
+      if (currentAudioUrl === audioUrl) currentAudioUrl = null;
+      URL.revokeObjectURL(audioUrl);
+      finishCurrentSpeech = null;
+      stopTextReveal(finished && audio.ended ? text : null);
+      speaking = false;
+      stopMouth();
+      updateSpeechControls();
+      reader.cancel().catch(() => {});
+    };
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      resolve();
+    };
+    const fail = (error) => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      reject(error);
+    };
+    finishCurrentSpeech = finish;
+    audio.onplay = () => {
+      speaking = true;
+      statusEl.textContent = "Mai đang nói";
+      revealTextWithAudio(text, audio);
+      updateSpeechControls();
+      startMouth();
+    };
+    audio.onended = finish;
+    audio.onerror = () => fail(new Error("Không phát được âm thanh gTTS."));
+    mediaSource.addEventListener("sourceopen", () => {
+      try {
+        sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
+        sourceBuffer.mode = "sequence";
+        sourceBuffer.addEventListener("updateend", () => {
+          if (finished) return;
+          if (!playbackStarted && audio.buffered.length > 0) {
+            playbackStarted = true;
+            audio.play().catch(() => fail(new Error("Trình duyệt không cho phép phát âm thanh.")));
+          }
+          appendNext();
+        });
+        sourceBuffer.addEventListener("error", () => fail(new Error("Dữ liệu âm thanh gTTS không hợp lệ.")));
+        appendNext();
+      } catch {
+        fail(new Error("Trình duyệt không hỗ trợ phát luồng âm thanh gTTS."));
+      }
+    }, { once: true });
+
+    async function appendNext() {
+      if (finished || !sourceBuffer || sourceBuffer.updating) return;
+      try {
+        const { done, value } = await reader.read();
+        if (finished) return;
+        if (done) {
+          if (mediaSource.readyState === "open" && !sourceBuffer.updating) mediaSource.endOfStream();
+          return;
+        }
+        sourceBuffer.appendBuffer(value);
+      } catch {
+        fail(new Error("Luồng âm thanh gTTS bị gián đoạn."));
+      }
+    }
+  });
+}
+
+function speakWithBrowser(text) {
+  return new Promise((resolve, reject) => {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      reject(new Error("Trình duyệt này không hỗ trợ đọc văn bản thành tiếng."));
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "vi-VN";
+    utterance.rate = 1.02;
+    utterance.pitch = 1.08;
+    const vietnameseVoice = speechSynthesis.getVoices().find((voice) => voice.lang.toLowerCase().startsWith("vi"));
+    if (vietnameseVoice) utterance.voice = vietnameseVoice;
+
+    let finished = false;
+    const finish = (error) => {
+      if (finished) return;
+      finished = true;
+      finishCurrentSpeech = null;
+      speaking = false;
+      stopMouth();
+      updateSpeechControls();
+      if (error) reject(error);
+      else resolve();
+    };
+    finishCurrentSpeech = () => finish();
+    utterance.onstart = () => {
+      speaking = true;
+      bubble.textContent = "";
+      updateSpeechControls();
+      startMouth();
+    };
+    utterance.onboundary = (event) => {
+      if (Number.isInteger(event.charIndex)) bubble.textContent = text.slice(0, event.charIndex);
+    };
+    utterance.onend = () => {
+      bubble.textContent = text;
+      finish();
+    };
+    utterance.onerror = () => finish(new Error("Trình duyệt không phát được giọng đọc."));
+    speechSynthesis.speak(utterance);
+  });
+}
+
+async function speak(text) {
+  const generation = speechGeneration;
+  try {
+    statusEl.textContent = "Đang tạo giọng đọc tiếng Việt...";
+    const response = await fetch("/api/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    if (generation !== speechGeneration) return;
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || "gTTS hiện chưa khả dụng.");
+    }
+    await playAudioStream(response.body, text);
+  } catch {
+    if (generation !== speechGeneration) return;
+    statusEl.textContent = "gTTS chưa khả dụng; đang dùng giọng đọc dự phòng của trình duyệt.";
+    await speakWithBrowser(text);
+  }
+}
+
+/* ---------- Xử lý câu trả lời có thẻ ---------- */
+async function performReply(text) {
+  const spokenText = text.replace(/\[(?:smile|nod|think|wave|surprised|sad|laugh)\]/g, "").replace(/\s+/g, " ").trim();
+  const shouldSpeak = spokenText && (interactionMode === "voice" || chatSpeechEnabled);
+  if (!shouldSpeak) bubble.textContent = text.replace(/\[\w+\]/g, "").replace(/\s+/g, " ").trim();
+  for (const match of text.matchAll(/\[(smile|nod|think|wave|surprised|sad|laugh)\]/g)) {
+    playGesture(match[1]);
+  }
+  if (shouldSpeak) {
+    try {
+      await speak(spokenText);
+      return true;
+    } catch (error) {
+      statusEl.textContent = error.message;
+      return false;
+    }
+  }
+  setTimeout(clearState, 600);
+  return true;
+}
+
+/* ---------- Gọi backend ---------- */
+async function send(userText) {
+  if (busy || !userText.trim()) return;
+  busy = true; $("send").disabled = true; $("mic").disabled = true; stopSpeaking();
+  let keepStatus = false;
+  const cleanText = userText.trim();
+  history.push({ role: "user", content: cleanText });
+  saveHistory();
+  bubble.textContent = cleanText; statusEl.textContent = "Mai đang nghĩ"; playGesture("think");
+  try {
+    const r = await fetch("/api/chat", { method:"POST", headers:{ "Content-Type":"application/json" },
+                                          body: JSON.stringify({ messages: history }) });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    history.push({ role: "assistant", content: data.reply });
+    saveHistory();
+    const verificationStatus = data.verification?.status;
+    const safeToSpeak = ["verified", "source_based", "deterministic"].includes(verificationStatus);
+    if (safeToSpeak) {
+      statusEl.textContent = "Mai đang nói";
+      keepStatus = !(await performReply(data.reply));
+    } else {
+      bubble.textContent = data.reply.replace(/\[\w+\]/g, "").replace(/\s+/g, " ").trim();
+      keepStatus = true;
+    }
+    if (verificationStatus === "verified") {
+      statusEl.textContent = `Đã rà soát thêm bằng Groq/Llama (${data.verification.model}); không thấy vấn đề rõ ràng. Đây không phải bảo đảm tuyệt đối.`;
+      keepStatus = true;
+    } else if (verificationStatus === "source_based") {
+      statusEl.textContent = "Câu trả lời được trích từ dữ liệu lịch sử của ứng dụng.";
+      keepStatus = true;
+    } else if (verificationStatus === "deterministic") {
+      statusEl.textContent = "Câu trả lời được tính trực tiếp, không qua model AI.";
+      keepStatus = true;
+    } else {
+      const issues = data.verification?.issues || [];
+      const reviewNote = verificationStatus === "concern"
+        ? `Groq/Llama lưu ý: ${issues.join("; ") || "cần kiểm tra lại nội dung."}`
+        : verificationStatus === "uncertain"
+          ? `Groq/Llama chưa đủ căn cứ xác minh${issues.length ? `: ${issues.join("; ")}` : "."}`
+          : verificationStatus === "unavailable"
+            ? "Groq/Llama hiện không thể rà soát câu trả lời."
+            : "Chưa bật rà soát Groq/Llama. Hãy cấu hình GROQ_API_KEY trên máy chủ.";
+      statusEl.textContent = `${reviewNote} Đây là bước kiểm tra bổ sung, không bảo đảm tuyệt đối.`;
+      keepStatus = true;
+    }
+  } catch (e) {
+    bubble.textContent = e.message; history.pop(); saveHistory();
+    statusEl.textContent = e.message;
+    keepStatus = true;
+  }
+  if (!keepStatus) statusEl.textContent = "";
+  busy = false;
+  $("send").disabled = false;
+  $("mic").disabled = false;
+}
+
+/* ---------- Nghe bằng mic và chuyển giọng nói qua Gemini ---------- */
+const micBtn = $("mic");
+let mediaRecorder = null;
+let micStream = null;
+let audioChunks = [];
+let recording = false;
+
+function stopMicStream() {
+  micStream?.getTracks().forEach((track) => track.stop());
+  micStream = null;
+}
+
+async function blobToBase64(blob) {
+  const buffer = await blob.arrayBuffer();
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  const blockSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += blockSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + blockSize));
+  }
+  return btoa(binary);
+}
+
+micBtn.onclick = async () => {
+  if (recording) {
+    mediaRecorder?.stop();
+    return;
+  }
+  stopSpeaking();
+
+  try {
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+      statusEl.textContent = "Trình duyệt không hỗ trợ ghi âm. Hãy dùng Chrome hoặc gõ tin nhắn.";
+      return;
+    }
+
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+    });
+    const preferredType = "audio/webm;codecs=opus";
+    const mimeType = MediaRecorder.isTypeSupported(preferredType) ? preferredType : micStream.getAudioTracks()[0]?.kind === "audio" ? "audio/webm" : "";
+    mediaRecorder = mimeType ? new MediaRecorder(micStream, { mimeType }) : new MediaRecorder(micStream);
+    audioChunks = [];
+
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size) audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstart = () => {
+      recording = true;
+      micBtn.classList.add("rec"); micBtn.textContent = "Dừng & gửi";
+      statusEl.textContent = "Mai đang nghe bạn…";
+      stage.classList.add("nod");
+    };
+
+    mediaRecorder.onstop = async () => {
+      recording = false;
+      micBtn.classList.remove("rec"); micBtn.textContent = "Nói chuyện";
+      stopMicStream();
+
+      try {
+        if (!audioChunks.length) {
+          statusEl.textContent = "Không ghi được âm thanh. Hãy thử lại.";
+          return;
+        }
+        statusEl.textContent = "Mai đang chuyển giọng nói thành chữ…";
+        const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+        const audio = await blobToBase64(blob);
+        const r = await fetch("/api/transcribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ audio, mimeType: blob.type })
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || "Không thể chuyển giọng nói thành chữ.");
+        if (!data.text?.trim()) {
+          statusEl.textContent = "Không nghe rõ lời nói. Hãy nói gần mic rồi thử lại.";
+          return;
+        }
+        statusEl.textContent = "Mai đang suy nghĩ";
+        await send(data.text.trim());
+      } catch (e) {
+        statusEl.textContent = e.message;
+      }
+    };
+
+    mediaRecorder.start();
+  } catch (e) {
+    stopMicStream();
+    micBtn.classList.remove("rec"); micBtn.textContent = "Nói chuyện";
+    statusEl.textContent = e.name === "NotAllowedError"
+      ? "Bạn đã từ chối quyền Mic. Cho phép Mic trong biểu tượng khóa bên cạnh địa chỉ trang."
+      : "Không mở được micrô. Hãy kiểm tra thiết bị âm thanh Windows.";
+  }
+};
+const chatModeBtn = $("mode-chat");
+const voiceModeBtn = $("mode-voice");
+
+function setInteractionMode(mode) {
+  interactionMode = mode;
+  document.body.classList.toggle("chat-mode", mode === "chat");
+  document.body.classList.toggle("voice-mode", mode === "voice");
+  chatModeBtn.classList.toggle("active", mode === "chat");
+  voiceModeBtn.classList.toggle("active", mode === "voice");
+
+  stopSpeaking(); clearState();
+  if (mode === "chat") {
+    if (recording) mediaRecorder?.stop();
+    statusEl.textContent = "Nhập tin nhắn để chat với Mai";
+    $("text").focus();
+  } else {
+    statusEl.textContent = "Bấm Nói chuyện để bắt đầu ghi âm";
+  }
+}
+
+chatModeBtn.addEventListener("click", () => setInteractionMode("chat"));
+voiceModeBtn.addEventListener("click", () => setInteractionMode("voice"));
+
+function submitTypedMessage() {
+  const textInput = $("text");
+  const value = textInput.value;
+  textInput.value = "";
+  send(value);
+}
+
+$("send").addEventListener("click", submitTypedMessage);
+$("clear-history").addEventListener("click", () => {
+  history = [];
+  saveHistory();
+  bubble.textContent = "Mai đang chờ bạn.";
+  statusEl.textContent = "Đã xóa lịch sử chat";
+  $("text").value = "";
+  $("text").focus();
+});
+$("text").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.isComposing) submitTypedMessage();
+});
+
+setInteractionMode("chat");
+if (history.length) {
+  bubble.textContent = history[history.length - 1].content.replace(/\[\w+\]/g, "").trim();
+  statusEl.textContent = "Đã khôi phục lịch sử chat";
+}
+</script>
+</body>
+</html>
