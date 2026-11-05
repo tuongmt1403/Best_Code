@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d3b">
+  <title>Mini Game · Học Mà Chơi</title>
+  <link rel="stylesheet" href="/dangKy_dangNhap/auth.css">
+  <link rel="stylesheet" href="/mini-game/styles.css">
+  <script src="/dangKy_dangNhap/session.js" defer></script>
+  <script src="/mini-game/client.js" defer></script>
+</head>
+<body class="auth-page minigame-page">
+  <main class="game-scene">
+    <header class="game-header">
+      <a class="game-brand" href="/" aria-label="Về trang chính">
+        <span class="game-brand-icon" aria-hidden="true">🎮</span>
+        <span><strong>Học Mà Chơi</strong><small>Mini Game cùng bạn bè</small></span>
+      </a>
+      <a class="back-link" href="/">← Trang chính</a>
+    </header>
+
+    <section class="game-hero">
+      <span class="game-eyebrow">⚡ Cùng học · Cùng đua · Cùng vui</span>
+      <h1>Thử tài cùng bạn bè</h1>
+      <p>Tạo phòng, gửi mã cho bạn và thi chọn đáp án đúng theo thời gian thực.</p>
+    </section>
+
+    <div class="game-columns">
+      <section id="game-card" class="game-card" aria-live="polite">
+        <div id="game-content">
+          <div class="game-loading">Đang chuẩn bị mini game...</div>
+        </div>
+      </section>
+
+      <aside class="leaderboard-card">
+        <div class="leaderboard-heading">
+          <span class="leaderboard-icon" aria-hidden="true">🏆</span>
+          <div><h2>Bảng xếp hạng</h2><p>Điểm tích lũy qua các ván chơi</p></div>
+        </div>
+        <ol id="leaderboard-list" class="leaderboard-list">
+          <li class="leaderboard-empty">Đang tải bảng xếp hạng...</li>
+        </ol>
+        <p class="leaderboard-note">Mỗi câu đúng được cộng điểm; trả lời nhanh sẽ có thêm điểm thưởng.</p>
+      </aside>
+    </div>
+    <p id="game-live-status" class="game-live-status" role="status" aria-live="polite"></p>
+    <p class="kindness-note">✨ Thi đấu vui vẻ nhé — hiệu ứng cổ vũ chỉ để cả phòng cùng cười, không có lời xúc phạm người chơi.</p>
+  </main>
+</body>
+</html>

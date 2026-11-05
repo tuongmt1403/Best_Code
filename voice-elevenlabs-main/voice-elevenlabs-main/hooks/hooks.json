@@ -1,0 +1,22 @@
+{
+  "hooks": [
+    {
+      "event": "Stop",
+      "type": "command",
+      "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/stop-voice.sh",
+      "description": "Announce '[project]: done' when Claude finishes"
+    },
+    {
+      "event": "SubagentStop",
+      "type": "command",
+      "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/subagent-voice.sh",
+      "description": "Announce '[project]: [task]' when subagent completes"
+    },
+    {
+      "event": "Notification",
+      "type": "command",
+      "command": "claude-voice-notifications",
+      "description": "Announce when Claude needs permission or input"
+    }
+  ]
+}

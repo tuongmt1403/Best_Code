@@ -1,0 +1,9 @@
+{
+  "name": "voice-elevenlabs",
+  "version": "2.0.0",
+  "description": "Voice notifications and TTS for Claude Code using ElevenLabs v3 AI voices",
+  "author": {
+    "name": "Adam Anzuoni",
+    "url": "https://github.com/adamanz"
+  }
+}

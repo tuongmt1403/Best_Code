@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "elevenlabs": {
+      "command": "uvx",
+      "args": ["elevenlabs-mcp"],
+      "env": {
+        "ELEVENLABS_API_KEY": "${ELEVENLABS_API_KEY}",
+        "ELEVENLABS_VOICE_ID": "${ELEVENLABS_VOICE_ID:-JBFqnCBsd6RMkjVDRZzb}",
+        "ELEVENLABS_MCP_OUTPUT_MODE": "files"
+      }
+    }
+  }
+}

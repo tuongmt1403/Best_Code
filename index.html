@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lụa - bạn trò chuyện AI</title>
+<link rel="stylesheet" href="/dangKy_dangNhap/auth.css">
+<script src="/dangKy_dangNhap/session.js" defer></script>
+<style>
+  :root { --bg:#f7f8fc; --ink:#20243b; --muted:#70758a; --line:#e7e9f2; --surface:#fff;
+    --skin:#ffe0cc; --hair:#3b2a4a; --cheek:#ffb3b3; --accent:#635bda; --accent-dark:#5149c5; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; padding:24px; background:
+    radial-gradient(ellipse at 12% 0%,#e4e5ff 0,transparent 35%),
+    radial-gradient(ellipse at 96% 82%,#e8f6f0 0,transparent 26%),
+    linear-gradient(145deg,#fafaff 0%,var(--bg) 70%);
+    color:var(--ink); font-family:system-ui,"Segoe UI",sans-serif; }
+  .chat-shell { width:min(1080px,100%); margin:0 auto; }
+  .chat-header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px; }
+  .chat-brand { display:flex; align-items:center; gap:10px; color:var(--ink); text-decoration:none; }
+  .chat-brand-mark { display:grid; width:40px; height:40px; place-items:center; border-radius:14px;
+    color:#fff; background:linear-gradient(145deg,#a29aff,#7169e8 48%,var(--accent-dark)); font-weight:800;
+    box-shadow:0 8px 20px #635bda3b,inset 0 1px 0 #ffffff66; }
+  .chat-brand small { display:block; margin-top:2px; color:var(--muted); font-size:.78rem; }
+  .chat-brand-mark { background:linear-gradient(145deg,#fff,#ffe6d7) !important; color:#ff6a32 !important; border:1px solid #ffd5c5; }
+  .chat-nav { display:flex; align-items:center; gap:3px; margin-left:auto; padding:6px; border:1px solid #e2e4ef; border-radius:999px; background:#fff; box-shadow:0 5px 18px #272c4b0a; }
+  .chat-nav a { min-height:38px; display:inline-flex; align-items:center; padding:8px 16px; border-radius:999px; color:#5b6078; font-size:.88rem; font-weight:750; text-decoration:none; }
+  .chat-nav a.active { color:#fff; background:linear-gradient(105deg,#746cf0,#635bda); box-shadow:0 4px 12px #635bda28; }
+  .home-link { color:var(--accent-dark); font-size:.9rem; font-weight:700; text-decoration:none; }
+  .chat-toolbar { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  #mode-panel { display:flex; gap:5px; width:max-content; max-width:100%; padding:5px;
+    border:1px solid #e3e4ef; border-radius:14px; background:linear-gradient(145deg,#fff,#f8f8fd);
+    box-shadow:0 5px 16px #272c4b0a,inset 0 1px 0 #fff; }
+  .mode-btn { min-height:42px; padding:9px 16px; border-radius:10px; color:var(--muted); background:transparent; font-size:.92rem; font-weight:700; }
+  .mode-btn.active { color:#fff; background:linear-gradient(105deg,#746cf0,#635bda 62%,#574fc9); box-shadow:0 5px 13px #635bda35,inset 0 1px 0 #ffffff40; }
+  #style-panel { display:flex; align-items:center; gap:8px; margin-left:auto; }
+  #style-panel label { margin:0; color:var(--muted); font-size:.86rem; font-weight:700; }
+  #chat-style { max-width:230px; padding:10px 12px; border:1px solid var(--line); border-radius:11px;
+    color:var(--ink); background:#fff; font:inherit; }
+  .chat-layout { display:grid; grid-template-columns:minmax(260px,.78fr) minmax(0,1.22fr); gap:18px; align-items:stretch; }
+  .character-card,.conversation-card { min-width:0; border:1px solid #e4e6f0; border-radius:22px;
+    background:var(--surface); box-shadow:0 14px 38px #272c4b0d,inset 0 1px 0 #fff; }
+  .character-card { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:540px;
+    padding:20px; overflow:hidden; position:relative;
+    background:radial-gradient(ellipse at 50% 38%,#e8e5ff 0,transparent 42%),radial-gradient(ellipse at 50% 100%,#f0f8f4 0,transparent 46%),#fff; }
+  .character-card::before { position:absolute; top:13%; left:50%; width:250px; height:250px; border:1px solid #dad7ff66;
+    border-radius:50%; content:""; transform:translateX(-50%); pointer-events:none; }
+  #stage { width:min(330px,100%); margin:auto 0 0; }
+  .character-caption { margin:0 0 auto; color:var(--muted); font-size:.92rem; text-align:center; }
+  .conversation-card { display:flex; flex-direction:column; min-height:540px; padding:20px;
+    background:linear-gradient(155deg,#fff 0%,#fff 74%,#fbfaff 100%); }
+  #conversation-heading { margin:0 0 14px; font-size:1.04rem; letter-spacing:-.02em; }
+  svg { width:100%; height:auto; overflow:visible; }
+  #bubble { min-height:150px; margin:0; padding:18px; border:1px solid #e9e9f4; border-radius:16px;
+    background:linear-gradient(145deg,#fbfbff,#f7f6fc); box-shadow:inset 0 1px 2px #302c5808;
+    line-height:1.7; white-space:pre-wrap; overflow-wrap:anywhere; }
+  #status { min-height:24px; margin:0 0 8px; color:var(--muted); font-size:.83rem;
+    line-height:1.5; overflow-wrap:anywhere; }
+  #controls { display:flex; gap:9px; margin:14px 0 0; flex-wrap:wrap; justify-content:stretch; width:100%; }
+  #text { flex:1; min-width:160px; min-height:46px; padding:11px 13px; border:1px solid #dfe1eb;
+    border-radius:12px; color:var(--ink); background:#fff; font:inherit; }
+  button { min-height:44px; padding:10px 16px; border:0; border-radius:12px;
+    background:linear-gradient(105deg,#746cf0,#635bda 62%,#574fc9);
+    color:#fff; font:inherit; font-weight:700; cursor:pointer;
+    box-shadow:0 5px 13px #635bda24,inset 0 1px 0 #ffffff38;
+    transition:filter .18s ease,transform .18s ease,box-shadow .18s ease; }
+  button:hover:not(:disabled) { filter:brightness(1.03); transform:translateY(-1px); box-shadow:0 8px 17px #635bda30,inset 0 1px 0 #ffffff38; }
+  button.rec { background:linear-gradient(105deg,#ef6477,#d93e59); box-shadow:0 5px 13px #d93e5930; }
+  button:focus-visible, a:focus-visible, #text:focus-visible, #chat-style:focus-visible { outline:3px solid #b5bdff; outline-offset:2px; }
+  #speech-controls { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0; justify-content:flex-end; }
+  #speech-toggle, #stop-speaking, #clear-history { min-height:38px; padding:7px 12px; color:#555a70;
+    background:linear-gradient(145deg,#fff,#f9f9fd); border:1px solid var(--line); font-size:.84rem; box-shadow:0 3px 9px #272c4b08; }
+  #speech-toggle[aria-pressed="true"] { color:#3545d0; border-color:var(--accent); }
+  #stop-speaking[hidden] { display:none; }
+  #camera-panel { width:100%; margin-top:12px; padding:10px; border:1px solid #e5e5f1; border-radius:14px;
+    background:linear-gradient(145deg,#fff,#f7f7fc); box-shadow:0 5px 15px #272c4b08; }
+  #camera-preview { display:block; width:100%; max-height:260px; border-radius:10px; background:#222; object-fit:cover; transform:scaleX(-1); }
+  #camera-note { margin:8px 2px 0; color:var(--muted); font-size:.78rem; line-height:1.5; text-align:center; }
+  #camera-toggle { color:var(--accent-dark); background:linear-gradient(110deg,#f3f1ff,#ebe9ff); border:1px solid #dfddfb; font-size:.9rem; box-shadow:0 4px 11px #635bda12; }
+  #camera-toggle[aria-pressed="true"] { color:#3545d0; border-color:var(--accent); }
+  #send { display:none; }
+  #clear-history { align-self:flex-start; margin-top:10px; }
+  body.chat-mode #mic { display:none; }
+  body.chat-mode #send { display:inline-block; }
+  body.voice-mode #text, body.voice-mode #send { display:none; }
+  @media (max-width:760px) {
+    body { padding:16px; }
+    .chat-toolbar { align-items:stretch; flex-direction:column; gap:9px; }
+    #mode-panel { width:100%; }
+    .mode-btn { flex:1; padding-inline:8px; }
+    #style-panel { justify-content:space-between; margin-left:0; }
+    #chat-style { max-width:none; }
+    .chat-layout { grid-template-columns:1fr; gap:12px; }
+    .character-card { min-height:0; padding:5px 16px 12px; }
+    #stage { width:min(220px,62vw); margin:0; }
+    .character-caption { margin:0; font-size:.83rem; }
+    .conversation-card { min-height:0; padding:15px; }
+    #bubble { min-height:110px; }
+  }
+  @media (max-width:420px) {
+    body { padding:12px; }
+    .chat-header { margin-bottom:15px; flex-wrap:wrap; }
+    .chat-nav { order:3; width:100%; justify-content:center; }
+    .chat-nav a { flex:1; justify-content:center; padding-inline:7px; }
+    .chat-brand small { display:none; }
+    .home-link { font-size:.82rem; }
+    #style-panel { align-items:flex-start; flex-direction:column; gap:5px; }
+    #chat-style { width:100%; max-width:none; }
+    #controls button { flex:1; }
+    #controls #camera-toggle { flex:0 0 100%; }
+  }
+  @media (prefers-reduced-motion:reduce) { button { transition:none; } }
+
+  /* ---- Cáo Lụa: trạng thái trò chuyện ---- */
+  #stage { position:relative; isolation:isolate; aspect-ratio:1; }
+  .fox-avatar { position:relative; z-index:1; display:block; width:100%; height:100%; object-fit:contain;
+    filter:drop-shadow(0 16px 18px #3d34732e); transform-origin:50% 82%; }
+  .idle .fox-avatar { animation:fox-idle 3.8s ease-in-out infinite; }
+  .speaking .fox-avatar { animation:fox-talk .42s ease-in-out infinite alternate; }
+  .listening .fox-avatar { animation:fox-listen 1s ease-in-out infinite alternate; }
+  .think .fox-avatar { animation:fox-think .65s ease-in-out 2; }
+  .nod .fox-avatar { animation:fox-nod .45s ease-in-out 2; }
+  .wave .fox-avatar { animation:fox-wave .55s ease-in-out 4; }
+  .surprised .fox-avatar { animation:fox-surprise .55s ease-out 1; }
+  .sad .fox-avatar { animation:fox-sad .55s ease-in-out 1; }
+  .laugh .fox-avatar { animation:fox-laugh .24s ease-in-out 6; }
+  .fox-orbit { position:absolute; z-index:0; inset:8%; border:1px solid #9887ef42; border-radius:50%;
+    background:radial-gradient(circle,#fff4 0,#e8e4ff18 54%,transparent 72%); }
+  .fox-orbit::before,.fox-orbit::after { position:absolute; border:1px solid #a798ef35; border-radius:50%; content:""; }
+  .fox-orbit::before { inset:10%; }
+  .fox-orbit::after { inset:-10%; border-color:#84dce43b; }
+  .fox-spark { position:absolute; z-index:2; color:#e7ad45; font-size:1.2rem; opacity:.5; }
+  .fox-spark.one { top:15%; left:13%; }
+  .fox-spark.two { top:25%; right:9%; color:#60becb; font-size:1rem; }
+  .fox-spark.three { right:15%; bottom:13%; color:#a66cda; font-size:1.4rem; }
+  .fox-soundwave { position:absolute; z-index:0; top:31%; left:50%; width:74%; height:30%;
+    border:2px solid #8965e8; border-right-color:transparent; border-left-color:transparent; border-radius:50%;
+    opacity:0; transform:translateX(-50%) scale(.78); pointer-events:none; }
+  .fox-soundwave.wave-two { width:92%; height:42%; }
+  .speaking .fox-soundwave { animation:soundwave 1.15s ease-out infinite; }
+  .speaking .fox-soundwave.wave-two { animation-delay:.36s; }
+  .listening .fox-orbit { animation:listen-glow 1s ease-in-out infinite alternate; }
+  .face-smile .fox-spark,.face-laugh .fox-spark { opacity:1; animation:spark-twinkle .8s ease-in-out infinite alternate; }
+  @keyframes fox-idle { 0%,100% { transform:translateY(0) rotate(-1deg); } 50% { transform:translateY(-7px) rotate(1deg); } }
+  @keyframes fox-talk { from { transform:translateY(0) rotate(-1deg) scale(1); } to { transform:translateY(-5px) rotate(1deg) scale(1.035); } }
+  @keyframes fox-listen { from { transform:rotate(-3deg) translateY(1px); } to { transform:rotate(3deg) translateY(-3px); } }
+  @keyframes fox-think { 50% { transform:rotate(-5deg) translateY(-4px); } }
+  @keyframes fox-nod { 50% { transform:translateY(8px) rotate(2deg); } }
+  @keyframes fox-wave { 50% { transform:rotate(5deg) translateY(-4px); } }
+  @keyframes fox-surprise { 45% { transform:scale(1.08) translateY(-9px); } }
+  @keyframes fox-sad { 50% { transform:translateY(5px) rotate(3deg) scale(.98); } }
+  @keyframes fox-laugh { 50% { transform:translateY(-7px) rotate(3deg); } }
+  @keyframes soundwave { 0% { opacity:.65; transform:translateX(-50%) scale(.78); } 100% { opacity:0; transform:translateX(-50%) scale(1.25); } }
+  @keyframes listen-glow { to { box-shadow:0 0 30px #77dce46b,inset 0 0 25px #8f7cf235; } }
+  @keyframes spark-twinkle { to { transform:translateY(-5px) scale(1.25); } }
+  @media (prefers-reduced-motion:reduce) { .fox-avatar,.fox-orbit,.fox-spark,.fox-soundwave { animation:none !important; } }
+</style>
+</head>
+<body class="chat-mode">
+<div class="chat-shell">
+<header class="chat-header">
+  <a class="chat-brand" href="/" aria-label="Lụa AI - về trang chính">
+    <span class="chat-brand-mark" aria-hidden="true">L</span>
+    <span><strong>Lụa AI</strong><small>Trò chuyện và học tập</small></span>
+  </a>
+  <nav class="chat-nav" aria-label="Điều hướng chính">
+    <a class="active" href="/chat">Trò chuyện</a>
+    <a href="/quiz">Quiz</a>
+    <a href="/quiz#roadmap">Lộ trình</a>
+    <a href="/mini-game">Phòng học 1-1</a>
+  </nav>
+</header>
+<div class="chat-toolbar">
+<div id="mode-panel" aria-label="Chọn chế độ chat">
+  <button id="mode-chat" class="mode-btn active" type="button">Chat chữ</button>
+  <button id="mode-voice" class="mode-btn" type="button">Nói chuyện 1-1</button>
+</div>
+<div id="style-panel">
+  <label for="chat-style">Phong cách:</label>
+  <select id="chat-style">
+    <option value="normal">Bình thường</option>
+    <option value="genz">Vui nhộn kiểu Gen Z</option>
+  </select>
+</div>
+ </div>
+<main class="chat-layout">
+<section class="character-card" aria-label="Nhân vật Lụa">
+<div id="stage" class="idle">
+  <div class="fox-orbit" aria-hidden="true">
+    <span class="fox-spark one">✦</span>
+    <span class="fox-spark two">✧</span>
+    <span class="fox-spark three">✦</span>
+    <span class="fox-soundwave wave-one"></span>
+    <span class="fox-soundwave wave-two"></span>
+  </div>
+  <img class="fox-avatar" src="/images/lua-fox.png" alt="Lụa, chú cáo AI đồng hành học tập">
+</div>
+<p class="character-caption">Lụa luôn sẵn sàng cùng bạn học hỏi.</p>
+</section>
+<section class="conversation-card" aria-labelledby="conversation-heading">
+<h1 id="conversation-heading">Cuộc trò chuyện</h1>
+<div id="status" aria-live="polite">Nhập tin nhắn hoặc chuyển sang chế độ nói chuyện.</div>
+<div id="bubble" aria-live="polite">Xin chào! Hôm nay bạn muốn cùng Lụa tìm hiểu điều gì?</div>
+<section id="camera-panel" hidden aria-label="Xem trước camera">
+  <video id="camera-preview" autoplay muted playsinline></video>
+  <p id="camera-note">Hình camera chỉ hiển thị trên thiết bị này, không gửi lên AI. Mic vẫn được gửi tới dịch vụ nhận dạng giọng nói.</p>
+</section>
+<div id="controls">
+  <button id="mic" type="button">Nói chuyện</button>
+  <button id="camera-toggle" type="button" aria-pressed="false">Bật camera (chỉ xem trước)</button>
+  <input id="text" placeholder="Nhập tin nhắn và gửi cho Lụa" aria-label="Tin nhắn">
+  <button id="send" type="button">Gửi</button>
+</div>
+<div id="speech-controls">
+  <button id="speech-toggle" type="button" aria-pressed="true">🔊 Đọc câu trả lời: Bật</button>
+  <button id="stop-speaking" type="button" hidden>Dừng đọc</button>
+</div>
+<button id="clear-history" type="button">Xóa lịch sử chat</button>
+</section>
+</main>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), statusEl = $("status"), bubble = $("bubble");
+const chatStyleSelect = $("chat-style");
+const allowedChatStyles = new Set(["normal", "genz"]);
+const requestedChatStyle = new URLSearchParams(location.search).get("style");
+let chatStyle = allowedChatStyles.has(requestedChatStyle)
+  ? requestedChatStyle
+  : localStorage.getItem("lụa-chat-style") === "genz" ? "genz" : "normal";
+chatStyleSelect.value = chatStyle;
+if (allowedChatStyles.has(requestedChatStyle)) localStorage.setItem("lụa-chat-style", chatStyle);
+let history = [];
+try {
+  const savedHistory = JSON.parse(localStorage.getItem("mai-chat-history") || "[]");
+  if (Array.isArray(savedHistory)) {
+    const validHistory = savedHistory.filter((message) =>
+      message && ["user", "assistant"].includes(message.role) && typeof message.content === "string"
+    );
+    history = validHistory.filter((message) =>
+      !(message.role === "assistant" && /^\s*(?:\[wave\]\s*)?chào bạn,\s*mình là mai!?\s*$/i.test(message.content))
+    ).slice(-20);
+    if (history.length !== validHistory.length) {
+      localStorage.setItem("mai-chat-history", JSON.stringify(history));
+    }
+  }
+} catch {
+  history = [];
+}
+
+async function checkHistoryConnection() {
+  try {
+    const response = await fetch("/api/history/status");
+    const data = await response.json();
+    if (response.ok && data.connected) {
+      bubble.textContent = `Lụa đã kết nối ${data.entries} mục dữ liệu Lịch sử Việt Nam.`;
+    }
+  } catch {
+    // Không chặn cuộc trò chuyện nếu tệp dữ liệu tạm thời không truy cập được.
+  }
+}
+checkHistoryConnection();
+
+function saveHistory() {
+  history = history.slice(-20);
+  localStorage.setItem("mai-chat-history", JSON.stringify(history));
+}
+
+let speaking = false, busy = false, currentAudio = null, currentAudioUrl = null, finishCurrentSpeech = null, speechGeneration = 0, textRevealFrame = 0;
+let interactionMode = "chat";
+const speechToggle = $("speech-toggle");
+const stopSpeakingButton = $("stop-speaking");
+let chatSpeechEnabled = localStorage.getItem("mai-chat-speak") !== "false";
+
+function updateSpeechControls() {
+  speechToggle.setAttribute("aria-pressed", String(chatSpeechEnabled));
+  speechToggle.textContent = chatSpeechEnabled ? "🔊 Đọc câu trả lời: Bật" : "🔇 Đọc câu trả lời: Tắt";
+  stopSpeakingButton.hidden = !speaking;
+}
+
+function stopSpeaking() {
+  speechGeneration++;
+  if (currentAudio) currentAudio.pause();
+  if (finishCurrentSpeech) finishCurrentSpeech();
+  stopTextReveal();
+  speechSynthesis.cancel();
+  speaking = false;
+  stopMouth();
+  updateSpeechControls();
+}
+
+speechToggle.addEventListener("click", () => {
+  chatSpeechEnabled = !chatSpeechEnabled;
+  localStorage.setItem("mai-chat-speak", String(chatSpeechEnabled));
+  if (!chatSpeechEnabled && interactionMode === "chat") stopSpeaking();
+  updateSpeechControls();
+});
+stopSpeakingButton.addEventListener("click", stopSpeaking);
+updateSpeechControls();
+
+/* ---------- Cử chỉ ---------- */
+const GESTURES = ["nod","think","wave","surprised","sad","laugh"];
+const FACES = { smile:"face-smile", laugh:"face-laugh", sad:"face-sad", surprised:"face-surprised" };
+
+function clearState() {
+  stage.className = "idle";
+}
+function playGesture(tag) {
+  stage.classList.remove(...GESTURES, ...Object.values(FACES));
+  if (FACES[tag]) stage.classList.add(FACES[tag]);
+  if (GESTURES.includes(tag)) {
+    void stage.offsetWidth; // khởi động lại animation
+    stage.classList.add(tag);
+  }
+  if (tag === "smile") stage.classList.add("face-smile");
+}
+
+/* ---------- Hiệu ứng cáo khi Lụa nói ---------- */
+function startMouth() {
+  stage.className = "speaking";
+}
+function stopMouth() {
+  clearState();
+}
+
+function stopTextReveal(text = null) {
+  cancelAnimationFrame(textRevealFrame);
+  textRevealFrame = 0;
+  if (text !== null) bubble.textContent = text;
+}
+
+function revealTextWithAudio(text, audio) {
+  const words = text.match(/\S+\s*/g) || [];
+  let visibleWords = 0;
+
+  const update = () => {
+    const duration = Number.isFinite(audio.duration) && audio.duration > 0
+      ? audio.duration
+      : words.length / 4;
+    const targetWords = Math.min(words.length, Math.floor((audio.currentTime / duration) * words.length));
+    if (targetWords > visibleWords) {
+      visibleWords = targetWords;
+      bubble.textContent = words.slice(0, visibleWords).join("");
+    }
+    if (!audio.paused && !audio.ended) textRevealFrame = requestAnimationFrame(update);
+  };
+
+  bubble.textContent = "";
+  cancelAnimationFrame(textRevealFrame);
+  textRevealFrame = requestAnimationFrame(update);
+}
+
+/* ---------- Giọng đọc Google gTTS ---------- */
+function playAudio(audioBlob, text) {
+  currentAudioUrl = URL.createObjectURL(audioBlob);
+  const audioUrl = currentAudioUrl;
+  const audio = new Audio(audioUrl);
+  currentAudio = audio;
+  return new Promise((resolve, reject) => {
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      if (currentAudio === audio) currentAudio = null;
+      if (currentAudioUrl === audioUrl) currentAudioUrl = null;
+      URL.revokeObjectURL(audioUrl);
+      finishCurrentSpeech = null;
+      stopTextReveal(finished && audio.ended ? text : null);
+      speaking = false;
+      stopMouth();
+      updateSpeechControls();
+      resolve();
+    };
+    finishCurrentSpeech = finish;
+    const fail = () => {
+      if (finished) return;
+      finished = true;
+      if (currentAudio === audio) currentAudio = null;
+      if (currentAudioUrl === audioUrl) currentAudioUrl = null;
+      URL.revokeObjectURL(audioUrl);
+      finishCurrentSpeech = null;
+      stopTextReveal();
+      speaking = false;
+      stopMouth();
+      updateSpeechControls();
+      reject(new Error("Không phát được âm thanh gTTS."));
+    };
+    audio.onplay = () => {
+      speaking = true;
+      statusEl.textContent = "Lụa đang nói";
+      revealTextWithAudio(text, audio);
+      updateSpeechControls();
+      startMouth();
+    };
+    audio.onended = finish;
+    audio.onerror = fail;
+    audio.play().catch(() => {
+      fail();
+    });
+  });
+}
+
+function playAudioStream(stream, text) {
+  if (!window.MediaSource || !MediaSource.isTypeSupported("audio/mpeg")) {
+    return new Response(stream).blob().then((blob) => playAudio(blob, text));
+  }
+
+  const mediaSource = new MediaSource();
+  currentAudioUrl = URL.createObjectURL(mediaSource);
+  const audioUrl = currentAudioUrl;
+  const audio = new Audio(audioUrl);
+  const reader = stream.getReader();
+  currentAudio = audio;
+
+  return new Promise((resolve, reject) => {
+    let finished = false;
+    let sourceBuffer;
+    let playbackStarted = false;
+    const cleanup = () => {
+      if (currentAudio === audio) currentAudio = null;
+      if (currentAudioUrl === audioUrl) currentAudioUrl = null;
+      URL.revokeObjectURL(audioUrl);
+      finishCurrentSpeech = null;
+      stopTextReveal(finished && audio.ended ? text : null);
+      speaking = false;
+      stopMouth();
+      updateSpeechControls();
+      reader.cancel().catch(() => {});
+    };
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      resolve();
+    };
+    const fail = (error) => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      reject(error);
+    };
+    finishCurrentSpeech = finish;
+    audio.onplay = () => {
+      speaking = true;
+      statusEl.textContent = "Lụa đang nói";
+      revealTextWithAudio(text, audio);
+      updateSpeechControls();
+      startMouth();
+    };
+    audio.onended = finish;
+    audio.onerror = () => fail(new Error("Không phát được âm thanh gTTS."));
+    mediaSource.addEventListener("sourceopen", () => {
+      try {
+        sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
+        sourceBuffer.mode = "sequence";
+        sourceBuffer.addEventListener("updateend", () => {
+          if (finished) return;
+          if (!playbackStarted && audio.buffered.length > 0) {
+            playbackStarted = true;
+            audio.play().catch(() => fail(new Error("Trình duyệt không cho phép phát âm thanh.")));
+          }
+          appendNext();
+        });
+        sourceBuffer.addEventListener("error", () => fail(new Error("Dữ liệu âm thanh gTTS không hợp lệ.")));
+        appendNext();
+      } catch {
+        fail(new Error("Trình duyệt không hỗ trợ phát luồng âm thanh gTTS."));
+      }
+    }, { once: true });
+
+    async function appendNext() {
+      if (finished || !sourceBuffer || sourceBuffer.updating) return;
+      try {
+        const { done, value } = await reader.read();
+        if (finished) return;
+        if (done) {
+          if (mediaSource.readyState === "open" && !sourceBuffer.updating) mediaSource.endOfStream();
+          return;
+        }
+        sourceBuffer.appendBuffer(value);
+      } catch {
+        fail(new Error("Luồng âm thanh gTTS bị gián đoạn."));
+      }
+    }
+  });
+}
+
+function speakWithBrowser(text) {
+  return new Promise((resolve, reject) => {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      reject(new Error("Trình duyệt này không hỗ trợ đọc văn bản thành tiếng."));
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "vi-VN";
+    utterance.rate = 1.02;
+    utterance.pitch = 1.08;
+    const vietnameseVoice = speechSynthesis.getVoices().find((voice) => voice.lang.toLowerCase().startsWith("vi"));
+    if (vietnameseVoice) utterance.voice = vietnameseVoice;
+
+    let finished = false;
+    const finish = (error) => {
+      if (finished) return;
+      finished = true;
+      finishCurrentSpeech = null;
+      speaking = false;
+      stopMouth();
+      updateSpeechControls();
+      if (error) reject(error);
+      else resolve();
+    };
+    finishCurrentSpeech = () => finish();
+    utterance.onstart = () => {
+      speaking = true;
+      bubble.textContent = "";
+      updateSpeechControls();
+      startMouth();
+    };
+    utterance.onboundary = (event) => {
+      if (Number.isInteger(event.charIndex)) bubble.textContent = text.slice(0, event.charIndex);
+    };
+    utterance.onend = () => {
+      bubble.textContent = text;
+      finish();
+    };
+    utterance.onerror = () => finish(new Error("Trình duyệt không phát được giọng đọc."));
+    speechSynthesis.speak(utterance);
+  });
+}
+
+async function speak(text) {
+  const generation = speechGeneration;
+  try {
+    statusEl.textContent = "Đang tạo giọng đọc tiếng Việt...";
+    const response = await fetch("/api/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    if (generation !== speechGeneration) return;
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || "gTTS hiện chưa khả dụng.");
+    }
+    await playAudioStream(response.body, text);
+  } catch {
+    if (generation !== speechGeneration) return;
+    statusEl.textContent = "gTTS chưa khả dụng; đang dùng giọng đọc dự phòng của trình duyệt.";
+    await speakWithBrowser(text);
+  }
+}
+
+/* ---------- Xử lý câu trả lời có thẻ ---------- */
+async function performReply(text) {
+  const spokenText = text.replace(/\[(?:smile|nod|think|wave|surprised|sad|laugh)\]/g, "").replace(/\s+/g, " ").trim();
+  const shouldSpeak = spokenText && (interactionMode === "voice" || chatSpeechEnabled);
+  if (!shouldSpeak) bubble.textContent = text.replace(/\[\w+\]/g, "").replace(/\s+/g, " ").trim();
+  for (const match of text.matchAll(/\[(smile|nod|think|wave|surprised|sad|laugh)\]/g)) {
+    playGesture(match[1]);
+  }
+  if (shouldSpeak) {
+    try {
+      await speak(spokenText);
+      return true;
+    } catch (error) {
+      statusEl.textContent = error.message;
+      return false;
+    }
+  }
+  setTimeout(clearState, 600);
+  return true;
+}
+
+/* ---------- Gọi backend ---------- */
+async function send(userText) {
+  if (busy || !userText.trim()) return;
+  busy = true; $("send").disabled = true; $("mic").disabled = true; stopSpeaking();
+  let keepStatus = false;
+  const cleanText = userText.trim();
+  history.push({ role: "user", content: cleanText });
+  saveHistory();
+  bubble.textContent = cleanText; statusEl.textContent = "Lụa đang nghĩ"; playGesture("think");
+  try {
+    const r = await fetch("/api/chat", { method:"POST", headers:{ "Content-Type":"application/json" },
+                                          body: JSON.stringify({
+                                            messages: history,
+                                            mode: interactionMode === "voice" ? "voice" : "text",
+                                            chatStyle,
+                                          }) });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    history.push({ role: "assistant", content: data.reply });
+    saveHistory();
+    const verificationStatus = data.verification?.status;
+    const safeToSpeak = ["verified", "source_based", "deterministic", "fallback_generated"].includes(verificationStatus);
+    if (safeToSpeak) {
+      statusEl.textContent = "Lụa đang nói";
+      keepStatus = !(await performReply(data.reply));
+    } else {
+      bubble.textContent = data.reply.replace(/\[\w+\]/g, "").replace(/\s+/g, " ").trim();
+      keepStatus = true;
+    }
+    if (verificationStatus === "verified") {
+      statusEl.textContent = data.verification.fallback
+        ? `Gemini đang lỗi (${data.verification.reason}); câu trả lời dự phòng Groq/Qwen (${data.verification.model}) đã được rà soát, không thấy vấn đề rõ ràng. Đây không phải bảo đảm tuyệt đối.`
+        : `Đã rà soát thêm bằng Groq/Qwen (${data.verification.model}); không thấy vấn đề rõ ràng. Đây không phải bảo đảm tuyệt đối.`;
+      keepStatus = true;
+    } else if (verificationStatus === "source_based") {
+      statusEl.textContent = "Câu trả lời được trích từ dữ liệu lịch sử của ứng dụng.";
+      keepStatus = true;
+    } else if (verificationStatus === "deterministic") {
+      statusEl.textContent = "Câu trả lời được tính trực tiếp, không qua model AI.";
+      keepStatus = true;
+    } else if (verificationStatus === "fallback_generated") {
+      statusEl.textContent = `Gemini đang lỗi (${data.verification.reason}); câu trả lời dùng dự phòng ${data.verification.provider} (${data.verification.model}), chưa được rà soát độc lập.`;
+      keepStatus = true;
+    } else {
+      const issues = data.verification?.issues || [];
+      const fallbackNote = data.verification?.fallback
+        ? `Câu trả lời do Groq/Qwen dự phòng tạo vì Gemini lỗi (${data.verification.reason}). `
+        : "";
+      const reviewNote = verificationStatus === "concern"
+        ? `Groq/Qwen lưu ý: ${issues.join("; ") || "cần kiểm tra lại nội dung."}`
+        : verificationStatus === "uncertain"
+          ? `Groq/Qwen chưa đủ căn cứ xác minh${issues.length ? `: ${issues.join("; ")}` : "."}`
+          : verificationStatus === "unavailable"
+            ? `Groq/Qwen hiện không thể rà soát câu trả lời${issues.length ? `: ${issues.join("; ")}` : "."}`
+            : "Chưa bật rà soát Groq/Qwen. Hãy cấu hình GROQ_API_KEY trên máy chủ.";
+      statusEl.textContent = `${fallbackNote}${reviewNote} Đây là bước kiểm tra bổ sung, không bảo đảm tuyệt đối.`;
+      keepStatus = true;
+    }
+  } catch (e) {
+    bubble.textContent = e.message; history.pop(); saveHistory();
+    statusEl.textContent = e.message;
+    keepStatus = true;
+  }
+  if (!keepStatus) statusEl.textContent = "";
+  busy = false;
+  $("send").disabled = false;
+  $("mic").disabled = false;
+}
+
+/* ---------- Nghe bằng mic và chuyển giọng nói qua Gemini ---------- */
+const micBtn = $("mic");
+const cameraToggle = $("camera-toggle");
+const cameraPanel = $("camera-panel");
+const cameraPreview = $("camera-preview");
+let mediaRecorder = null;
+let micStream = null;
+let cameraStream = null;
+let audioChunks = [];
+let recording = false;
+let micStarting = false;
+let voiceProcessing = false;
+let discardRecording = false;
+let recordingTimer = null;
+const MAX_RECORDING_MS = 60_000;
+
+function stopMicStream() {
+  micStream?.getTracks().forEach((track) => track.stop());
+  micStream = null;
+}
+
+function stopCamera() {
+  cameraStream?.getTracks().forEach((track) => track.stop());
+  cameraStream = null;
+  cameraPreview.srcObject = null;
+  cameraPanel.hidden = true;
+  cameraToggle.setAttribute("aria-pressed", "false");
+  cameraToggle.textContent = "Bật camera (chỉ xem trước)";
+}
+
+cameraToggle.addEventListener("click", async () => {
+  if (cameraStream) {
+    stopCamera();
+    statusEl.textContent = "Camera đã tắt.";
+    return;
+  }
+  cameraToggle.disabled = true;
+  statusEl.textContent = "Đang xin quyền truy cập camera...";
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    cameraPreview.srcObject = cameraStream;
+    cameraPanel.hidden = false;
+    cameraToggle.setAttribute("aria-pressed", "true");
+    cameraToggle.textContent = "Tắt camera";
+    statusEl.textContent = "Camera chỉ hiển thị trên thiết bị này; hình ảnh không được gửi lên AI.";
+  } catch (error) {
+    stopCamera();
+    statusEl.textContent = error.name === "NotAllowedError"
+      ? "Bạn chưa cấp quyền camera. Cho phép camera trong cài đặt trình duyệt rồi thử lại."
+      : error.name === "NotFoundError"
+        ? "Không tìm thấy camera trên thiết bị."
+        : `Không mở được camera: ${error.message || "hãy kiểm tra quyền truy cập thiết bị."}`;
+  } finally {
+    cameraToggle.disabled = false;
+  }
+});
+
+async function blobToBase64(blob) {
+  const buffer = await blob.arrayBuffer();
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  const blockSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += blockSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + blockSize));
+  }
+  return btoa(binary);
+}
+
+micBtn.onclick = async () => {
+  if (recording) {
+    mediaRecorder?.stop();
+    return;
+  }
+  if (busy || micStarting || voiceProcessing) return;
+  stopSpeaking();
+  micStarting = true;
+  micBtn.disabled = true;
+
+  try {
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+      statusEl.textContent = "Trình duyệt không hỗ trợ ghi âm. Hãy dùng Chrome hoặc gõ tin nhắn.";
+      micStarting = false;
+      micBtn.disabled = false;
+      return;
+    }
+
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+    });
+    if (interactionMode !== "voice") {
+      stopMicStream();
+      micStarting = false;
+      micBtn.disabled = false;
+      return;
+    }
+    const preferredType = "audio/webm;codecs=opus";
+    const mimeType = MediaRecorder.isTypeSupported(preferredType) ? preferredType : "";
+    const recorder = mimeType ? new MediaRecorder(micStream, { mimeType }) : new MediaRecorder(micStream);
+    mediaRecorder = recorder;
+    audioChunks = [];
+    discardRecording = false;
+    let recorderFailed = false;
+
+    recorder.ondataavailable = (event) => {
+      if (event.data.size) audioChunks.push(event.data);
+    };
+
+    recorder.onstart = () => {
+      micStarting = false;
+      recording = true;
+      micBtn.disabled = false;
+      micBtn.classList.add("rec"); micBtn.textContent = "Dừng & gửi";
+      statusEl.textContent = "Lụa đang nghe bạn… (tối đa 60 giây)";
+      stage.className = "listening";
+      recordingTimer = setTimeout(() => {
+        if (recording && mediaRecorder === recorder) {
+          statusEl.textContent = "Đã đạt giới hạn 60 giây; Lụa đang xử lý đoạn ghi âm.";
+          recorder.stop();
+        }
+      }, MAX_RECORDING_MS);
+    };
+
+    recorder.onerror = () => {
+      recorderFailed = true;
+      clearState();
+      statusEl.textContent = "Lỗi khi ghi âm. Hãy kiểm tra micrô rồi thử lại.";
+      stopMicStream();
+    };
+
+    recorder.onstop = async () => {
+      clearTimeout(recordingTimer);
+      recordingTimer = null;
+      recording = false;
+      clearState();
+      micBtn.classList.remove("rec"); micBtn.textContent = "Nói chuyện";
+      stopMicStream();
+      if (discardRecording || recorderFailed) {
+        discardRecording = false;
+        micBtn.disabled = false;
+        return;
+      }
+      voiceProcessing = true;
+      micBtn.disabled = true;
+
+      try {
+        if (!audioChunks.length) {
+          statusEl.textContent = "Không ghi được âm thanh. Hãy thử lại.";
+          return;
+        }
+        statusEl.textContent = "Lụa đang chuyển giọng nói thành chữ…";
+        const blob = new Blob(audioChunks, { type: recorder.mimeType || "audio/webm" });
+        if (blob.size > 9_000_000) {
+          throw new Error("Audio quá dài hoặc quá lớn. Hãy ghi âm ngắn hơn 60 giây.");
+        }
+        const audio = await blobToBase64(blob);
+        const r = await fetch("/api/transcribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ audio, mimeType: blob.type }),
+          signal: AbortSignal.timeout(100_000),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.error || "Không thể chuyển giọng nói thành chữ.");
+        if (!data.text?.trim()) {
+          statusEl.textContent = "Không nghe rõ lời nói. Hãy nói gần mic rồi thử lại.";
+          return;
+        }
+        statusEl.textContent = "Lụa đang suy nghĩ";
+        await send(data.text.trim());
+        if (data.provider === "Groq Whisper") {
+          statusEl.textContent = `Đã nhận dạng bằng Groq Whisper (${data.model}). ${statusEl.textContent}`;
+        }
+      } catch (e) {
+        statusEl.textContent = e.name === "TimeoutError"
+          ? "Xử lý giọng nói quá lâu. Hãy ghi âm ngắn hơn rồi thử lại."
+          : e.message;
+      } finally {
+        voiceProcessing = false;
+        micBtn.disabled = busy;
+      }
+    };
+
+    recorder.start();
+  } catch (e) {
+    stopMicStream();
+    micStarting = false;
+    micBtn.classList.remove("rec"); micBtn.textContent = "Nói chuyện";
+    micBtn.disabled = false;
+    statusEl.textContent = e.name === "NotAllowedError"
+      ? "Bạn đã từ chối quyền Mic. Cho phép Mic trong biểu tượng khóa bên cạnh địa chỉ trang."
+      : `Không mở được micrô. ${e.message || "Hãy kiểm tra quyền truy cập và thiết bị âm thanh."}`;
+  }
+};
+const chatModeBtn = $("mode-chat");
+const voiceModeBtn = $("mode-voice");
+
+function setInteractionMode(mode) {
+  interactionMode = mode;
+  document.body.classList.toggle("chat-mode", mode === "chat");
+  document.body.classList.toggle("voice-mode", mode === "voice");
+  chatModeBtn.classList.toggle("active", mode === "chat");
+  voiceModeBtn.classList.toggle("active", mode === "voice");
+
+  stopSpeaking(); clearState();
+  if (mode === "chat") {
+    if (recording && mediaRecorder) {
+      discardRecording = true;
+      mediaRecorder.stop();
+    }
+    if (micStarting) {
+      stopMicStream();
+      micStarting = false;
+      micBtn.disabled = false;
+    }
+    statusEl.textContent = "Nhập tin nhắn để chat với Lụa";
+    $("text").focus();
+  } else {
+    statusEl.textContent = "Bấm Nói chuyện để bắt đầu ghi âm";
+  }
+}
+
+chatModeBtn.addEventListener("click", () => setInteractionMode("chat"));
+voiceModeBtn.addEventListener("click", () => setInteractionMode("voice"));
+
+function submitTypedMessage() {
+  const textInput = $("text");
+  const value = textInput.value;
+  textInput.value = "";
+  send(value);
+}
+
+$("send").addEventListener("click", submitTypedMessage);
+$("clear-history").addEventListener("click", () => {
+  history = [];
+  saveHistory();
+  bubble.textContent = "Lụa đang chờ bạn.";
+  statusEl.textContent = "Đã xóa lịch sử chat";
+  $("text").value = "";
+  $("text").focus();
+});
+$("text").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.isComposing) submitTypedMessage();
+});
+window.addEventListener("beforeunload", () => {
+  clearTimeout(recordingTimer);
+  stopMicStream();
+  stopCamera();
+});
+
+chatStyleSelect.addEventListener("change", () => {
+  chatStyle = allowedChatStyles.has(chatStyleSelect.value) ? chatStyleSelect.value : "normal";
+  localStorage.setItem("lụa-chat-style", chatStyle);
+  const updatedUrl = new URL(location.href);
+  updatedUrl.searchParams.set("style", chatStyle);
+  window.history.replaceState(null, "", updatedUrl);
+  statusEl.textContent = chatStyle === "genz"
+    ? "Đã chọn phong cách vui nhộn kiểu Gen Z. Thông tin vẫn được ưu tiên chính xác."
+    : "Đã chọn phong cách trò chuyện bình thường.";
+});
+
+setInteractionMode("chat");
+if (history.length) {
+  bubble.textContent = history[history.length - 1].content.replace(/\[\w+\]/g, "").trim();
+  statusEl.textContent = "Đã khôi phục lịch sử chat";
+}
+</script>
+</body>
+</html>
