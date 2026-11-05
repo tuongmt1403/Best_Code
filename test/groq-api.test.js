@@ -2,14 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { fetchWithGroqKeyFallback, getGroqApiKeys } from "../groq-api.js";
 
-test("loads the primary Groq key and three distinct backup keys", () => {
+test("loads the primary Groq key and all distinct backup keys", () => {
   assert.deepEqual(getGroqApiKeys({
     GROQ_API_KEY: " primary ",
     GROQ_API_KEY_2: "backup-2",
     GROQ_API_KEY_3: "backup-3",
     GROQ_API_KEY_4: "backup-4",
-    GROQ_API_KEY_5: "ignored",
-  }), ["primary", "backup-2", "backup-3", "backup-4"]);
+    GROQ_API_KEY_5: "backup-5",
+    GROQ_API_KEY_6: "backup-6",
+    GROQ_API_KEY_7: "backup-7",
+  }), ["primary", "backup-2", "backup-3", "backup-4", "backup-5", "backup-6", "backup-7"]);
 });
 
 test("uses the second Groq key after a quota response", async () => {

@@ -330,25 +330,10 @@ function stopTextReveal(text = null) {
   if (text !== null) bubble.textContent = text;
 }
 
-function revealTextWithAudio(text, audio) {
-  const words = text.match(/\S+\s*/g) || [];
-  let visibleWords = 0;
-
-  const update = () => {
-    const duration = Number.isFinite(audio.duration) && audio.duration > 0
-      ? audio.duration
-      : words.length / 4;
-    const targetWords = Math.min(words.length, Math.floor((audio.currentTime / duration) * words.length));
-    if (targetWords > visibleWords) {
-      visibleWords = targetWords;
-      bubble.textContent = words.slice(0, visibleWords).join("");
-    }
-    if (!audio.paused && !audio.ended) textRevealFrame = requestAnimationFrame(update);
-  };
-
-  bubble.textContent = "";
+function revealTextWithAudio(text, _audio) {
   cancelAnimationFrame(textRevealFrame);
-  textRevealFrame = requestAnimationFrame(update);
+  textRevealFrame = 0;
+  bubble.textContent = text;
 }
 
 /* ---------- Giọng đọc Google gTTS ---------- */
@@ -514,13 +499,11 @@ function speakWithBrowser(text) {
     finishCurrentSpeech = () => finish();
     utterance.onstart = () => {
       speaking = true;
-      bubble.textContent = "";
+      bubble.textContent = text;
       updateSpeechControls();
       startMouth();
     };
-    utterance.onboundary = (event) => {
-      if (Number.isInteger(event.charIndex)) bubble.textContent = text.slice(0, event.charIndex);
-    };
+    utterance.onboundary = null;
     utterance.onend = () => {
       bubble.textContent = text;
       finish();

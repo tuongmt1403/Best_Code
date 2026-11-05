@@ -2,7 +2,7 @@ import { fetchWithGroqKeyFallback } from "./groq-api.js";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b";
-const REVIEW_TIMEOUT_MS = 30_000;
+const REVIEW_TIMEOUT_MS = 15_000;
 
 function isStringArray(value) {
   return Array.isArray(value)
@@ -10,7 +10,7 @@ function isStringArray(value) {
     && value.every((item) => typeof item === "string" && item.trim().length > 0);
 }
 
-async function groqChat({ apiKey, apiKeys, model, messages, maxTokens = 500 }) {
+async function groqChat({ apiKey, apiKeys, model, messages, maxTokens = 500, timeoutMs = 12_000 }) {
   const keys = apiKeys?.length ? apiKeys : apiKey ? [apiKey] : [];
   if (!keys.length) {
     throw new Error("GROQ_API_KEY is not configured.");
@@ -18,6 +18,7 @@ async function groqChat({ apiKey, apiKeys, model, messages, maxTokens = 500 }) {
 
   const { response } = await fetchWithGroqKeyFallback({
     apiKeys: keys,
+    timeoutMs,
     url: GROQ_URL,
     init: {
     method: "POST",
@@ -30,6 +31,7 @@ async function groqChat({ apiKey, apiKeys, model, messages, maxTokens = 500 }) {
       model: model || DEFAULT_GROQ_MODEL,
       temperature: 0,
       max_tokens: maxTokens,
+      reasoning_effort: "none",
       response_format: { type: "json_object" },
       messages,
     }),

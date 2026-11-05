@@ -43,6 +43,13 @@ app.get("/api/history/status", (_req, res) => {
 const geminiApiKeys = getGeminiApiKeys();
 const groqApiKeys = getGroqApiKeys();
 const groqModel = process.env.GROQ_MODEL || "qwen/qwen3.8-27b";
+const geminiModel = process.env.GEMINI_MODEL || "gemini-flash-lite-latest";
+const geminiModels = [...new Set([
+  geminiModel,
+  ...((process.env.GEMINI_MODEL_FALLBACKS || "gemini-3-flash-preview,gemini-flash-latest").split(",")
+    .map((model) => model.trim())
+    .filter(Boolean)),
+])];
 if (geminiApiKeys.length === 0) {
   console.error("Thiếu Gemini API key. Hãy thêm GEMINI_API_KEY vào tệp .env.");
 } else {
@@ -168,13 +175,15 @@ Quy tắc trả lời:
 - Khi dữ liệu lịch sử được cung cấp, dùng dữ liệu đó làm căn cứ cho các chi tiết cụ thể, nêu nguồn/năm nếu có và đánh dấu rõ phần phân tích là nhận định.
 - Với phép tính đơn giản, nêu kết quả rồi giải thích cách tính nếu người dùng yêu cầu hoặc phép tính cần làm rõ.
 - Không kết thúc máy móc bằng câu hỏi; chỉ hỏi lại khi còn thiếu thông tin quan trọng.
+- Hãy trả lời bằng văn bản thuần túy (plain text). Tuyệt đối không dùng Markdown, HTML, dấu ** để in đậm, dấu # làm tiêu đề, bảng hoặc khung định dạng.
+- Chia ý bằng xuống dòng và dùng CHỮ IN HOA cho tiêu đề chính khi cần. Với danh sách, dùng dấu gạch ngang; chỉ dùng mã nguồn trong khối văn bản thuần khi người dùng yêu cầu lập trình.
 - Chèn thẻ hành động khi phù hợp, đặt ngay trước câu nói tương ứng. Chỉ dùng: [smile] [nod] [think] [wave] [surprised] [sad] [laugh]. Không lạm dụng.
 - Ví dụ: "[wave] Chào bạn! Hôm nay mình có thể giúp gì cho bạn?"`;
 
 function buildSystemInstruction(historyContext, mode, chatStyle) {
   const responseStyle = mode === "voice"
     ? "Đây là Voice chat: giải thích rõ ý chính và lý do quan trọng, nhưng ưu tiên câu nói tự nhiên, dễ nghe và vừa phải để đọc thành tiếng; không dùng tiêu đề, bảng hay danh sách dài."
-    : "Đây là chat chữ: với vấn đề cần giải thích, hãy phân tích có chiều sâu và cụ thể; có thể dùng tiêu đề, đoạn văn hoặc danh sách khi giúp người đọc theo dõi.";
+    : "Đây là chat chữ: phân tích đủ sâu và cụ thể bằng văn bản thuần túy; chia ý bằng xuống dòng, dùng CHỮ IN HOA cho tiêu đề chính nếu cần, và danh sách bằng dấu gạch ngang. Không dùng Markdown, HTML hoặc ký hiệu định dạng đậm/nghiêng.";
   const toneStyle = chatStyle === "genz"
     ? "Phong cách Gen Z vui nhộn, gần gũi, trẻ trung và tự nhiên; có thể dùng tiếng lóng thông dụng vừa phải, không gượng ép, không lạm dụng meme/emoji. Giữ nguyên độ chính xác, chiều sâu, sự tôn trọng và đính chính sai sót; không biến câu trả lời học tập thành trò đùa."
     : "Phong cách bình thường, thân thiện, rõ ràng và điềm đạm; không cố dùng tiếng lóng Gen Z.";
@@ -190,10 +199,16 @@ function asksForExplanation(question) {
 
 function normalizeAssistantName(reply) {
   return reply
+    .replace(/<think>[\s\S]*?(?:<\/think>|$)/giu, "")
+    .replace(/<analysis>[\s\S]*?(?:<\/analysis>|$)/giu, "")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
     .replace(/\b((?:mình|tôi|em)\s+(?:là|tên là)\s+)(?:Mai|Luka|Luca|Lua|Lúa)\b/giu, "$1Lụa")
-    .replace(/\b(Tên (?:của mình|của tôi|của em) là\s+)(?:Mai|Luka|Luca|Lua|Lúa)\b/giu, "$1Lụa");
+    .replace(/\b(Tên (?:của mình|của tôi|của em) là\s+)(?:Mai|Luka|Luca|Lua|Lúa)\b/giu, "$1Lụa")
+    .trim();
 }
-
 async function generateGroqReply(messages, historyContext, mode, chatStyle, reviewIssues = []) {
   if (groqApiKeys.length === 0) throw new Error("GROQ_API_KEY chưa được cấu hình.");
   const apiKey = groqApiKeys[0];
@@ -202,6 +217,7 @@ async function generateGroqReply(messages, historyContext, mode, chatStyle, revi
     : "";
   const { response } = await fetchWithGroqKeyFallback({
     apiKeys: groqApiKeys,
+    timeoutMs: 12_000,
     url: "https://api.groq.com/openai/v1/chat/completions",
     init: {
     method: "POST",
@@ -209,7 +225,7 @@ async function generateGroqReply(messages, historyContext, mode, chatStyle, revi
       Authorization: `Bearer ${groqApiKey}`,
       "Content-Type": "application/json",
     },
-    signal: AbortSignal.timeout(60_000),
+    signal: AbortSignal.timeout(20_000),
     body: JSON.stringify({
       model: groqModel,
       messages: [
@@ -219,8 +235,9 @@ async function generateGroqReply(messages, historyContext, mode, chatStyle, revi
           content: content.slice(0, 4_000),
         })),
       ],
-      temperature: 0.4,
-      max_tokens: mode === "voice" ? 450 : 1_400,
+      temperature: 0.2,
+      max_tokens: mode === "voice" ? 300 : 800,
+      reasoning_effort: "none",
     }),
     },
   });
@@ -230,9 +247,15 @@ async function generateGroqReply(messages, historyContext, mode, chatStyle, revi
     error.status = response.status;
     throw error;
   }
-  const reply = normalizeAssistantName(data?.choices?.[0]?.message?.content?.trim() || "");
-  if (!reply) throw new Error("Groq chat returned no content.");
-  return reply;
+  const choice = data?.choices?.[0];
+  const finishReason = choice?.finish_reason;
+  if (finishReason === "length") {
+    throw new Error("Groq chat response was truncated before completion.");
+  }
+  const content = choice?.message?.content?.trim();
+  const cleanedReply = normalizeAssistantName(content || "");
+  if (!cleanedReply) throw new Error("Groq chat returned no content.");
+  return cleanedReply;
 }
 
 app.post("/api/chat", async (req, res) => {
@@ -287,40 +310,44 @@ app.post("/api/chat", async (req, res) => {
   let reply;
   let geminiFailure;
   if (geminiApiKeys.length > 0) {
-    try {
-      const { response } = await fetchWithGeminiKeyFallback({
-        apiKeys: geminiApiKeys,
-        url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent",
-        init: {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.timeout(60_000),
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: buildSystemInstruction(historyContext, mode, chatStyle) }] },
-            contents,
-            generationConfig: { maxOutputTokens: mode === "voice" ? 450 : 1_400 },
-          }),
-        },
-      });
-      const data = await response.json().catch(() => null);
-      if (response.ok) {
-        reply = data?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
-        if (!reply) geminiFailure = "Gemini không trả về nội dung.";
-      } else {
-        geminiFailure = `Gemini API trả HTTP ${response.status}.`;
-        console.error("Gemini API request failed", { status: response.status });
-        if (exactYearMatches.length > 0 && response.status === 429 && !wantsExplanation) {
-          return res.json({
-            reply: formatHistoryAnswer(exactYearMatches),
-            verification: { status: "source_based", issues: [] },
-          });
+    for (const model of geminiModels) {
+      try {
+        const { response } = await fetchWithGeminiKeyFallback({
+          apiKeys: geminiApiKeys,
+          timeoutMs: 12_000,
+          url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+          init: {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: AbortSignal.timeout(15_000),
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: buildSystemInstruction(historyContext, mode, chatStyle) }] },
+              contents,
+              generationConfig: { maxOutputTokens: mode === "voice" ? 450 : 1_400 },
+            }),
+          },
+        });
+        const data = await response.json().catch(() => null);
+        if (response.ok) {
+          reply = data?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
+          if (reply) break;
+          geminiFailure = `Gemini ${model} không trả về nội dung.`;
+        } else {
+          geminiFailure = `Gemini ${model} trả HTTP ${response.status}.`;
+          console.error("Gemini API request failed", { model, status: response.status });
+          if (exactYearMatches.length > 0 && response.status === 429 && !wantsExplanation) {
+            return res.json({
+              reply: formatHistoryAnswer(exactYearMatches),
+              verification: { status: "source_based", issues: [] },
+            });
+          }
         }
+      } catch (error) {
+        geminiFailure = error.name === "TimeoutError"
+          ? `Gemini ${model} hết thời gian chờ.`
+          : `Không kết nối được Gemini ${model}.`;
+        console.error("Gemini chat request failed:", { model, message: error.message });
       }
-    } catch (error) {
-      geminiFailure = error.name === "TimeoutError"
-        ? "Gemini hết thời gian chờ."
-        : "Không kết nối được Gemini.";
-      console.error("Gemini chat request failed:", error.message);
     }
   } else {
     geminiFailure = "Chưa có Gemini API key hợp lệ.";
@@ -521,6 +548,7 @@ async function transcribeWithGroq(audio, mimeType) {
   formData.append("response_format", "json");
   const { response } = await fetchWithGroqKeyFallback({
     apiKeys: groqApiKeys,
+    timeoutMs: 12_000,
     url: "https://api.groq.com/openai/v1/audio/transcriptions",
     init: {
     method: "POST",
@@ -561,7 +589,8 @@ app.post("/api/transcribe", async (req, res) => {
     try {
       const { response } = await fetchWithGeminiKeyFallback({
         apiKeys: geminiApiKeys,
-        url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent",
+        timeoutMs: 12_000,
+        url: `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`,
         init: {
           method: "POST",
           headers: { "Content-Type": "application/json" },

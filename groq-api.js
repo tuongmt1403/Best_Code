@@ -6,9 +6,10 @@ const PLACEHOLDER_PATTERNS = [
 
 export function getGroqApiKeys(env = process.env) {
   const configuredKeys = [env.GROQ_API_KEY];
-  for (let index = 2; index <= 4; index += 1) {
-    configuredKeys.push(env[`GROQ_API_KEY_${index}`]);
-  }
+  const numberedKeys = Object.keys(env)
+    .filter((name) => /^GROQ_API_KEY_\d+$/.test(name))
+    .sort((left, right) => Number(left.slice(left.lastIndexOf("_") + 1)) - Number(right.slice(right.lastIndexOf("_") + 1)));
+  for (const name of numberedKeys) configuredKeys.push(env[name]);
 
   return [...new Set(configuredKeys
     .map((key) => key?.trim())
@@ -33,6 +34,7 @@ export async function fetchWithGroqKeyFallback({
   apiKeys,
   url,
   init = {},
+  timeoutMs,
   fetchImpl = globalThis.fetch,
 }) {
   if (!Array.isArray(apiKeys) || apiKeys.length === 0) {
@@ -46,7 +48,10 @@ export async function fetchWithGroqKeyFallback({
     headers.set("Authorization", `Bearer ${apiKey}`);
 
     try {
-      const response = await fetchImpl(url, { ...init, headers });
+      const attemptInit = timeoutMs
+        ? { ...init, headers, signal: AbortSignal.timeout(timeoutMs) }
+        : { ...init, headers };
+      const response = await fetchImpl(url, attemptInit);
       if (response.ok || !(await shouldRetryWithNextKey(response)) || index === apiKeys.length - 1) {
         return { response, keyNumber: index + 1, attempts: index + 1 };
       }
