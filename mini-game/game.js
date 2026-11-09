@@ -65,9 +65,123 @@ const questionBanks = {
       { prompt: "Mốc lịch sử", question: "Sau Hiệp định Paris năm 1973, điều gì vẫn tiếp diễn?", options: ["Xung đột giữa các lực lượng Việt Nam", "Chiến tranh đã hoàn toàn kết thúc", "Tổng tuyển cử đã diễn ra", "Hiệp định Genève được ký lại"], answer: 0, explanation: "Xung đột giữa các lực lượng Việt Nam tiếp tục; chiến tranh chưa kết thúc vào năm 1973." },
     ],
   },
+  geography: {
+    title: "Địa lý Việt Nam",
+    questions: [
+      { prompt: "Bản đồ Việt Nam", question: "Thủ đô của Việt Nam là thành phố nào?", options: ["Hà Nội", "Huế", "Đà Nẵng", "Cần Thơ"], answer: 0, explanation: "Hà Nội là thủ đô của Việt Nam." },
+      { prompt: "Sông ngòi", question: "Sông nào là con sông lớn chảy qua miền Tây Nam Bộ?", options: ["Sông Hồng", "Sông Tiền", "Sông Đà", "Sông Mã"], answer: 1, explanation: "Sông Tiền là nhánh chính của sông Cửu Long tại miền Tây Nam Bộ." },
+      { prompt: "Vùng biển", question: "Biển Đông giáp phần lớn bờ biển của vùng nào ở Việt Nam?", options: ["Miền Trung và miền Nam", "Chỉ miền Bắc", "Chỉ Tây Nguyên", "Chỉ vùng núi phía Bắc"], answer: 0, explanation: "Biển Đông giáp bờ biển miền Trung, miền Nam và một phần miền Bắc Việt Nam." },
+      { prompt: "Địa hình", question: "Dãy núi lớn chạy theo biên giới Việt – Lào là gì?", options: ["Trường Sơn", "Hoàng Liên Sơn", "Bạch Mã", "Côn Đảo"], answer: 0, explanation: "Dãy Trường Sơn chạy dài ở miền Trung Việt Nam và theo biên giới với Lào." },
+      { prompt: "Khí hậu", question: "Dải đất Việt Nam nằm chủ yếu trong đới khí hậu nào?", options: ["Nhiệt đới gió mùa", "Ôn đới lục địa", "Cực", "Hoang mạc"], answer: 0, explanation: "Việt Nam thuộc đới khí hậu nhiệt đới gió mùa." },
+      { prompt: "Kinh tế biển", question: "Vịnh nào nổi tiếng ở Quảng Ninh với hàng nghìn đảo đá?", options: ["Vịnh Hạ Long", "Vịnh Thái Lan", "Vịnh Bắc Bộ", "Vịnh Nha Trang"], answer: 0, explanation: "Vịnh Hạ Long ở Quảng Ninh là di sản thiên nhiên nổi tiếng thế giới." },
+      { prompt: "Đồng bằng", question: "Đồng bằng sông Hồng chủ yếu nằm ở miền nào của Việt Nam?", options: ["Miền Bắc", "Miền Trung", "Tây Nguyên", "Miền Nam"], answer: 0, explanation: "Đồng bằng sông Hồng là vùng đồng bằng lớn ở miền Bắc Việt Nam." },
+      { prompt: "Đồng bằng", question: "Đồng bằng sông Cửu Long còn được gọi là vùng nào?", options: ["Vùng Đồng bằng Nam Bộ", "Vùng Tây Bắc", "Vùng Đông Bắc", "Vùng Duyên hải miền Trung"], answer: 0, explanation: "Đồng bằng sông Cửu Long còn gọi là Đồng bằng Nam Bộ hoặc Tây Nam Bộ." },
+      { prompt: "Thành phố", question: "Thành phố nào nằm ở cửa sông Hồng ra biển?", options: ["Hải Phòng", "Huế", "Đà Lạt", "Bạc Liêu"], answer: 0, explanation: "Hải Phòng là thành phố cảng lớn nằm gần cửa biển của miền Bắc, trong vùng cửa sông Hồng và hệ sông ven biển." },
+      { prompt: "Đảo quần đảo", question: "Quần đảo Hoàng Sa thuộc vùng biển của tỉnh, thành phố nào trước khi sáp nhập hành chính?", options: ["Đà Nẵng", "Khánh Hòa", "Quảng Ninh", "Kiên Giang"], answer: 0, explanation: "Quần đảo Hoàng Sa nằm trên vùng biển thuộc địa giới hành chính thành phố Đà Nẵng theo cấu trúc hành chính trước khi sáp nhập." },
+      { prompt: "Địa hình cao nguyên", question: "Tây Nguyên nổi tiếng với loại địa hình chủ yếu nào?", options: ["Các cao nguyên badan", "Đồng bằng phù sa ven biển", "Đầm phá ven sông", "Thung lũng trũng sâu"], answer: 0, explanation: "Tây Nguyên là vùng cao nguyên, nhiều cao nguyên badan như Kon Tum, Đắk Lắk, Lâm Viên." },
+      { prompt: "Dân cư", question: "Mật độ dân cư thường cao nhất ở vùng nào của Việt Nam?", options: ["Đồng bằng và ven biển", "Núi cao hiểm trở", "Rừng nguyên sinh", "Đỉnh núi cao"], answer: 0, explanation: "Dân cư tập trung nhiều nhất ở đồng bằng, ven biển và các thành phố lớn." },
+      { prompt: "Khoáng sản", question: "Than đá là khoáng sản nổi bật ở tỉnh, thành phố nào?", options: ["Quảng Ninh", "Cà Mau", "Đồng Tháp", "Bắc Giang"], answer: 0, explanation: "Quảng Ninh là vùng có mỏ than đá nổi tiếng của Việt Nam." },
+      { prompt: "Tài nguyên", question: "Dầu khí lớn ở thềm lục địa Việt Nam chủ yếu thuộc vùng biển nào?", options: ["Phía Nam Việt Nam", "Miền Bắc ven núi", "Tây Nguyên", "Đông Bắc biên giới"], answer: 0, explanation: "Các mỏ dầu khí trọng điểm của Việt Nam chủ yếu nằm trên thềm lục địa phía Nam." },
+      { prompt: "Giao thông", question: "Quốc lộ 1 nối liền chủ yếu khu vực nào của Việt Nam?", options: ["Các vùng từ Bắc vào Nam", "Các huyện ở đảo Phú Quốc", "Các cao nguyên Tây Nguyên", "Chỉ vùng Trung du miền núi"], answer: 0, explanation: "Quốc lộ 1 là trục đường xuyên suốt từ Bắc vào Nam Việt Nam." },
+    ],
+  },
 };
 
+const pictureQuestionBanks = {
+  english: {
+    title: "Đuổi hình bắt chữ · Tiếng Anh",
+    questions: [
+      { image: "/images/picture-xedap.svg", answer: "BICYCLE", letters: "B I C Y C L E", hint: "English: a vehicle with two wheels" },
+      { image: "/images/picture-bongden.svg", answer: "LAMP", letters: "L A M P", hint: "English: it gives light in a room" },
+      { image: "/images/picture-mattrang.svg", answer: "MOON", letters: "M O O N", hint: "English: it shines at night in the sky" },
+      { image: "/images/picture-maybay.svg", answer: "AIRPLANE", letters: "A I R P L A N E", hint: "English: it flies passengers through the sky" },
+      { image: "/images/picture-congau.svg", answer: "BEAR", letters: "B E A R", hint: "English: a large furry animal that may hibernate" },
+    ],
+  },
+  cProgramming: {
+    title: "Đuổi hình bắt chữ · Ngôn ngữ C",
+    questions: [
+      { image: "/images/picture-c-printf.svg", answer: "PRINTF", letters: "P R I N T F", hint: "Hàm in ra màn hình trong thư viện stdio.h" },
+      { image: "/images/picture-c-array.svg", answer: "ARRAY", letters: "A R R A Y", hint: "Cấu trúc lưu nhiều phần tử cùng kiểu, bắt đầu từ chỉ số 0" },
+      { image: "/images/picture-c-pointer.svg", answer: "POINTER", letters: "P O I N T E R", hint: "Biến chứa địa chỉ của một vùng nhớ" },
+      { image: "/images/picture-c-break.svg", answer: "BREAK", letters: "B R E A K", hint: "Từ khóa thoát vòng lặp hoặc switch ngay lập tức" },
+      { image: "/images/picture-c-malloc.svg", answer: "MALLOC", letters: "M A L L O C", hint: "Hàm cấp phát bộ nhớ động trong stdlib.h" },
+    ],
+  },
+  history: {
+    title: "Đuổi hình bắt chữ · Lịch sử Việt Nam",
+    questions: [
+      { image: "/images/picture-history-paris.svg", answer: "PARIS1973", letters: "P A R I S 1 9 7 3", hint: "Hiệp định chấm dứt chiến tranh, ký năm 1973" },
+      { image: "/images/picture-history-bentre.svg", answer: "BENTRE1960", letters: "B E N T R E 1 9 6 0", hint: "Địa phương tiêu biểu của phong trào Đồng Khởi" },
+      { image: "/images/picture-history-mauthan.svg", answer: "MAUTHAN1968", letters: "M A U T H A N 1 9 6 8", hint: "Tổng tiến công nổi dậy dịp Tết năm 1968" },
+      { image: "/images/picture-history-1975.svg", answer: "HCM1975", letters: "H C M 1 9 7 5", hint: "Chiến dịch giải phóng miền Nam năm 1975" },
+      { image: "/images/picture-history-dienbien.svg", answer: "DIENBIEN1954", letters: "D I E N B I E N 1 9 5 4", hint: "Chiến thắng quyết định kết thúc chiến tranh Đông Dương" },
+    ],
+  },
+};
+
+function shuffleLetters(answer, suppliedLetters) {
+  const letters = suppliedLetters ? suppliedLetters.split(" ").filter(Boolean) : [...answer.replaceAll(" ", "")];
+  for (let index = letters.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(index + 1);
+    [letters[index], letters[swapIndex]] = [letters[swapIndex], letters[index]];
+  }
+  return letters;
+}
+
+async function createObstacleQuestionSet(topicId, generateQuestions, recentGeneratedQuestions) {
+  if (typeof generateQuestions !== "function") {
+    throw new Error("Chế độ này cần AI để tạo bộ chướng ngại vật theo chủ đề.");
+  }
+  const bank = questionBanks[topicId];
+  const historyKey = `obstacle:${topicId}`;
+  const previousQuestions = recentGeneratedQuestions.get(historyKey) || [];
+  const result = await generateQuestions({
+    topicId,
+    topic: bank.title,
+    count: 5,
+    avoidQuestions: previousQuestions,
+    avoidKeywords: recentGeneratedQuestions.get(`${historyKey}:keywords`) || [],
+    mode: "obstacle",
+  });
+  const generated = result?.questions;
+  const obstacle = result?.obstacle;
+  validateGeneratedQuestions(generated, 5);
+  if (!obstacle || typeof obstacle.keyword !== "string" || !obstacle.keyword.trim()
+    || typeof obstacle.logic !== "string" || !obstacle.logic.trim()) {
+    throw new Error("AI không trả đúng từ khóa và giải thích logic của chướng ngại vật.");
+  }
+  const keyword = normalizeQuestionText(obstacle.keyword).replaceAll(" ", "");
+  if (!/^[\p{L}\p{N}]{2,32}$/u.test(keyword)) {
+    throw new Error("Từ khóa AI tạo không hợp lệ.");
+  }
+  const centralQuestion = generated[4];
+  if (normalizeQuestionText(centralQuestion.options[centralQuestion.answer]).replaceAll(" ", "") !== keyword) {
+    throw new Error("Đáp án đúng của ô trung tâm phải khớp chính xác với từ khóa chướng ngại vật.");
+  }
+  const previousSet = new Set(previousQuestions.map(normalizeQuestionText));
+  if (generated.some((question) => previousSet.has(normalizeQuestionText(question.question)))) {
+    throw new Error("AI lặp lại câu hỏi của ván gần đây.");
+  }
+  recentGeneratedQuestions.set(
+    historyKey,
+    [...previousQuestions, ...generated.map((question) => question.question)].slice(-40),
+  );
+  recentGeneratedQuestions.set(
+    `${historyKey}:keywords`,
+    [...(recentGeneratedQuestions.get(`${historyKey}:keywords`) || []), obstacle.keyword].slice(-20),
+  );
+  return {
+    questions: generated,
+    obstacleKeywordLength: [...keyword].length,
+    obstacleKeyword: keyword.toLocaleUpperCase("vi"),
+    obstacleLogic: obstacle.logic.trim(),
+    questionReview: result.review || null,
+  };
+}
+
 const ROUND_DURATION_MS = 15_000;
+const PICTURE_BUZZ_DURATION_MS = 10_000;
 const RESULT_DURATION_MS = 2_500;
 const ROOM_IDLE_MS = 30 * 60 * 1000;
 const ROOM_CODE_LENGTH = 6;
@@ -78,6 +192,7 @@ function publicPlayer(player) {
     score: player.score,
     correctAnswers: player.correctAnswers,
     hasAnswered: Boolean(player.answer),
+    rulesAcknowledged: Boolean(player.rulesAcknowledged),
     isHost: player.isHost,
   };
 }
@@ -88,7 +203,11 @@ function getRoomCode() {
 }
 
 function makeRoomQuestions(topicId, questionCount) {
-  const questions = questionBanks[topicId].questions.map((question) => {
+  return shuffleRoomQuestions(questionBanks[topicId].questions, questionCount);
+}
+
+function shuffleRoomQuestions(sourceQuestions, questionCount) {
+  const questions = sourceQuestions.map((question) => {
     const optionOrder = question.options.map((_, index) => index);
     for (let index = optionOrder.length - 1; index > 0; index -= 1) {
       const swapIndex = randomInt(index + 1);
@@ -107,15 +226,50 @@ function makeRoomQuestions(topicId, questionCount) {
   return questions.slice(0, questionCount);
 }
 
+function normalizeQuestionText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+function validateGeneratedQuestions(questions, questionCount) {
+  if (!Array.isArray(questions) || questions.length !== questionCount) {
+    throw new Error(`AI phải tạo đúng ${questionCount} câu hỏi.`);
+  }
+  const seenQuestions = new Set();
+  for (const [index, question] of questions.entries()) {
+    if (!question || typeof question !== "object"
+      || typeof question.prompt !== "string" || !question.prompt.trim()
+      || typeof question.question !== "string" || !question.question.trim()
+      || !Array.isArray(question.options) || question.options.length !== 4
+      || question.options.some((option) => typeof option !== "string" || !option.trim())
+      || new Set(question.options.map(normalizeQuestionText)).size !== 4
+      || !Number.isInteger(question.answer) || question.answer < 0 || question.answer > 3
+      || typeof question.explanation !== "string" || !question.explanation.trim()) {
+      throw new Error(`Câu hỏi AI số ${index + 1} không đúng định dạng.`);
+    }
+    const normalized = normalizeQuestionText(question.question);
+    if (seenQuestions.has(normalized)) throw new Error("AI tạo câu hỏi trùng lặp trong cùng một ván.");
+    seenQuestions.add(normalized);
+  }
+}
+
 function roomSnapshot(room, userId, now) {
   const ownPlayer = room.players.get(userId);
   const currentQuestion = room.phase === "playing" ? room.questions[room.questionIndex] : null;
   const response = {
     code: room.code,
     phase: room.phase,
-    you: { username: ownPlayer?.username || "" },
-    topic: questionBanks[room.topicId].title,
+    you: { username: ownPlayer?.username || "", rulesAcknowledged: Boolean(ownPlayer?.rulesAcknowledged) },
+    mode: room.mode || "quiz",
+    topic: room.mode === "picture"
+      ? pictureQuestionBanks[room.topicId]?.title || pictureQuestionBanks.english.title
+      : room.mode === "obstacle" ? `Vượt Chướng Ngại Vật · ${questionBanks[room.topicId].title}` : questionBanks[room.topicId].title,
     questionCount: room.questionCount,
+    questionReview: room.questionReview || null,
     players: [...room.players.values()].map(publicPlayer),
     isHost: room.hostId === userId,
     currentQuestion: currentQuestion
@@ -130,6 +284,39 @@ function roomSnapshot(room, userId, now) {
       }
       : null,
     hasAnswered: Boolean(ownPlayer?.answer),
+    pictureQuestion: room.mode === "picture" && room.phase === "playing"
+      ? (() => {
+        const q = room.questions[room.questionIndex];
+        return {
+          number: room.questionIndex + 1,
+          total: room.questionCount,
+          image: q.image,
+          hint: q.hint,
+          slots: q.slots,
+          letters: q.letters,
+          buzzOwnerId: room.buzzOwnerId,
+          buzzOwnerName: room.buzzOwnerId ? room.players.get(room.buzzOwnerId)?.username || "" : "",
+          buzzTimeLeftMs: room.buzzOwnerId ? Math.max(0, room.buzzDeadline - now) : Math.max(0, room.roundDeadline - now),
+          canBuzz: !room.buzzOwnerId && !room.buzzBlockedIds.has(userId),
+        };
+      })()
+      : null,
+    obstacle: room.mode === "obstacle"
+      ? {
+        keywordLength: room.obstacleKeywordLength,
+        revealedRows: room.obstacleRevealedRows.map((revealed) => revealed),
+        revealedAnswers: room.obstacleRevealedRows.map((revealed, index) =>
+          revealed ? room.questions[index].options[room.questions[index].answer] : null),
+        centralQuestion: room.phase === "playing" && room.questionIndex === 4,
+        keyword: room.mode === "obstacle"
+          && (room.phase === "finished" || (room.phase === "roundResult" && room.questionIndex === 4))
+          ? room.obstacleKeyword
+          : null,
+        logic: room.phase === "finished" || (room.phase === "roundResult" && room.questionIndex === 4)
+          ? room.obstacleLogic
+          : null,
+      }
+      : null,
     roundResult: room.phase === "roundResult" ? room.roundResult : null,
     finalResult: room.phase === "finished" ? room.finalResult : null,
   };
@@ -196,6 +383,9 @@ function resolveRound(room, now) {
     };
   });
   const bestPoints = Math.max(...results.map((result) => result.points));
+  if (room.mode === "obstacle" && results.some((result) => result.correct) && room.questionIndex < 4) {
+    room.obstacleRevealedRows[room.questionIndex] = true;
+  }
   const winners = results.filter((result) => result.points === bestPoints && result.points > 0);
   const winningUserIds = new Set(winners.map((winner) => winner.userId));
   room.roundResult = {
@@ -225,8 +415,68 @@ function resolveRound(room, now) {
   room.nextRoundAt = now + RESULT_DURATION_MS;
 }
 
+function resolvePictureRound(room, db, now, winnerId, timedOut) {
+  const question = room.questions[room.questionIndex];
+  const players = [...room.players.values()].map((player) => {
+    const isWinner = player.id === winnerId;
+    return {
+      username: player.username,
+      correct: isWinner,
+      points: isWinner ? 100 : 0,
+      response: isWinner ? "Giành quyền và trả lời đúng!" : timedOut ? "Hết giờ" : "Chưa giành quyền",
+      isRoundWinner: isWinner,
+    };
+  });
+  room.phase = "roundResult";
+  room.roundResult = {
+    number: room.questionIndex + 1,
+    correctAnswer: question.answer,
+    explanation: question.hint,
+    players,
+  };
+  room.nextRoundAt = now + RESULT_DURATION_MS;
+  room.buzzOwnerId = null;
+  room.buzzDeadline = 0;
+  room.lastActivityAt = now;
+}
+
 function advanceRoom(room, db, now) {
   let transitions = 0;
+  if (room.mode === "picture") {
+    while (transitions <= room.questionCount * 2 + 2) {
+      if (room.phase === "playing" && room.buzzOwnerId && now >= room.buzzDeadline) {
+        room.buzzOwnerId = null;
+        room.buzzDeadline = 0;
+        room.lastActivityAt = now;
+        transitions += 1;
+        continue;
+      }
+      if (room.phase === "playing" && !room.buzzOwnerId && now >= room.roundDeadline) {
+        resolvePictureRound(room, db, now, null, false);
+        transitions += 1;
+        continue;
+      }
+      if (room.phase === "roundResult" && now >= room.nextRoundAt) {
+        if (room.questionIndex + 1 >= room.questionCount) {
+          finishRoom(room, db, now);
+        } else {
+          room.questionIndex += 1;
+          room.phase = "playing";
+          room.roundStartedAt = now;
+          room.roundDeadline = now + ROUND_DURATION_MS;
+          room.buzzOwnerId = null;
+          room.buzzDeadline = 0;
+          room.buzzBlockedIds = new Set();
+          room.roundResult = null;
+          room.lastActivityAt = now;
+        }
+        transitions += 1;
+        continue;
+      }
+      break;
+    }
+    return;
+  }
   while (transitions <= room.questionCount * 2 + 2) {
     if (room.phase === "playing"
       && (now >= room.roundDeadline || [...room.players.values()].every((player) => player.answer))) {
@@ -256,6 +506,7 @@ function advanceRoom(room, db, now) {
 export function createMiniGame({
   projectDir,
   clock = Date.now,
+  generateQuestions,
 } = {}) {
   if (!projectDir) throw new TypeError("projectDir is required to initialize mini-game storage.");
 
@@ -279,7 +530,38 @@ export function createMiniGame({
 
   const rooms = new Map();
   const playerRooms = new Map();
+  const recentGeneratedQuestions = new Map();
+  const pendingRoomCreations = new Set();
   const router = express.Router();
+
+  async function createQuestionSet(topicId, questionCount) {
+    if (typeof generateQuestions !== "function") {
+      return { questions: makeRoomQuestions(topicId, questionCount), questionReview: null };
+    }
+    const bank = questionBanks[topicId];
+    const previousQuestions = recentGeneratedQuestions.get(topicId) || [];
+    const result = await generateQuestions({
+      topicId,
+      topic: bank.title,
+      count: questionCount,
+      avoidQuestions: previousQuestions,
+    });
+    const generated = Array.isArray(result) ? result : result?.questions;
+    const questionReview = Array.isArray(result) ? null : result?.review || null;
+    validateGeneratedQuestions(generated, questionCount);
+    const previousSet = new Set(previousQuestions.map(normalizeQuestionText));
+    if (generated.some((question) => previousSet.has(normalizeQuestionText(question.question)))) {
+      throw new Error("AI lặp lại câu hỏi của ván gần đây.");
+    }
+    recentGeneratedQuestions.set(
+      topicId,
+      [...previousQuestions, ...generated.map((question) => question.question)].slice(-60),
+    );
+    return {
+      questions: shuffleRoomQuestions(generated, questionCount),
+      questionReview,
+    };
+  }
 
   function cleanupRooms(now) {
     for (const [code, room] of rooms) {
@@ -341,40 +623,79 @@ export function createMiniGame({
     res.json({ entries });
   });
 
-  router.post("/api/minigame/rooms", (req, res) => {
-    const { topicId, questionCount } = req.body || {};
-    if (!questionBanks[topicId]) return res.status(400).json({ error: "Chọn một chủ đề hợp lệ." });
-    if (![5, 10, 15].includes(questionCount)) {
+  router.post("/api/minigame/rooms", async (req, res) => {
+    const { topicId, questionCount, mode } = req.body || {};
+    const isPictureMode = mode === "picture";
+    const isObstacleMode = mode === "obstacle";
+    if (!isPictureMode && !questionBanks[topicId]) return res.status(400).json({ error: "Chọn một chủ đề hợp lệ." });
+    if (isPictureMode && !pictureQuestionBanks[topicId] && topicId !== "picture") {
+      return res.status(400).json({ error: "Chọn một chủ đề hợp lệ cho Đuổi hình bắt chữ." });
+    }
+    if (!isPictureMode && !isObstacleMode && ![5, 10, 15].includes(questionCount)) {
       return res.status(400).json({ error: "Số câu hỏi phải là 5, 10 hoặc 15." });
     }
     if (playerRooms.has(req.authUser.id)) {
       return res.status(409).json({ error: "Bạn đang ở trong một phòng khác. Hãy rời phòng đó trước." });
     }
-    let code = getRoomCode();
-    while (rooms.has(code)) code = getRoomCode();
-    const room = {
-      code,
-      topicId,
-      questionCount,
-      questions: makeRoomQuestions(topicId, questionCount),
-      phase: "lobby",
-      players: new Map(),
-      hostId: req.authUser.id,
-      hostName: req.authUser.username,
-      createdAt: clock(),
-      lastActivityAt: clock(),
-      questionIndex: -1,
-      roundStartedAt: 0,
-      roundDeadline: 0,
-      nextRoundAt: 0,
-      roundResult: null,
-      finalResult: null,
-    };
-    const player = { id: req.authUser.id, username: req.authUser.username, isHost: true, score: 0, correctAnswers: 0, answer: null };
-    room.players.set(player.id, player);
-    rooms.set(code, room);
-    playerRooms.set(player.id, code);
-    return res.status(201).json(roomSnapshot(room, req.authUser.id, clock()));
+    if (pendingRoomCreations.has(req.authUser.id)) {
+      return res.status(409).json({ error: "Đang tạo bộ câu hỏi cho bạn. Vui lòng đợi một chút." });
+    }
+    pendingRoomCreations.add(req.authUser.id);
+    try {
+      const questionSet = isPictureMode
+        ? {
+          questions: pictureQuestionBanks[pictureQuestionBanks[topicId] ? topicId : "english"].questions.map((question) => ({
+          ...question,
+          letters: shuffleLetters(question.answer, question.letters),
+          slots: question.answer.replaceAll(" ", "").length,
+          })),
+          questionReview: null,
+        }
+        : isObstacleMode
+          ? await createObstacleQuestionSet(topicId, generateQuestions, recentGeneratedQuestions)
+        : await createQuestionSet(topicId, questionCount);
+      let code = getRoomCode();
+      while (rooms.has(code)) code = getRoomCode();
+      const room = {
+        code,
+        mode: isPictureMode ? "picture" : isObstacleMode ? "obstacle" : "quiz",
+        topicId: isPictureMode ? (pictureQuestionBanks[topicId] ? topicId : "english") : topicId,
+        questionCount: isPictureMode || isObstacleMode ? 5 : questionCount,
+        questions: questionSet.questions,
+        obstacleRevealedRows: isObstacleMode ? [false, false, false, false] : null,
+        obstacleKeywordLength: isObstacleMode ? questionSet.obstacleKeywordLength : null,
+        obstacleKeyword: isObstacleMode ? questionSet.obstacleKeyword : null,
+        obstacleLogic: isObstacleMode ? questionSet.obstacleLogic : null,
+        questionReview: questionSet.questionReview,
+        phase: "lobby",
+        players: new Map(),
+        hostId: req.authUser.id,
+        hostName: req.authUser.username,
+        createdAt: clock(),
+        lastActivityAt: clock(),
+        questionIndex: -1,
+        roundStartedAt: 0,
+        roundDeadline: 0,
+        nextRoundAt: 0,
+        roundResult: null,
+        finalResult: null,
+        buzzOwnerId: null,
+        buzzDeadline: 0,
+        buzzBlockedIds: new Set(),
+      };
+      const player = { id: req.authUser.id, username: req.authUser.username, isHost: true, score: 0, correctAnswers: 0, answer: null, rulesAcknowledged: false };
+      room.players.set(player.id, player);
+      rooms.set(code, room);
+      playerRooms.set(player.id, code);
+      return res.status(201).json(roomSnapshot(room, req.authUser.id, clock()));
+    } catch (error) {
+      console.error("Mini-game question generation failed:", error.message);
+      return res.status(503).json({
+        error: error.userMessage || "Chưa tạo được bộ câu hỏi mới bằng AI. Hãy thử tạo phòng lại sau.",
+      });
+    } finally {
+      pendingRoomCreations.delete(req.authUser.id);
+    }
   });
 
   router.post("/api/minigame/rooms/:code/join", (req, res) => {
@@ -388,7 +709,7 @@ export function createMiniGame({
       return res.status(409).json({ error: "Bạn đang ở trong một phòng khác. Hãy rời phòng đó trước." });
     }
     if (room.players.size >= 6) return res.status(409).json({ error: "Phòng đã đủ 6 người chơi." });
-    const player = { id: req.authUser.id, username: req.authUser.username, isHost: false, score: 0, correctAnswers: 0, answer: null };
+    const player = { id: req.authUser.id, username: req.authUser.username, isHost: false, score: 0, correctAnswers: 0, answer: null, rulesAcknowledged: false };
     room.players.set(player.id, player);
     playerRooms.set(player.id, room.code);
     room.lastActivityAt = clock();
@@ -411,17 +732,85 @@ export function createMiniGame({
     return res.json(roomSnapshot(room, req.authUser.id, now));
   });
 
+  router.post("/api/minigame/rooms/:code/rules/acknowledge", (req, res) => {
+    const room = getRoom(req.params.code);
+    if (!room) return res.status(404).json({ error: "Không tìm thấy phòng." });
+    if (room.phase !== "lobby") return res.status(409).json({ error: "Luật chơi chỉ cần xác nhận trong phòng chờ." });
+    const player = room.players.get(req.authUser.id);
+    if (!player) return res.status(403).json({ error: "Bạn chưa tham gia phòng này." });
+    player.rulesAcknowledged = true;
+    room.lastActivityAt = clock();
+    return res.json(roomSnapshot(room, req.authUser.id, clock()));
+  });
+
   router.post("/api/minigame/rooms/:code/start", (req, res) => {
     const room = getRoom(req.params.code);
     if (!room) return res.status(404).json({ error: "Không tìm thấy phòng." });
     if (room.hostId !== req.authUser.id) return res.status(403).json({ error: "Chỉ người tạo phòng mới có thể bắt đầu." });
     if (room.phase !== "lobby") return res.status(409).json({ error: "Ván chơi đã bắt đầu." });
     if (room.players.size < 2) return res.status(409).json({ error: "Cần ít nhất 2 người trong phòng mới bắt đầu được." });
+    const unacknowledged = [...room.players.values()].filter((player) => !player.rulesAcknowledged);
+    if (unacknowledged.length > 0) {
+      return res.status(409).json({ error: `Chờ ${unacknowledged.map((player) => player.username).join(", ")} xác nhận đã hiểu luật chơi.` });
+    }
     const now = clock();
     room.phase = "playing";
     room.questionIndex = 0;
     room.roundStartedAt = now;
     room.roundDeadline = now + ROUND_DURATION_MS;
+    room.buzzOwnerId = null;
+    room.buzzDeadline = 0;
+    room.buzzBlockedIds = new Set();
+    room.lastActivityAt = now;
+    return res.json(roomSnapshot(room, req.authUser.id, now));
+  });
+
+  router.post("/api/minigame/rooms/:code/buzz", (req, res) => {
+    const room = getRoom(req.params.code);
+    if (!room) return res.status(404).json({ error: "Không tìm thấy phòng." });
+    if (room.mode !== "picture") return res.status(409).json({ error: "Chế độ hiện tại không dùng chuông giành quyền." });
+    if (room.phase !== "playing") return res.status(409).json({ error: "Chưa đến lượt giành quyền trả lời." });
+    const player = room.players.get(req.authUser.id);
+    if (!player) return res.status(403).json({ error: "Bạn chưa tham gia phòng này." });
+    const now = clock();
+    advanceRoom(room, db, now);
+    if (room.phase !== "playing") return res.status(409).json({ error: "Câu hỏi đã kết thúc." });
+    if (room.buzzBlockedIds.has(player.id)) return res.status(409).json({ error: "Bạn vừa trả lời sai; hãy nhường cơ hội cho người kia." });
+    if (room.buzzOwnerId) return res.status(409).json({ error: "Đã có người giành quyền trả lời." });
+    if (now >= room.roundDeadline) return res.status(409).json({ error: "Hết thời gian giành quyền." });
+    room.buzzOwnerId = player.id;
+    room.buzzDeadline = now + PICTURE_BUZZ_DURATION_MS;
+    room.lastActivityAt = now;
+    return res.json(roomSnapshot(room, req.authUser.id, now));
+  });
+
+  router.post("/api/minigame/rooms/:code/picture-answer", (req, res) => {
+    const room = getRoom(req.params.code);
+    if (!room) return res.status(404).json({ error: "Không tìm thấy phòng." });
+    if (room.mode !== "picture") return res.status(409).json({ error: "API này chỉ dùng cho Đuổi hình bắt chữ." });
+    if (room.phase !== "playing") return res.status(409).json({ error: "Câu hỏi đã kết thúc." });
+    const player = room.players.get(req.authUser.id);
+    if (!player) return res.status(403).json({ error: "Bạn chưa tham gia phòng này." });
+    const now = clock();
+    advanceRoom(room, db, now);
+    if (room.phase !== "playing") return res.status(409).json({ error: "Câu hỏi đã kết thúc." });
+    if (room.buzzOwnerId !== player.id) return res.status(409).json({ error: "Bạn chưa giành được quyền trả lời." });
+    if (now >= room.buzzDeadline) return res.status(409).json({ error: "Hết thời gian trả lời." });
+    const normalized = String(req.body?.answer || "")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toUpperCase().replace(/[^A-Z]/g, "");
+    const question = room.questions[room.questionIndex];
+    const expected = question.answer.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z]/g, "");
+    if (normalized === expected) {
+      player.score += 100;
+      player.correctAnswers += 1;
+      resolvePictureRound(room, db, now, player.id, false);
+    } else {
+      player.score = Math.max(0, player.score - 20);
+      room.buzzOwnerId = null;
+      room.buzzDeadline = 0;
+      room.buzzBlockedIds.add(player.id);
+    }
     room.lastActivityAt = now;
     return res.json(roomSnapshot(room, req.authUser.id, now));
   });

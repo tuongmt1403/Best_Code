@@ -31,7 +31,7 @@ const miniGameDir = path.join(projectDir, "mini-game");
 app.get("/mini-game", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(miniGameDir, "index.html")));
 app.get("/mini-game/styles.css", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(miniGameDir, "styles.css")));
 app.get("/mini-game/client.js", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(miniGameDir, "client.js")));
-app.use(createMiniGame({ projectDir }).router);
+app.use(createMiniGame({ projectDir, generateQuestions: generateMiniGameQuestions }).router)
 app.get("/", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(projectDir, "main-web", "index.html")));
 app.get("/chat", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(projectDir, "index.html")));
 app.get("/quiz", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(projectDir, "quiz-web", "index.html")));
@@ -58,6 +58,115 @@ if (geminiApiKeys.length === 0) {
 if (groqApiKeys.length > 0) {
   console.log(`Đã nạp ${groqApiKeys.length} Groq API key (giá trị key được giữ bí mật).`);
 }
+}
+
+async function generateMiniGameQuestions({ topic, count, avoidQuestions, avoidKeywords = [], mode = "quiz" }) {
+  if (geminiApiKeys.length === 0) throw new Error("Chưa cấu hình Gemini API key.");
+
+  const isObstacleMode = mode === "obstacle";
+  const questionCount = isObstacleMode ? 5 : count;
+  const generationTimeoutMs = 10_000;
+  const prompt = isObstacleMode
+    ? [
+      `Tạo một bộ Vượt Chướng Ngại Vật mới bằng tiếng Việt theo đúng chủ đề "${topic}".`,
+      "Từ khóa ẩn phải là một danh từ/cụm danh từ cụ thể, hợp lý với chủ đề; viết HOA, không dấu, không khoảng trắng.",
+      "Tạo đúng 4 câu hàng ngang có độ khó tăng dần và 1 câu hỏi ô trung tâm ở vị trí thứ 5.",
+      "Mỗi câu phải có prompt, question, đúng 4 options, answer (chỉ số 0-3), explanation ngắn. Chỉ có một đáp án đúng.",
+      "Mỗi đáp án đúng của 4 hàng ngang phải liên hệ rõ ràng, thuyết phục với từ khóa ẩn. Nêu mối liên hệ trong logic.",
+      "Câu ô trung tâm phải hỏi trực tiếp từ khóa ẩn là gì. Một option phải chứa chính xác từ khóa ẩn (không dấu, viết hoa, không khoảng trắng) và answer phải trỏ đúng option đó; ba option còn lại là từ khóa nhiễu cùng chủ đề. Không dùng câu hỏi trung tâm chung chung.",
+      "Dùng kiến thức phổ thông chắc chắn, tránh câu mơ hồ, dữ kiện hành chính hoặc số liệu khó xác minh.",
+      "Không lặp hoặc viết lại gần giống các câu và từ khóa cần tránh.",
+      `Mã biến thể: ${Date.now()}-${Math.random().toString(36).slice(2)}.`,
+      `Câu gần đây cần tránh:\n${JSON.stringify((avoidQuestions || []).slice(-10))}`,
+      `Từ khóa gần đây cần tránh:\n${JSON.stringify(avoidKeywords.slice(-10))}`,
+      'Chỉ trả JSON object theo dạng {"obstacle":{"keyword":"TU_KHOA","logic":"Giải thích rõ liên hệ của từng hàng ngang với từ khóa"},"questions":[{"prompt":"HÀNG NGANG 1 · ...","question":"...","options":["...","...","...","..."],"answer":0,"explanation":"..."},{"prompt":"HÀNG NGANG 2 · ...","question":"...","options":["...","...","...","..."],"answer":0,"explanation":"..."},{"prompt":"HÀNG NGANG 3 · ...","question":"...","options":["...","...","...","..."],"answer":0,"explanation":"..."},{"prompt":"HÀNG NGANG 4 · ...","question":"...","options":["...","...","...","..."],"answer":0,"explanation":"..."},{"prompt":"Ô TRUNG TÂM","question":"Từ khóa bí ẩn liên kết các hàng ngang là gì?","options":["TU_KHOA","NHIỄU 1","NHIỄU 2","NHIỄU 3"],"answer":0,"explanation":"..."}]}. Ở câu cuối, thay TU_KHOA trong options bằng chính obstacle.keyword; đặt answer đúng vị trí của từ khóa. Không thêm markdown hay văn bản ngoài JSON.',
+    ].join("\n")
+    : [
+      `Tạo đúng ${count} câu hỏi trắc nghiệm bằng tiếng Việt cho chủ đề "${topic}".`,
+      "Mỗi câu gồm prompt, question, đúng 4 options, answer (chỉ số 0-3), explanation tối đa 12 từ. Chỉ có một đáp án đúng.",
+      "Đa dạng câu hỏi nhận biết, hiểu, đọc dữ kiện, suy luận hoặc vận dụng; dùng kiến thức phổ thông phổ biến, chắc chắn và không mơ hồ.",
+      "Tránh số liệu chính xác, thời điểm/mùa vụ hoặc dữ kiện hành chính dễ nhầm nếu không chắc chắn.",
+      "Không lặp hoặc viết lại gần giống các câu cần tránh; tự kiểm tra độ chính xác của từng câu và đáp án.",
+      `Mã biến thể: ${Date.now()}-${Math.random().toString(36).slice(2)}.`,
+      `Câu gần đây cần tránh:\n${JSON.stringify((avoidQuestions || []).slice(-10))}`,
+      'Chỉ trả JSON object đúng dạng {"questions":[{"prompt":"...","question":"...","options":["...","...","...","..."],"answer":0,"explanation":"..."}]}. Không thêm markdown hay văn bản ngoài JSON.',
+    ].join("\n");
+  let generated;
+  try {
+    const { response } = await fetchWithGeminiKeyFallback({
+      apiKeys: geminiApiKeys,
+      timeoutMs: generationTimeoutMs,
+      signal: AbortSignal.timeout(generationTimeoutMs),
+      url: `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`,
+      init: {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.6,
+            maxOutputTokens: isObstacleMode ? 3_500 : 2_500,
+            responseMimeType: "application/json",
+          },
+        }),
+      },
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(`Gemini trả HTTP ${response.status}.`);
+    const text = data?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
+    if (!text) throw new Error("Gemini không trả về bộ câu hỏi.");
+    generated = JSON.parse(text);
+    if (!Array.isArray(generated?.questions) || generated.questions.length !== questionCount) {
+      throw new Error(`Gemini không trả đúng ${questionCount} câu hỏi.`);
+    }
+    if (isObstacleMode && (!generated.obstacle || typeof generated.obstacle.keyword !== "string"
+      || typeof generated.obstacle.logic !== "string")) {
+      throw new Error("Gemini không trả đúng từ khóa và logic của chướng ngại vật.");
+    }
+  } catch (error) {
+    console.error("Mini-game Gemini generation failed:", error.message);
+    if (error.name === "TimeoutError" || error.name === "AbortError") {
+      throw Object.assign(new Error("Gemini mất quá 10 giây để tạo câu hỏi."), {
+        userMessage: "Gemini đang phản hồi chậm nên chưa tạo xong câu hỏi trong 10 giây. Hãy thử lại.",
+      });
+    }
+    throw Object.assign(error, { userMessage: "Gemini chưa tạo được câu hỏi. Hãy thử lại sau." });
+  }
+
+  let review = { status: "unavailable", issues: [] };
+  if (groqApiKeys.length > 0) {
+    try {
+      review = await reviewWithGroq({
+        apiKeys: groqApiKeys,
+        model: process.env.GROQ_MINIGAME_REVIEW_MODEL || groqModel,
+        task: isObstacleMode
+          ? "Kiểm tra câu hỏi có chính xác, rõ ràng không; kiểm tra từng hàng ngang có liên hệ hợp lý với từ khóa ẩn và câu trung tâm có phù hợp không. Chỉ nêu lỗi cụ thể, không suy đoán."
+          : "Kiểm tra lỗi kiến thức rõ ràng, câu mơ hồ, nhiều đáp án đúng hoặc giải thích sai; chỉ nêu vấn đề cụ thể, không suy đoán.",
+        question: isObstacleMode
+          ? `Chủ đề ${topic}; cần 4 hàng ngang tăng dần và 1 câu trung tâm.`
+          : `Chủ đề ${topic}; cần đúng ${count} câu, mỗi câu 4 lựa chọn.`,
+        answer: JSON.stringify(isObstacleMode ? generated : generated.questions),
+        context: "",
+        maxTokens: 400,
+        timeoutMs: 6_000,
+        signal: AbortSignal.timeout(6_000),
+      });
+    } catch (error) {
+      console.error("Mini-game Groq review failed:", error.message);
+    }
+  } else {
+    console.error("Mini-game Groq review skipped: no API key is configured.");
+  }
+  if (review.status !== "verified") {
+    console.warn("Mini-game Groq review returned a warning:", review.issues);
+  }
+  return {
+    questions: generated.questions,
+    obstacle: isObstacleMode ? generated.obstacle : undefined,
+    review: { status: review.status, warning: review.status !== "verified" },
+  };
+}
+
 app.use(createQuizRouter({
   baseUrl: process.env.OLLAMA_BASE_URL,
   model: process.env.OLLAMA_MODEL,
