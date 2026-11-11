@@ -70,10 +70,31 @@ function makeCookie(value, { maxAge, secure }) {
   return attributes.join("; ");
 }
 
-function sameOrigin(req, res, next, baseUrl) {
+function sameOrigin(req, res, next, _baseUrl) {
   const origin = req.get("origin");
-  if (origin && origin !== new URL(baseUrl).origin) {
-    return res.status(403).json({ error: "Yêu cầu không cùng nguồn với ứng dụng." });
+  if (!origin) return next();
+
+  let requestOrigin;
+  try {
+    const trustProxy = process.env.TRUST_PROXY === "true";
+    const forwardedProtocol = trustProxy
+      ? String(req.get("x-forwarded-proto") || "").split(",")[0].trim()
+      : "";
+    const forwardedHost = trustProxy
+      ? String(req.get("x-forwarded-host") || "").split(",")[0].trim()
+      : "";
+    const protocol = forwardedProtocol && /^[a-z]+$/i.test(forwardedProtocol)
+      ? forwardedProtocol
+      : (req.protocol || "http");
+    const host = forwardedHost || req.get("host") || "";
+    if (!host) return next();
+    requestOrigin = `${protocol}://${host}`;
+
+    if (new URL(origin).origin !== new URL(requestOrigin).origin) {
+      return res.status(403).json({ error: "Yêu cầu không cùng nguồn với ứng dụng. Hãy tải lại trang bằng cùng địa chỉ link đã truy cập." });
+    }
+  } catch {
+    return res.status(400).json({ error: "Địa chỉ truy cập không hợp lệ." });
   }
   return next();
 }

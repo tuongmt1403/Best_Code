@@ -1,0 +1,11 @@
+.git
+.env
+.env.*
+.data
+.venv
+node_modules
+__pycache__
+*.py[cod]
+npm-debug.log*
+free-claude-code-main
+voice-elevenlabs-main

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lụa - bạn trò chuyện AI</title>
 <link rel="stylesheet" href="/dangKy_dangNhap/auth.css">
+<script src="/app-shell.js" defer></script>
 <script src="/dangKy_dangNhap/session.js" defer></script>
 <style>
   :root { --bg:#f7f8fc; --ink:#20243b; --muted:#70758a; --line:#e7e9f2; --surface:#fff;
@@ -35,7 +36,7 @@
   .mode-btn.active { color:#fff; background:linear-gradient(105deg,#746cf0,#635bda 62%,#574fc9); box-shadow:0 5px 13px #635bda35,inset 0 1px 0 #ffffff40; }
   #style-panel { display:flex; align-items:center; gap:8px; margin-left:auto; }
   #style-panel label { margin:0; color:var(--muted); font-size:.86rem; font-weight:700; }
-  #chat-style { max-width:230px; padding:10px 12px; border:1px solid var(--line); border-radius:11px;
+  #chat-style, #speech-engine, #elevenlabs-voice { max-width:230px; padding:10px 12px; border:1px solid var(--line); border-radius:11px;
     color:var(--ink); background:#fff; font:inherit; }
   .chat-layout { display:grid; grid-template-columns:minmax(260px,.78fr) minmax(0,1.22fr); gap:18px; align-items:stretch; }
   .character-card,.conversation-card { min-width:0; border:1px solid #e4e6f0; border-radius:22px;
@@ -51,12 +52,35 @@
     background:linear-gradient(155deg,#fff 0%,#fff 74%,#fbfaff 100%); }
   #conversation-heading { margin:0 0 14px; font-size:1.04rem; letter-spacing:-.02em; }
   svg { width:100%; height:auto; overflow:visible; }
-  #bubble { min-height:150px; margin:0; padding:18px; border:1px solid #e9e9f4; border-radius:16px;
+  #bubble { display:none !important; }
+  #answer-display { position:relative; z-index:2; min-height:150px; margin:0; padding:18px; border:1px solid #e9e9f4; border-radius:16px;
     background:linear-gradient(145deg,#fbfbff,#f7f6fc); box-shadow:inset 0 1px 2px #302c5808;
-    line-height:1.7; white-space:pre-wrap; overflow-wrap:anywhere; }
+    line-height:1.68; white-space:normal; overflow-wrap:anywhere; }
+  #answer-display .answer-heading { margin:12px 0 5px; color:#242846; font-size:1.08em; font-weight:850; }
+  #answer-display .answer-section { margin:18px 0 7px; color:#242846; font-size:1.08em; font-weight:850; }
+  #answer-display .answer-section:first-child { margin-top:0; }
+  #answer-display .answer-bullet { margin:3px 0 3px 18px; padding-left:0; text-indent:0; }
+  #answer-display .answer-bullet::before { content:"•"; display:inline-block; margin-left:-18px; width:18px; color:#635bda; font-weight:900; }
+  #answer-display .answer-paragraph { margin:6px 0; }
+  #history-panel { width:100%; max-height:180px; margin-top:10px; overflow:auto; border-top:1px solid var(--line); }
+  #history-toggle { display:none !important; }
+  #history-panel { display:none !important; }
+  .history-entry { margin:7px 0; padding:8px 10px; border-radius:10px; line-height:1.45; overflow-wrap:anywhere; }
+  .history-entry.user { background:#f2f1ff; }
+  .history-entry.assistant { background:#f7f8fb; }
+  .history-entry strong { margin-right:5px; color:#57508d; }
   #status { min-height:24px; margin:0 0 8px; color:var(--muted); font-size:.83rem;
     line-height:1.5; overflow-wrap:anywhere; }
   #controls { display:flex; gap:9px; margin:14px 0 0; flex-wrap:wrap; justify-content:stretch; width:100%; }
+  #attachment-wrap { width:100%; }
+  #file-input { display:none; }
+  #attach-file { min-height:38px; padding:7px 12px; color:#555a70; background:linear-gradient(145deg,#fff,#f9f9fd);
+    border:1px solid var(--line); font-size:.84rem; box-shadow:0 3px 9px #272c4b08; }
+  #attachment-list { display:flex; gap:7px; flex-wrap:wrap; margin-top:8px; }
+  .attachment-chip { display:inline-flex; align-items:center; gap:6px; max-width:100%; min-height:34px; padding:7px 9px;
+    border:1px solid #dddffa; border-radius:10px; color:#504b9e; background:#f7f7ff; font-size:.78rem; }
+  .attachment-chip span { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .attachment-remove { min-height:24px; padding:0 7px; border-radius:7px; font-size:.76rem; }
   #text { flex:1; min-width:160px; min-height:46px; padding:11px 13px; border:1px solid #dfe1eb;
     border-radius:12px; color:var(--ink); background:#fff; font:inherit; }
   button { min-height:44px; padding:10px 16px; border:0; border-radius:12px;
@@ -95,7 +119,7 @@
     #stage { width:min(220px,62vw); margin:0; }
     .character-caption { margin:0; font-size:.83rem; }
     .conversation-card { min-height:0; padding:15px; }
-    #bubble { min-height:110px; }
+    #answer-display { min-height:110px; }
   }
   @media (max-width:420px) {
     body { padding:12px; }
@@ -105,7 +129,7 @@
     .chat-brand small { display:none; }
     .home-link { font-size:.82rem; }
     #style-panel { align-items:flex-start; flex-direction:column; gap:5px; }
-    #chat-style { width:100%; max-width:none; }
+    #chat-style, #speech-engine, #elevenlabs-voice { width:100%; max-width:none; }
     #controls button { flex:1; }
     #controls #camera-toggle { flex:0 0 100%; }
   }
@@ -155,6 +179,8 @@
   @keyframes spark-twinkle { to { transform:translateY(-5px) scale(1.25); } }
   @media (prefers-reduced-motion:reduce) { .fox-avatar,.fox-orbit,.fox-spark,.fox-soundwave { animation:none !important; } }
 </style>
+<link rel="stylesheet" href="/bright-theme.css">
+<link rel="stylesheet" href="/app-theme.css">
 </head>
 <body class="chat-mode">
 <div class="chat-shell">
@@ -181,6 +207,15 @@
     <option value="normal">Bình thường</option>
     <option value="genz">Vui nhộn kiểu Gen Z</option>
   </select>
+  <label for="speech-engine">Giọng đọc:</label>
+  <select id="speech-engine">
+    <option value="elevenlabs">ElevenLabs</option>
+    <option value="gtts">Python gTTS</option>
+    <option value="browser">Trình duyệt</option>
+  </select>
+  <select id="elevenlabs-voice" aria-label="Chọn giọng ElevenLabs">
+    <option value="Xb7hH8MSUJpSbSDYk0k2">Đang tải giọng...</option>
+  </select>
 </div>
  </div>
 <main class="chat-layout">
@@ -200,7 +235,10 @@
 <section class="conversation-card" aria-labelledby="conversation-heading">
 <h1 id="conversation-heading">Cuộc trò chuyện</h1>
 <div id="status" aria-live="polite">Nhập tin nhắn hoặc chuyển sang chế độ nói chuyện.</div>
-<div id="bubble" aria-live="polite">Xin chào! Hôm nay bạn muốn cùng Lụa tìm hiểu điều gì?</div>
+<div id="bubble" aria-hidden="true"></div>
+<div id="answer-display" aria-live="polite">Xin chào! Hôm nay bạn muốn cùng Lụa tìm hiểu điều gì?</div>
+<button id="history-toggle" type="button" aria-expanded="false">Hiện lịch sử chat</button>
+<section id="history-panel" hidden aria-label="Lịch sử chat"></section>
 <section id="camera-panel" hidden aria-label="Xem trước camera">
   <video id="camera-preview" autoplay muted playsinline></video>
   <p id="camera-note">Hình camera chỉ hiển thị trên thiết bị này, không gửi lên AI. Mic vẫn được gửi tới dịch vụ nhận dạng giọng nói.</p>
@@ -208,6 +246,11 @@
 <div id="controls">
   <button id="mic" type="button">Nói chuyện</button>
   <button id="camera-toggle" type="button" aria-pressed="false">Bật camera (chỉ xem trước)</button>
+  <div id="attachment-wrap">
+    <input id="file-input" type="file" multiple accept="image/*,.pdf,.docx,.txt,.md,.csv,.json,.xml,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.html,.css,.log">
+    <button id="attach-file" type="button">📎 Đính kèm</button>
+    <div id="attachment-list" aria-label="Tệp đã chọn"></div>
+  </div>
   <input id="text" placeholder="Nhập tin nhắn và gửi cho Lụa" aria-label="Tin nhắn">
   <button id="send" type="button">Gửi</button>
 </div>
@@ -222,15 +265,60 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
-const stage = $("stage"), statusEl = $("status"), bubble = $("bubble");
+const stage = $("stage"), statusEl = $("status"), bubble = $("bubble"), answerDisplay = $("answer-display");
 const chatStyleSelect = $("chat-style");
 const allowedChatStyles = new Set(["normal", "genz"]);
 const requestedChatStyle = new URLSearchParams(location.search).get("style");
+let pendingAttachments = [];
 let chatStyle = allowedChatStyles.has(requestedChatStyle)
   ? requestedChatStyle
   : localStorage.getItem("lụa-chat-style") === "genz" ? "genz" : "normal";
 chatStyleSelect.value = chatStyle;
 if (allowedChatStyles.has(requestedChatStyle)) localStorage.setItem("lụa-chat-style", chatStyle);
+const speechEngineSelect = $("speech-engine");
+const elevenLabsVoiceSelect = $("elevenlabs-voice");
+const savedSpeechEngine = localStorage.getItem("lụa-speech-engine");
+let speechEngine = ["elevenlabs", "gtts", "browser"].includes(savedSpeechEngine) ? savedSpeechEngine : "elevenlabs";
+speechEngineSelect.value = speechEngine;
+
+async function loadElevenLabsVoices() {
+  try {
+    const [statusResponse, voicesResponse] = await Promise.all([
+      fetch("/api/elevenlabs/status", { cache: "no-store" }),
+      fetch("/api/elevenlabs/voices", { cache: "no-store" }),
+    ]);
+    const status = await statusResponse.json();
+    const voicesData = await voicesResponse.json();
+    if (!statusResponse.ok || !status.configured) {
+      elevenLabsVoiceSelect.replaceChildren(new Option("ElevenLabs chưa cấu hình", ""));
+      return;
+    }
+    if (!voicesResponse.ok) throw new Error(voicesData.error || "Không tải được giọng ElevenLabs.");
+    elevenLabsVoiceSelect.replaceChildren();
+    let selectedVoice = localStorage.getItem("lụa-elevenlabs-voice") || status.voiceId;
+    let hasSelectedVoice = false;
+    for (const voice of voicesData.voices || []) {
+      elevenLabsVoiceSelect.add(new Option(voice.name || voice.voice_id, voice.voice_id));
+      if (voice.voice_id === selectedVoice) hasSelectedVoice = true;
+    }
+    if (!hasSelectedVoice && voicesData.voices?.length) selectedVoice = voicesData.voices[0].voice_id;
+    if (selectedVoice) elevenLabsVoiceSelect.value = selectedVoice;
+    localStorage.setItem("lụa-elevenlabs-voice", elevenLabsVoiceSelect.value);
+  } catch (error) {
+    elevenLabsVoiceSelect.replaceChildren(new Option("Không tải được giọng ElevenLabs", ""));
+    statusEl.textContent = error.message;
+  }
+}
+speechEngineSelect.addEventListener("change", () => {
+  speechEngine = speechEngineSelect.value;
+  localStorage.setItem("lụa-speech-engine", speechEngine);
+  elevenLabsVoiceSelect.style.display = speechEngine === "elevenlabs" ? "block" : "none";
+});
+elevenLabsVoiceSelect.addEventListener("change", () => {
+  if (elevenLabsVoiceSelect.value) localStorage.setItem("lụa-elevenlabs-voice", elevenLabsVoiceSelect.value);
+});
+elevenLabsVoiceSelect.style.display = speechEngine === "elevenlabs" ? "block" : "none";
+loadElevenLabsVoices();
 let history = [];
 try {
   const savedHistory = JSON.parse(localStorage.getItem("mai-chat-history") || "[]");
@@ -251,21 +339,73 @@ try {
 
 async function checkHistoryConnection() {
   try {
-    const response = await fetch("/api/history/status");
-    const data = await response.json();
-    if (response.ok && data.connected) {
-      bubble.textContent = `Lụa đã kết nối ${data.entries} mục dữ liệu Lịch sử Việt Nam.`;
-    }
+    await fetch("/api/history/status");
   } catch {
-    // Không chặn cuộc trò chuyện nếu tệp dữ liệu tạm thời không truy cập được.
+    // Không chặn cuộc trò chuyện nếu dữ liệu lịch sử tạm thời không truy cập được.
   }
 }
-checkHistoryConnection();
 
-function saveHistory() {
-  history = history.slice(-20);
-  localStorage.setItem("mai-chat-history", JSON.stringify(history));
+function renderHistoryPanel() {
+  const panel = $("history-panel");
+  panel.replaceChildren();
+  if (!history.length) {
+    const empty = document.createElement("p");
+    empty.className = "history-entry";
+    empty.textContent = "Chưa có lịch sử trò chuyện.";
+    panel.append(empty);
+    return;
+  }
+  for (const message of history) {
+    const entry = document.createElement("div");
+    entry.className = `history-entry ${message.role}`;
+    const label = document.createElement("strong");
+    label.textContent = message.role === "user" ? "Bạn:" : "Lụa:";
+    entry.append(label, document.createTextNode(message.content));
+    panel.append(entry);
+  }
 }
+
+async function loadChatHistory() {
+  try {
+    const response = await fetch("/api/chat/history", { cache: "no-store" });
+    const data = await response.json();
+    if (response.ok && Array.isArray(data.messages)) {
+      if (data.messages.length) {
+        history = data.messages.slice(-100);
+      } else if (history.length) {
+        await fetch("/api/chat/history", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: history }),
+        });
+      }
+      localStorage.setItem("mai-chat-history", JSON.stringify(history));
+      renderHistoryPanel();
+      const lastAssistant = [...history].reverse().find((message) => message.role === "assistant");
+      if (lastAssistant) renderBubbleText(lastAssistant.content);
+    }
+  } catch {
+    renderHistoryPanel();
+  }
+}
+
+async function saveHistory() {
+  history = history.slice(-100);
+  localStorage.setItem("mai-chat-history", JSON.stringify(history));
+  renderHistoryPanel();
+  try {
+    await fetch("/api/chat/history", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: history }),
+    });
+  } catch {
+    statusEl.textContent = "Không đồng bộ được lịch sử lên máy chủ; lịch sử vẫn được giữ tạm trong trình duyệt.";
+  }
+}
+
+checkHistoryConnection();
+loadChatHistory();
 
 let speaking = false, busy = false, currentAudio = null, currentAudioUrl = null, finishCurrentSpeech = null, speechGeneration = 0, textRevealFrame = 0;
 let interactionMode = "chat";
@@ -324,16 +464,97 @@ function stopMouth() {
   clearState();
 }
 
-function stopTextReveal(text = null) {
-  cancelAnimationFrame(textRevealFrame);
-  textRevealFrame = 0;
-  if (text !== null) bubble.textContent = text;
+function renderBubbleText(text, suggestions = null) {
+  const rawSource = String(text || "");
+  const cleanText = rawSource.replace(/\[(?:smile|nod|think|wave|surprised|sad|laugh)\]/g, "").trim();
+  bubble.textContent = rawSource;
+  bubble.dataset.displayMode = "source-hidden";
+  answerDisplay.replaceChildren();
+  answerDisplay.dataset.rawSource = rawSource;
+  answerDisplay.dataset.displayMode = "formatted";
+
+  for (const line of cleanText.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    const markdownHeading = trimmed.match(/^#{1,6}\s+(.+)$/);
+    const numberedLine = trimmed.match(/^\d+[.)]\s+(.+)$/);
+    const bullet = trimmed.match(/^[-*•]\s+(.+)$/);
+    const row = document.createElement("div");
+
+    if (markdownHeading) {
+      row.className = "answer-section";
+    } else if (numberedLine) {
+      row.className = "answer-section";
+    } else if (bullet) {
+      row.className = "answer-bullet";
+    } else {
+      row.className = "answer-paragraph";
+    }
+
+    const content = markdownHeading?.[1] || (numberedLine ? trimmed : null) || bullet?.[1] || trimmed;
+    const inlineParts = content.split(/(\*\*[^*]+\*\*)/g);
+    for (const part of inlineParts) {
+      const bold = part.match(/^\*\*([^*]+)\*\*$/);
+      if (bold) {
+        const strong = document.createElement("strong");
+        strong.textContent = bold[1];
+        row.append(strong);
+      } else if (part) {
+        const colonLabel = part.match(/^([^:]{1,80}:)(\s*)(.*)$/);
+        if (colonLabel && !part.includes("http")) {
+          const label = document.createElement("strong");
+          label.textContent = colonLabel[1];
+          row.append(label, document.createTextNode(colonLabel[2] + colonLabel[3]));
+        } else {
+          row.append(document.createTextNode(part));
+        }
+      }
+    }
+    answerDisplay.append(row);
+  }
+
+  if (suggestions && Array.isArray(suggestions.links) && suggestions.links.length) {
+    const card = document.createElement("div");
+    card.style.marginTop = "14px";
+    card.style.paddingTop = "10px";
+    card.style.borderTop = "1px solid #e3e1ef";
+
+    const heading = document.createElement("div");
+    heading.textContent = "ĐỊNH HƯỚNG & ĐỀ XUẤT";
+    heading.style.fontWeight = "800";
+    heading.style.marginBottom = "6px";
+    card.append(heading);
+
+    const direction = document.createElement("div");
+    direction.textContent = suggestions.direction || "Đối chiếu thêm thông tin từ các nguồn đáng tin cậy bên dưới.";
+    direction.style.marginBottom = "7px";
+    card.append(direction);
+
+    for (const item of suggestions.links) {
+      const link = document.createElement("a");
+      link.href = item.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = item.title || item.url;
+      link.style.display = "block";
+      link.style.marginTop = "4px";
+      link.style.color = "#4c46a3";
+      link.style.textDecoration = "none";
+      card.append(link);
+    }
+    answerDisplay.append(card);
+  }
 }
 
-function revealTextWithAudio(text, _audio) {
+function stopTextReveal(_text = null) {
   cancelAnimationFrame(textRevealFrame);
   textRevealFrame = 0;
-  bubble.textContent = text;
+}
+
+function revealTextWithAudio(_text, _audio) {
+  cancelAnimationFrame(textRevealFrame);
+  textRevealFrame = 0;
 }
 
 /* ---------- Giọng đọc Google gTTS ---------- */
@@ -386,89 +607,17 @@ function playAudio(audioBlob, text) {
   });
 }
 
-function playAudioStream(stream, text) {
-  if (!window.MediaSource || !MediaSource.isTypeSupported("audio/mpeg")) {
-    return new Response(stream).blob().then((blob) => playAudio(blob, text));
-  }
-
-  const mediaSource = new MediaSource();
-  currentAudioUrl = URL.createObjectURL(mediaSource);
-  const audioUrl = currentAudioUrl;
-  const audio = new Audio(audioUrl);
-  const reader = stream.getReader();
-  currentAudio = audio;
-
-  return new Promise((resolve, reject) => {
-    let finished = false;
-    let sourceBuffer;
-    let playbackStarted = false;
-    const cleanup = () => {
-      if (currentAudio === audio) currentAudio = null;
-      if (currentAudioUrl === audioUrl) currentAudioUrl = null;
-      URL.revokeObjectURL(audioUrl);
-      finishCurrentSpeech = null;
-      stopTextReveal(finished && audio.ended ? text : null);
-      speaking = false;
-      stopMouth();
-      updateSpeechControls();
-      reader.cancel().catch(() => {});
-    };
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      cleanup();
-      resolve();
-    };
-    const fail = (error) => {
-      if (finished) return;
-      finished = true;
-      cleanup();
-      reject(error);
-    };
-    finishCurrentSpeech = finish;
-    audio.onplay = () => {
-      speaking = true;
-      statusEl.textContent = "Lụa đang nói";
-      revealTextWithAudio(text, audio);
-      updateSpeechControls();
-      startMouth();
-    };
-    audio.onended = finish;
-    audio.onerror = () => fail(new Error("Không phát được âm thanh gTTS."));
-    mediaSource.addEventListener("sourceopen", () => {
-      try {
-        sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
-        sourceBuffer.mode = "sequence";
-        sourceBuffer.addEventListener("updateend", () => {
-          if (finished) return;
-          if (!playbackStarted && audio.buffered.length > 0) {
-            playbackStarted = true;
-            audio.play().catch(() => fail(new Error("Trình duyệt không cho phép phát âm thanh.")));
-          }
-          appendNext();
-        });
-        sourceBuffer.addEventListener("error", () => fail(new Error("Dữ liệu âm thanh gTTS không hợp lệ.")));
-        appendNext();
-      } catch {
-        fail(new Error("Trình duyệt không hỗ trợ phát luồng âm thanh gTTS."));
-      }
-    }, { once: true });
-
-    async function appendNext() {
-      if (finished || !sourceBuffer || sourceBuffer.updating) return;
-      try {
-        const { done, value } = await reader.read();
-        if (finished) return;
-        if (done) {
-          if (mediaSource.readyState === "open" && !sourceBuffer.updating) mediaSource.endOfStream();
-          return;
-        }
-        sourceBuffer.appendBuffer(value);
-      } catch {
-        fail(new Error("Luồng âm thanh gTTS bị gián đoạn."));
-      }
+async function playAudioStream(stream, text) {
+  try {
+    const blob = await new Response(stream).blob();
+    if (!blob.size) throw new Error("Không nhận được dữ liệu âm thanh gTTS.");
+    if (blob.type && !blob.type.includes("mpeg") && !blob.type.includes("audio")) {
+      throw new Error("Dữ liệu giọng đọc không hợp lệ.");
     }
-  });
+    return await playAudio(blob, text);
+  } catch (error) {
+    throw new Error(error?.message || "Không phát được âm thanh gTTS.");
+  }
 }
 
 function speakWithBrowser(text) {
@@ -499,13 +648,11 @@ function speakWithBrowser(text) {
     finishCurrentSpeech = () => finish();
     utterance.onstart = () => {
       speaking = true;
-      bubble.textContent = text;
       updateSpeechControls();
       startMouth();
     };
     utterance.onboundary = null;
     utterance.onend = () => {
-      bubble.textContent = text;
       finish();
     };
     utterance.onerror = () => finish(new Error("Trình duyệt không phát được giọng đọc."));
@@ -513,33 +660,84 @@ function speakWithBrowser(text) {
   });
 }
 
+async function speakWithElevenLabs(text) {
+  const generation = speechGeneration;
+  const voiceId = elevenLabsVoiceSelect.value || localStorage.getItem("lụa-elevenlabs-voice") || "";
+  if (!voiceId) throw new Error("Hãy cấu hình ElevenLabs và chọn giọng đọc.");
+  statusEl.textContent = "Đang tạo giọng ElevenLabs...";
+  const response = await fetch("/api/elevenlabs/speak", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, voiceId }),
+  });
+  if (generation !== speechGeneration) return;
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const error = new Error(data.error || "ElevenLabs hiện chưa khả dụng.");
+    if (response.status === 401 || response.status === 402 || /quota|credit/i.test(data.error || "")) {
+      error.code = "ELEVENLABS_QUOTA";
+    }
+    throw error;
+  }
+  await playAudio(await response.blob(), text);
+}
+
+async function speakWithGtts(text) {
+  const generation = speechGeneration;
+  statusEl.textContent = "Đang tạo giọng đọc tiếng Việt bằng gTTS...";
+  const response = await fetch("/api/speak", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  if (generation !== speechGeneration) return;
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || "gTTS hiện chưa khả dụng.");
+  }
+  await playAudioStream(response.body, text);
+}
+
 async function speak(text) {
   const generation = speechGeneration;
-  try {
-    statusEl.textContent = "Đang tạo giọng đọc tiếng Việt...";
-    const response = await fetch("/api/speak", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-    if (generation !== speechGeneration) return;
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.error || "gTTS hiện chưa khả dụng.");
+  if (speechEngine === "browser") {
+    await speakWithBrowser(text);
+    return;
+  }
+  if (speechEngine === "gtts") {
+    try {
+      await speakWithGtts(text);
+      return;
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+      statusEl.textContent = "gTTS chưa khả dụng; đang dùng giọng đọc dự phòng của trình duyệt.";
+      await speakWithBrowser(text);
+      return;
     }
-    await playAudioStream(response.body, text);
-  } catch {
+  }
+  try {
+    await speakWithElevenLabs(text);
+  } catch (error) {
     if (generation !== speechGeneration) return;
-    statusEl.textContent = "gTTS chưa khả dụng; đang dùng giọng đọc dự phòng của trình duyệt.";
+    if (error?.code === "ELEVENLABS_QUOTA") {
+      speechEngine = "browser";
+      speechEngineSelect.value = "browser";
+      localStorage.setItem("lụa-speech-engine", "browser");
+      elevenLabsVoiceSelect.style.display = "none";
+      statusEl.textContent = "Tạm chuyển sang giọng đọc dự phòng để tiết kiệm credit ElevenLabs.";
+      await speakWithBrowser(text);
+      return;
+    }
+    statusEl.textContent = `${error.message} Đang dùng giọng đọc dự phòng của trình duyệt.`;
     await speakWithBrowser(text);
   }
 }
 
 /* ---------- Xử lý câu trả lời có thẻ ---------- */
-async function performReply(text) {
-  const spokenText = text.replace(/\[(?:smile|nod|think|wave|surprised|sad|laugh)\]/g, "").replace(/\s+/g, " ").trim();
+async function performReply(text, suggestions = null) {
+  const visibleText = answerDisplay.innerText.replace(/\s+/g, " ").trim();
+  const spokenText = visibleText || text.replace(/\[(?:smile|nod|think|wave|surprised|sad|laugh)\]/g, "").replace(/\s+/g, " ").trim();
   const shouldSpeak = spokenText && (interactionMode === "voice" || chatSpeechEnabled);
-  if (!shouldSpeak) bubble.textContent = text.replace(/\[\w+\]/g, "").replace(/\s+/g, " ").trim();
   for (const match of text.matchAll(/\[(smile|nod|think|wave|surprised|sad|laugh)\]/g)) {
     playGesture(match[1]);
   }
@@ -556,35 +754,95 @@ async function performReply(text) {
   return true;
 }
 
+/* ---------- Đính kèm tệp ---------- */
+function renderAttachments() {
+  const list = $("attachment-list");
+  list.replaceChildren();
+  for (const [index, file] of pendingAttachments.entries()) {
+    const chip = document.createElement("span");
+    chip.className = "attachment-chip";
+    const name = document.createElement("span");
+    name.textContent = `${file.name} (${Math.max(1, Math.round(file.size / 1024))} KB)`;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "attachment-remove";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", `Bỏ tệp ${file.name}`);
+    remove.addEventListener("click", () => {
+      pendingAttachments.splice(index, 1);
+      renderAttachments();
+    });
+    chip.append(name, remove);
+    list.append(chip);
+  }
+}
+
+$("attach-file").addEventListener("click", () => $("file-input").click());
+$("file-input").addEventListener("change", async (event) => {
+  const selected = Array.from(event.target.files || []);
+  event.target.value = "";
+  if (!selected.length) return;
+  if (pendingAttachments.length + selected.length > 5) {
+    statusEl.textContent = "Chỉ được đính kèm tối đa 5 tệp cùng lúc.";
+    return;
+  }
+
+  for (const file of selected) {
+    if (file.size > 8 * 1024 * 1024) {
+      statusEl.textContent = `Tệp "${file.name}" vượt quá 8 MB.`;
+      continue;
+    }
+    if (!file.type && !/\.(pdf|docx|txt|md|csv|json|xml|js|jsx|ts|tsx|py|java|c|cpp|html|css|log)$/i.test(file.name)) {
+      statusEl.textContent = `Không hỗ trợ định dạng của tệp "${file.name}".`;
+      continue;
+    }
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+      pendingAttachments.push({ name: file.name, mimeType: file.type || "text/plain", data: dataUrl.split(",")[1] || "", size: file.size });
+      statusEl.textContent = `Đã đính kèm ${pendingAttachments.length} tệp.`;
+    } catch (error) {
+      statusEl.textContent = `Không thể đọc tệp "${file.name}".`;
+    }
+  }
+  renderAttachments();
+});
+
 /* ---------- Gọi backend ---------- */
-async function send(userText) {
-  if (busy || !userText.trim()) return;
+async function send(userText, attachments = pendingAttachments) {
+  const cleanText = userText.trim() || (attachments.length ? "Hãy phân tích các tệp tôi vừa gửi và giải thích nội dung chính." : "");
+  if (busy || !cleanText) return;
   busy = true; $("send").disabled = true; $("mic").disabled = true; stopSpeaking();
   let keepStatus = false;
-  const cleanText = userText.trim();
+  const attachmentSnapshot = attachments.map((item) => ({ ...item }));
+  const fileNames = attachmentSnapshot.map((item) => item.name).join(", ");
   history.push({ role: "user", content: cleanText });
   saveHistory();
-  bubble.textContent = cleanText; statusEl.textContent = "Lụa đang nghĩ"; playGesture("think");
+  bubble.textContent = "";
+  answerDisplay.textContent = "Lụa đang suy nghĩ…";
+  statusEl.textContent = "Lụa đang nghĩ"; playGesture("think");
   try {
     const r = await fetch("/api/chat", { method:"POST", headers:{ "Content-Type":"application/json" },
                                           body: JSON.stringify({
                                             messages: history,
                                             mode: interactionMode === "voice" ? "voice" : "text",
                                             chatStyle,
+                                            attachments: attachmentSnapshot.map(({ name, mimeType, data }) => ({ name, mimeType, data })),
                                           }) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
+    pendingAttachments = [];
+    renderAttachments();
     history.push({ role: "assistant", content: data.reply });
     saveHistory();
     const verificationStatus = data.verification?.status;
-    const safeToSpeak = ["verified", "source_based", "deterministic", "fallback_generated"].includes(verificationStatus);
-    if (safeToSpeak) {
-      statusEl.textContent = "Lụa đang nói";
-      keepStatus = !(await performReply(data.reply));
-    } else {
-      bubble.textContent = data.reply.replace(/\[\w+\]/g, "").replace(/\s+/g, " ").trim();
-      keepStatus = true;
-    }
+    renderBubbleText(data.reply, data.suggestions);
+    statusEl.textContent = chatSpeechEnabled || interactionMode === "voice" ? "Lụa đang nói" : "";
+    keepStatus = !(await performReply(data.reply, data.suggestions));
     if (verificationStatus === "verified") {
       statusEl.textContent = data.verification.fallback
         ? `Gemini đang lỗi (${data.verification.reason}); câu trả lời dự phòng Groq/Qwen (${data.verification.model}) đã được rà soát, không thấy vấn đề rõ ràng. Đây không phải bảo đảm tuyệt đối.`
@@ -615,7 +873,7 @@ async function send(userText) {
       keepStatus = true;
     }
   } catch (e) {
-    bubble.textContent = e.message; history.pop(); saveHistory();
+    answerDisplay.textContent = e.message; bubble.textContent = ""; history.pop(); saveHistory();
     statusEl.textContent = e.message;
     keepStatus = true;
   }
@@ -857,10 +1115,28 @@ function submitTypedMessage() {
 }
 
 $("send").addEventListener("click", submitTypedMessage);
-$("clear-history").addEventListener("click", () => {
+$("history-toggle").addEventListener("click", () => {
+  const panel = $("history-panel");
+  const willShow = panel.hidden;
+  panel.hidden = !willShow;
+  $("history-toggle").setAttribute("aria-expanded", String(willShow));
+  $("history-toggle").textContent = willShow ? "Ẩn lịch sử chat" : "Hiện lịch sử chat";
+  renderHistoryPanel();
+});
+
+$("clear-history").addEventListener("click", async () => {
   history = [];
-  saveHistory();
-  bubble.textContent = "Lụa đang chờ bạn.";
+  pendingAttachments = [];
+  renderAttachments();
+  localStorage.setItem("mai-chat-history", "[]");
+  renderHistoryPanel();
+  try {
+    await fetch("/api/chat/history", { method: "DELETE" });
+  } catch {
+    // Lịch sử trình duyệt vẫn được xóa ngay cả khi máy chủ không truy cập được.
+  }
+  bubble.textContent = "";
+  answerDisplay.textContent = "Lụa đang chờ bạn.";
   statusEl.textContent = "Đã xóa lịch sử chat";
   $("text").value = "";
   $("text").focus();
@@ -887,7 +1163,8 @@ chatStyleSelect.addEventListener("change", () => {
 
 setInteractionMode("chat");
 if (history.length) {
-  bubble.textContent = history[history.length - 1].content.replace(/\[\w+\]/g, "").trim();
+  const lastAssistant = [...history].reverse().find((message) => message.role === "assistant");
+  if (lastAssistant) renderBubbleText(lastAssistant.content);
   statusEl.textContent = "Đã khôi phục lịch sử chat";
 }
 </script>

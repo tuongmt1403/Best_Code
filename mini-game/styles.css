@@ -216,3 +216,32 @@ body.minigame-page {
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
 }
+.olympia-stage { position: relative; display: grid; justify-items: center; gap: 14px; text-align: center; }
+.olympia-header { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 12px; }
+.olympia-question-count { color: #d7ddff; font-size: .82rem; font-weight: 850; letter-spacing: .08em; }
+.olympia-image { display: block; width: min(100%, 620px); max-height: 290px; border: 1px solid #8794ee; border-radius: 20px; object-fit: contain; background: #101943; box-shadow: 0 15px 40px #02062288; }
+.olympia-prompt { margin: 4px 0 0; color: #ffe28a; font-size: clamp(1.05rem,2.4vw,1.35rem); }
+.olympia-caption { width: min(100%, 820px); padding: clamp(18px,3vw,30px); border: 2px solid #8e85ff; border-radius: 22px; background: linear-gradient(140deg,#171e59,#0b123d); box-shadow: 0 12px 35px #02062288,inset 0 1px 0 #ffffff20; text-align: left; }
+.olympia-caption-label { display: block; margin-bottom: 10px; color: #7deaff; font-size: .78rem; font-weight: 950; letter-spacing: .12em; }
+.olympia-caption-text { margin: 0; color: #fff; font-size: clamp(1.2rem,3vw,1.85rem); font-weight: 850; line-height: 1.55; overflow-wrap: anywhere; }
+.olympia-reading-status,.olympia-intro-timer,.olympia-round-timer { min-height: 34px; color: #a9efff; font-size: 1rem; font-weight: 850; }
+.olympia-intro-timer { display: grid; min-width: 250px; min-height: 66px; place-items: center; border: 1px solid #8e85ff; border-radius: 18px; padding: 10px 24px; color: #fff; background: linear-gradient(110deg,#5b35d8,#1c9ed3); font-size: clamp(1.25rem,3vw,1.7rem); }
+.olympia-round-timer.urgent { color: #ff9aab; }
+.olympia-countdown-overlay { position: fixed; z-index: 20; inset: 0; display: grid; align-content: center; justify-items: center; gap: 12px; background: #050822df; backdrop-filter: blur(7px); pointer-events: none; }
+.olympia-countdown-label { color: #ffe28a; font-size: clamp(1.15rem,4vw,2rem); font-weight: 950; letter-spacing: .12em; }
+.olympia-countdown-number { color: #fff; font-size: clamp(7rem,25vw,15rem); font-weight: 1000; line-height: .95; text-shadow: 0 0 30px #21dcff,0 0 70px #803eff; animation: olympia-count-pop .8s ease-in-out infinite alternate; }
+@keyframes olympia-count-pop { from { transform: scale(.9); } to { transform: scale(1.08); } }
+.olympia-turn-status { min-height: 26px; margin: 0; color: #c4d2ff; font-weight: 750; }
+.olympia-buzz-button { width: min(100%, 600px); min-height: 76px; border: 3px solid #fff0a5; border-radius: 22px; color: #3c2300; background: linear-gradient(105deg,#ffdf5e,#ff993f); box-shadow: 0 0 30px #ffc44d77,inset 0 2px 0 #ffffffa8; font: inherit; font-size: clamp(1rem,3vw,1.45rem); font-weight: 1000; cursor: pointer; }
+.olympia-buzz-button:disabled { cursor: not-allowed; filter: grayscale(.35); opacity: .58; }
+.olympia-answer-form { display: grid; width: min(100%, 600px); grid-template-columns: minmax(0,1fr) auto; gap: 9px; }
+.olympia-answer-input { min-width: 0; min-height: 48px; border: 1px solid #8b8bff; border-radius: 13px; padding: 0 14px; color: #fff; background: #0a1039; font: inherit; }
+.olympia-answer-input:focus { outline: 3px solid #30d9ff44; border-color: #31d9ff; }
+.olympia-voice-button { grid-column: 1; min-height: 44px; border: 1px solid #8290e7; border-radius: 12px; color: #e8eaff; background: #202966; font: inherit; font-weight: 750; cursor: pointer; }
+.olympia-voice-button:disabled { cursor: not-allowed; opacity: .58; }
+.olympia-answer-form .primary-action { grid-column: 2; grid-row: 1 / span 2; }
+@media (max-width: 520px) {
+  .olympia-header { align-items: flex-start; flex-direction: column; }
+  .olympia-answer-form { grid-template-columns: minmax(0,1fr); }
+  .olympia-answer-form .primary-action,.olympia-voice-button { grid-column: 1; grid-row: auto; }
+}

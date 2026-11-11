@@ -13,6 +13,12 @@ let activeMusicPhase = "";
 let victoryPlayed = false;
 let activeGameTrackStarted = false;
 let musicMuted = sessionStorage.getItem("minigame-music-muted") === "true";
+let olympiaSpeechKey = "";
+let olympiaAudio = null;
+let olympiaAudioUrl = "";
+let olympiaRecognition = null;
+let speechRevealTimer = null;
+const speechRevealProgress = new Map();
 
 function node(tag, className, text) {
   const element = document.createElement(tag);
@@ -148,6 +154,7 @@ function createSetupField(labelText, control) {
 function renderSetup() {
   stopRoomPolling();
   stopGameMusic();
+  document.querySelector(".game-columns")?.classList.remove("obstacle-mode-active");
   lastRenderKey = "";
   content.replaceChildren();
 
@@ -169,7 +176,8 @@ function renderSetup() {
   modeSelect.append(
     new Option("Quiz trắc nghiệm", "quiz"),
     new Option("Đuổi hình bắt chữ 1v1", "picture"),
-    new Option("Vượt Chướng Ngại Vật · AI theo chủ đề", "obstacle"),
+    new Option("Vượt Chướng Ngại Vật · tranh + hàng ngang + ô trung tâm", "obstacle"),
+    new Option("Olympia · câu mở đầu + chuông (không có bảng tranh)", "olympia"),
   );
   const countSelect = node("select");
   countSelect.name = "questionCount";
@@ -179,22 +187,32 @@ function renderSetup() {
     option.value = String(count);
     countSelect.append(option);
   });
+  const countField = createSetupField("Số câu trong ván", countSelect);
   form.append(
     createSetupField("Chế độ chơi", modeSelect),
     createSetupField("Chọn chủ đề", topicSelect),
-    createSetupField("Số câu trong ván", countSelect),
+    countField,
   );
   modeSelect.addEventListener("change", () => {
     const isPictureMode = modeSelect.value === "picture";
     const isObstacleMode = modeSelect.value === "obstacle";
+    const isOlympiaMode = modeSelect.value === "olympia";
+    countField.firstChild.textContent = isObstacleMode ? "Số hàng ngang" : "Số câu trong ván";
+    countSelect.querySelectorAll("option").forEach((option) => {
+      const count = Number(option.value);
+      option.textContent = isObstacleMode
+        ? `${count} hàng ngang + 1 ô trung tâm`
+        : `${count} câu hỏi`;
+    });
     topicSelect.querySelectorAll("option").forEach((option) => {
       option.disabled = isPictureMode && option.value === "geography";
     });
     if (isPictureMode && topicSelect.value === "geography") {
       topicSelect.value = topicSelect.querySelector("option:not(:disabled)")?.value || "";
     }
-    countSelect.disabled = isPictureMode || isObstacleMode;
-    countSelect.value = isPictureMode || isObstacleMode ? "5" : countSelect.value;
+    countSelect.disabled = isPictureMode;
+    countSelect.value = isPictureMode ? "5" : countSelect.value;
+    topicSelect.title = isOlympiaMode ? "Mỗi câu Olympia có hình minh họa theo chủ đề." : "";
   });
   const createButton = node("button", "primary-action", "✨ Tạo phòng");
   createButton.type = "submit";
@@ -223,7 +241,9 @@ function renderSetup() {
     createButton.textContent = modeSelect.value === "picture"
       ? "✨ Đang tạo phòng..."
       : modeSelect.value === "obstacle"
-        ? "✨ AI đang tạo chướng ngại vật..."
+        ? "✨ AI đang tạo câu hỏi và tự vẽ tranh..."
+        : modeSelect.value === "olympia"
+          ? "✨ AI đang tạo câu hỏi Olympia..."
       : `✨ AI đang tạo ${countSelect.value} câu (~10–16 giây)...`;
     setError("");
     try {
@@ -258,6 +278,8 @@ function renderSetup() {
 }
 
 function enterRoom(code) {
+  stopOlympiaVoice();
+  olympiaSpeechKey = "";
   roomCode = code.toUpperCase();
   victoryPlayed = false;
   activeGameTrackStarted = false;
@@ -296,8 +318,10 @@ function renderLobby(snapshot) {
   const copyStatus = node("span", "room-copy-status");
   const codeRow = node("div", "room-code-row");
   codeRow.append(codeLabel, copyActions);
-  const info = node("p", "room-info", snapshot.mode === "obstacle"
-    ? `${snapshot.topic} · 4 hàng ngang + ô trung tâm · tối đa 6 người`
+  const info = node("p", "room-info", snapshot.mode === "olympia"
+    ? `${snapshot.topic} · 1 câu mở đầu 25 giây + ${snapshot.questionCount} câu nhánh giành chuông · tối đa 6 người`
+    : snapshot.mode === "obstacle"
+    ? `${snapshot.topic} · ${snapshot.questionCount} hàng ngang + ô trung tâm · AI vẽ tranh riêng · không tính giờ/điểm`
     : `${snapshot.topic} · ${snapshot.questionCount} câu hỏi · tối đa 6 người`);
   const reviewWarning = snapshot.questionReview?.warning
     ? node("p", "game-hint", snapshot.questionReview.status === "unavailable"
@@ -308,13 +332,21 @@ function renderLobby(snapshot) {
   const players = renderPlayerList(snapshot.players);
   const rules = node("section", "rules-panel");
   rules.append(node("h3", "rules-title", "LUẬT CHƠI – CẢ NHÓM CẦN ĐỒNG Ý"));
-  const ruleItems = snapshot.mode === "obstacle"
+  const ruleItems = snapshot.mode === "olympia"
     ? [
-      "Cả phòng cùng trả lời lần lượt 4 hàng ngang, độ khó tăng dần, rồi đến câu hỏi ô trung tâm.",
-      "Mỗi hàng có 15 giây. Mỗi đáp án đúng sẽ mở thêm một phần bức ảnh.",
-      "Mỗi câu chỉ gửi được một đáp án; điểm được tính theo độ chính xác và tốc độ.",
-      "Ô trung tâm xuất hiện ở câu cuối; hãy dựa vào các gợi ý và phần ảnh đã mở.",
-      "Người có tổng điểm cao nhất sau 5 câu là người chiến thắng.",
+      "AI đọc câu hỏi mở bao quát cùng hình minh họa; cả phòng có 25 giây suy nghĩ.",
+      "Mỗi câu nhánh được AI đọc; đọc xong sẽ đếm ngược 3 giây ở giữa màn hình rồi mới mở chuông.",
+      "Chỉ người bấm chuông trước mới được nhập câu trả lời hoặc dùng micro để nói.",
+      "Trả lời sai hoặc hết 10 giây sẽ mất lượt câu đó; người khác được bấm chuông.",
+      "Trả lời đúng được 100 điểm; hết 30 giây hoặc mọi người đã mất lượt thì xem đáp án.",
+    ]
+    : snapshot.mode === "obstacle"
+    ? [
+      `AI tạo ${snapshot.obstacle.clueCount} hàng ngang, thêm một câu hỏi ô trung tâm và tự vẽ tranh gợi ý riêng.`,
+      "Cả nhóm lần lượt chọn hàng ngang; AI đọc câu hỏi và chữ hiện dần theo giọng đọc.",
+      "Bấm chuông để nhận lượt trả lời. Trả lời sai thì nhường lượt cho người khác; không giới hạn thời gian.",
+      "Trả lời đúng hàng nào thì mở mảnh ghép cùng số. Không cộng điểm và không thưởng tốc độ.",
+      `Sau khi hoàn thành tất cả hàng ngang, cả nhóm mở ô trung tâm số ${snapshot.obstacle.clueCount + 1} để nhận gợi ý cuối cùng.`,
     ]
     : [
       "Mỗi người trả lời 5, 10 hoặc 15 câu theo chủ đề của phòng.",
@@ -511,36 +543,546 @@ function renderPictureQuestion(snapshot) {
   content.replaceChildren(top, image, hint, status, slots, letterGrid, buzzButton, actions, error);
 }
 
-function renderObstacleBoard(snapshot) {
-  const board = node("section", "obstacle-board");
-  board.setAttribute("aria-label", "Bảng hình ảnh của Vượt Chướng Ngại Vật");
+function selectObstacleRow(rowNumber) {
+  return request(`/api/minigame/rooms/${encodeURIComponent(roomCode)}/obstacle/select`, {
+    method: "POST",
+    body: JSON.stringify({ rowNumber }),
+  });
+}
+
+function renderObstaclePuzzle(snapshot, canChoose) {
+  const obstacle = snapshot.obstacle;
+  const panel = node("section", "obstacle-puzzle-panel");
+  panel.setAttribute("aria-label", "Bức tranh Vượt Chướng Ngại Vật");
   const heading = node("div", "obstacle-board-heading");
   heading.append(
-    node("span", "obstacle-kicker", "VƯỢT CHƯỚNG NGẠI VẬT"),
-    node("strong", "obstacle-keyword-length", `${snapshot.obstacle.keywordLength} ký tự`),
+    node("span", "obstacle-kicker", "BỨC TRANH GỢI Ý"),
+    node("strong", "obstacle-keyword-length", `${obstacle.keywordLength} chữ cái`),
   );
-  const rows = node("div", "obstacle-clue-grid");
-  snapshot.obstacle.revealedRows.forEach((revealed, index) => {
-    const row = node("div", `obstacle-clue-row${revealed ? " revealed" : ""}`);
-    row.setAttribute("aria-label", revealed ? `Hàng ngang ${index + 1}: ${snapshot.obstacle.revealedAnswers[index]}` : `Hàng ngang ${index + 1} chưa mở`);
+  const board = node("div", "obstacle-picture-board");
+  const image = node("img", "obstacle-ai-image");
+  image.src = obstacle.image;
+  image.alt = "Tranh minh họa do AI tạo, đang được che bởi các mảnh ghép";
+  image.loading = "eager";
+  board.append(image);
+  const pieceGrid = node("div", "obstacle-piece-grid");
+  const columns = Math.ceil(Math.sqrt(obstacle.clueCount));
+  const remainder = obstacle.clueCount % columns;
+  pieceGrid.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
+  pieceGrid.style.gridTemplateRows = `repeat(${Math.ceil(obstacle.clueCount / columns)}, minmax(0, 1fr))`;
+  obstacle.revealedRows.forEach((revealed, index) => {
+    const piece = node("button", `obstacle-piece${revealed ? " opened" : ""}${obstacle.completedRows[index] && !revealed ? " closed" : ""}`, String(index + 1));
+    piece.type = "button";
+    if (remainder && index === obstacle.clueCount - 1) {
+      piece.style.gridColumn = `span ${columns - remainder + 1}`;
+    }
+    piece.disabled = !canChoose || obstacle.completedRows[index];
+    piece.setAttribute("aria-label", `Chọn hàng ngang ${index + 1}`);
+    piece.addEventListener("click", async () => {
+      piece.disabled = true;
+      try {
+        await selectObstacleRow(index + 1);
+        await pollRoom();
+      } catch (error) {
+        setError(error.message);
+        await pollRoom();
+      }
+    });
+    pieceGrid.append(piece);
+  });
+  board.append(pieceGrid);
+  const centerNumber = obstacle.clueCount + 1;
+  const center = node("button", `obstacle-piece-center${obstacle.centerRevealed ? " opened" : ""}${obstacle.centerResolved && !obstacle.centerRevealed ? " closed" : ""}`, String(centerNumber));
+  center.type = "button";
+  center.disabled = !canChoose || !obstacle.canSelectCenter;
+  center.setAttribute("aria-label", `Chọn ô trung tâm số ${centerNumber}`);
+  center.addEventListener("click", async () => {
+    center.disabled = true;
+    try {
+      await selectObstacleRow(centerNumber);
+      await pollRoom();
+    } catch (error) {
+      setError(error.message);
+      await pollRoom();
+    }
+  });
+  board.append(center);
+
+  const keyword = node("div", "obstacle-keyword", obstacle.keyword
+    ? `TỪ KHÓA: ${obstacle.keyword}`
+    : `ẨN SỐ · ${obstacle.keywordLength} CHỮ CÁI`);
+  const rowList = node("div", "obstacle-row-list");
+  obstacle.completedRows.forEach((completed, index) => {
+    const row = node("button", `obstacle-row-status${obstacle.revealedRows[index] ? " revealed" : completed ? " closed" : ""}`);
+    row.type = "button";
+    row.disabled = !canChoose || completed;
     row.append(
       node("span", "obstacle-tile-label", String(index + 1)),
-      node("strong", "obstacle-clue-answer", revealed ? snapshot.obstacle.revealedAnswers[index] : "Chưa mở"),
+      node("span", "", `Hàng ngang ${index + 1}`),
+      node("strong", "", obstacle.revealedRows[index]
+        ? obstacle.revealedAnswers[index]
+        : completed ? "Đã khép lại" : "Chưa mở"),
     );
-    rows.append(row);
+    row.addEventListener("click", async () => {
+      row.disabled = true;
+      try {
+        await selectObstacleRow(index + 1);
+        await pollRoom();
+      } catch (error) {
+        setError(error.message);
+        await pollRoom();
+      }
+    });
+    rowList.append(row);
   });
-  const answer = node("div", "obstacle-keyword");
-  for (let index = 0; index < snapshot.obstacle.keywordLength; index += 1) {
-    answer.append(node("span", "obstacle-letter", snapshot.obstacle.keyword?.[index] || (snapshot.obstacle.centralQuestion ? "?" : "•")));
+  panel.append(heading, board, keyword, rowList);
+  return panel;
+}
+
+function renderObstacleQuestion(snapshot) {
+  const obstacle = snapshot.obstacle;
+  const question = snapshot.currentQuestion;
+  const area = node("section", "obstacle-question-area");
+  if (!question) {
+    area.append(
+      node("h2", "obstacle-question-title", "Chọn hàng ngang để bắt đầu"),
+      node("p", "obstacle-question-help", obstacle.canSelectCenter
+        ? "Bốn hàng ngang đã hoàn tất. Cùng mở ô đỏ số 5 để nhận gợi ý cuối."
+        : "Chọn một ô số 1–4 trên tranh hoặc danh sách để nghe câu hỏi."),
+    );
+    return area;
   }
-  const note = node("p", "obstacle-board-note",
-    snapshot.obstacle.keyword
-      ? `${snapshot.obstacle.logic} · Từ khóa: ${snapshot.obstacle.keyword}`
-      : snapshot.obstacle.centralQuestion
-        ? "Ô trung tâm: chọn từ khóa liên kết các đáp án hàng ngang."
-        : "Trả lời đúng để mở đáp án hàng ngang và tìm mối liên hệ chung.");
-  board.append(heading, rows, answer, note);
-  return board;
+
+  area.append(
+    node("p", "obstacle-question-number", obstacle.centralQuestion ? "Ô TRUNG TÂM · GỢI Ý CUỐI" : `HÀNG NGANG ${question.number}`),
+    node("h2", "obstacle-question-title", question.prompt),
+  );
+  const speechKey = `${snapshot.code}:obstacle:${question.number}`;
+  area.append(renderOlympiaCaption(question.question, speechKey));
+
+  const buzz = node("button", "obstacle-buzz-button");
+  buzz.type = "button";
+  buzz.disabled = snapshot.phase !== "playing" || !obstacle.canBuzz;
+  buzz.textContent = snapshot.phase === "obstacleReading"
+    ? "🔔 CHUÔNG SẼ MỞ SAU KHI AI ĐỌC XONG"
+    : obstacle.buzzOwnerName
+      ? `🔔 ${obstacle.buzzOwnerName} ĐANG GIỮ LƯỢT`
+      : obstacle.hasLostTurn
+        ? "🔔 BẠN ĐÃ THỬ CÂU NÀY"
+        : "🔔 BẤM CHUÔNG GIÀNH QUYỀN TRẢ LỜI";
+  buzz.addEventListener("click", async () => {
+    buzz.disabled = true;
+    try {
+      await request(`/api/minigame/rooms/${encodeURIComponent(roomCode)}/buzz`, { method: "POST", body: "{}" });
+      await pollRoom();
+    } catch (error) {
+      setError(error.message);
+      await pollRoom();
+    }
+  });
+  area.append(buzz);
+
+  if (snapshot.phase === "obstacleReading") {
+    area.append(node("p", "olympia-reading-status", "AI đang đọc câu hỏi…"));
+    speakAiQuestion(snapshot, question.question, speechKey);
+  } else if (snapshot.phase === "playing") {
+    const status = node("p", "obstacle-turn-status", obstacle.buzzOwnerName
+      ? `${obstacle.buzzOwnerName} đang có lượt trả lời.`
+      : obstacle.hasLostTurn ? "Bạn đã thử câu này rồi; hãy nhường lượt cho người khác."
+        : "Không giới hạn thời gian. Bấm chuông khi bạn muốn nhận lượt.");
+    area.append(status);
+    if (obstacle.canAnswer) {
+      const choices = node("div", "obstacle-answer-options");
+      if (!obstacle.centralQuestion) {
+        question.options.forEach((option, index) => {
+          const answerButton = node("button", "option-button", `${String.fromCharCode(65 + index)}. ${option}`);
+          answerButton.type = "button";
+          answerButton.addEventListener("click", async () => {
+            answerButton.disabled = true;
+            try {
+              await request(`/api/minigame/rooms/${encodeURIComponent(roomCode)}/obstacle/answer`, {
+                method: "POST",
+                body: JSON.stringify({ optionIndex: index }),
+              });
+              await pollRoom();
+            } catch (error) {
+              setError(error.message);
+              await pollRoom();
+            }
+          });
+          choices.append(answerButton);
+        });
+      }
+      const form = node("form", "obstacle-answer-form");
+      const input = node("input", "olympia-answer-input");
+      input.type = "text";
+      input.maxLength = 300;
+      input.placeholder = obstacle.centralQuestion ? "Nhập từ khóa ẩn (có thể không dấu)…" : "Hoặc nhập câu trả lời ngắn…";
+      input.setAttribute("aria-label", "Câu trả lời ngắn");
+      const submit = node("button", "primary-action", "Gửi câu trả lời");
+      submit.type = "submit";
+      form.append(input, submit);
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!input.value.trim()) {
+          setError("Hãy chọn một đáp án hoặc nhập câu trả lời.");
+          input.focus();
+          return;
+        }
+        submit.disabled = true;
+        try {
+          await request(`/api/minigame/rooms/${encodeURIComponent(roomCode)}/obstacle/answer`, {
+            method: "POST",
+            body: JSON.stringify({ answer: input.value.trim() }),
+          });
+          await pollRoom();
+        } catch (error) {
+          setError(error.message);
+          await pollRoom();
+        }
+      });
+      if (!obstacle.centralQuestion) area.append(choices);
+      area.append(form);
+    }
+  }
+  return area;
+}
+
+function renderObstacleGame(snapshot) {
+  stopGameMusic();
+  const game = node("section", "obstacle-game");
+  const layout = node("div", "obstacle-game-layout");
+  const canChoose = snapshot.phase === "obstacleSelect";
+  layout.append(renderObstaclePuzzle(snapshot, canChoose), renderObstacleQuestion(snapshot));
+  game.append(layout);
+
+  if (snapshot.phase === "obstacleResult") {
+    const result = snapshot.obstacle.answerResult;
+    const panel = node("section", "obstacle-result-panel");
+    panel.append(
+      node("h2", "obstacle-result-heading", result.correct ? "Mảnh ghép đã mở!" : "Hàng ngang đã khép lại"),
+      node("p", "obstacle-result-copy", result.correct ? "Cả nhóm đã trả lời đúng." : "Cả nhóm đã thử lượt này. Cùng xem đáp án rồi chọn câu tiếp nhé."),
+      node("p", "obstacle-result-answer", `Đáp án: ${result.correctAnswer}`),
+      node("p", "obstacle-result-explanation", result.explanation),
+    );
+    const next = node("button", "primary-action", "Tiếp tục chọn câu");
+    next.type = "button";
+    next.addEventListener("click", async () => {
+      next.disabled = true;
+      try {
+        await request(`/api/minigame/rooms/${encodeURIComponent(roomCode)}/obstacle/continue`, { method: "POST", body: "{}" });
+        await pollRoom();
+      } catch (error) {
+        setError(error.message);
+        await pollRoom();
+      }
+    });
+    panel.append(next);
+    game.append(panel);
+  }
+  game.append(node("p", "game-error"));
+  content.replaceChildren(game);
+}
+
+function renderObstacleFinal(snapshot) {
+  const result = snapshot.obstacle;
+  const section = node("section", "obstacle-final");
+  section.append(
+    renderObstaclePuzzle(snapshot, false),
+    node("h2", "obstacle-result-heading", result.finalOutcome === "solved" ? "Cả nhóm đã giải được ẩn số!" : "Cùng xem đáp án của ô trung tâm"),
+    node("p", "obstacle-result-answer", `Từ khóa: ${result.keyword}`),
+    node("p", "obstacle-result-explanation", result.logic),
+  );
+  const back = node("button", "primary-action", "← Về chọn phòng");
+  back.type = "button";
+  back.addEventListener("click", () => { void leaveRoom(); });
+  section.append(back);
+  content.replaceChildren(section);
+}
+
+function stopOlympiaVoice() {
+  if (speechRevealTimer) window.clearInterval(speechRevealTimer);
+  speechRevealTimer = null;
+  if (olympiaAudio) {
+    olympiaAudio.pause();
+    olympiaAudio.src = "";
+    olympiaAudio = null;
+  }
+  if (olympiaAudioUrl) {
+    URL.revokeObjectURL(olympiaAudioUrl);
+    olympiaAudioUrl = "";
+  }
+  if (olympiaRecognition) {
+    olympiaRecognition.abort();
+    olympiaRecognition = null;
+  }
+  window.speechSynthesis?.cancel();
+}
+
+async function finishOlympiaSpeech(code, speechKey) {
+  try {
+    await request(`/api/minigame/rooms/${encodeURIComponent(code)}/speech-complete`, {
+      method: "POST",
+      body: "{}",
+    });
+    await pollRoom();
+  } catch (error) {
+    if (olympiaSpeechKey === speechKey) setError(error.message);
+  }
+}
+
+function revealQuestionText(speechKey, text, progress) {
+  const characters = Array.from(text);
+  const count = Math.max(0, Math.min(characters.length, Math.ceil(characters.length * progress)));
+  speechRevealProgress.set(speechKey, characters.slice(0, count).join(""));
+  const captionText = [...document.querySelectorAll(".olympia-caption-text")]
+    .find((element) => element.dataset.speechKey === speechKey);
+  if (captionText) captionText.textContent = speechRevealProgress.get(speechKey);
+}
+
+function speakAiQuestion(snapshot, text, speechKey) {
+  if (olympiaSpeechKey === speechKey) return;
+  if (speechRevealTimer) window.clearInterval(speechRevealTimer);
+  speechRevealTimer = null;
+  olympiaSpeechKey = speechKey;
+  speechRevealProgress.set(speechKey, "");
+  while (speechRevealProgress.size > 40) {
+    speechRevealProgress.delete(speechRevealProgress.keys().next().value);
+  }
+  liveStatus.textContent = "AI đang đọc câu hỏi cho cả phòng…";
+  const finish = () => {
+    if (olympiaSpeechKey !== speechKey) return;
+    revealQuestionText(speechKey, text, 1);
+    if (!snapshot.isHost) return;
+    void finishOlympiaSpeech(snapshot.code, speechKey);
+  };
+  const speakWithBrowserVoice = () => {
+    if (olympiaSpeechKey !== speechKey) return;
+    if (!window.speechSynthesis || typeof SpeechSynthesisUtterance !== "function") {
+      liveStatus.textContent = "Không hỗ trợ phát giọng ở trình duyệt này; câu hỏi sẽ mở sau giây lát.";
+      let progress = 0;
+      speechRevealTimer = window.setInterval(() => {
+        progress = Math.min(1, progress + 0.1);
+        revealQuestionText(speechKey, text, progress);
+        if (progress === 1) {
+          window.clearInterval(speechRevealTimer);
+          speechRevealTimer = null;
+          finish();
+        }
+      }, 100);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "vi-VN";
+    utterance.rate = 0.94;
+    utterance.onboundary = (event) => {
+      if (event.charIndex >= 0) {
+        const remaining = text.slice(event.charIndex);
+        const spokenWordLength = remaining.match(/^\S*/)?.[0].length || 0;
+        revealQuestionText(speechKey, text, (event.charIndex + spokenWordLength) / Math.max(1, text.length));
+      }
+    };
+    utterance.onend = finish;
+    utterance.onerror = finish;
+    window.speechSynthesis.speak(utterance);
+  };
+  fetch("/api/elevenlabs/speak", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  }).then(async (response) => {
+    if (olympiaSpeechKey !== speechKey) return;
+    if (!response.ok) throw new Error("ElevenLabs chưa sẵn sàng.");
+    olympiaAudioUrl = URL.createObjectURL(await response.blob());
+    const audio = new Audio(olympiaAudioUrl);
+    olympiaAudio = audio;
+    audio.ontimeupdate = () => {
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        revealQuestionText(speechKey, text, audio.currentTime / audio.duration);
+      }
+    };
+    audio.onended = finish;
+    audio.onerror = speakWithBrowserVoice;
+    await audio.play();
+  }).catch(speakWithBrowserVoice);
+}
+
+function renderOlympiaCaption(text, speechKey = "") {
+  const caption = node("section", "olympia-caption");
+  caption.setAttribute("role", "region");
+  caption.setAttribute("aria-label", "Chữ câu hỏi đang được AI đọc");
+  caption.setAttribute("aria-live", "polite");
+  caption.setAttribute("aria-atomic", "true");
+  const captionText = node("p", "olympia-caption-text", speechKey
+    ? speechRevealProgress.get(speechKey) || ""
+    : text);
+  if (speechKey) captionText.dataset.speechKey = speechKey;
+  caption.append(
+    node("span", "olympia-caption-label", "CÂU HỎI HIỂN THỊ"),
+    captionText,
+  );
+  return caption;
+}
+
+function renderOlympia(snapshot) {
+  stopGameMusic();
+  if (countdownTimer) window.clearInterval(countdownTimer);
+  countdownTimer = null;
+  const state = snapshot.olympia;
+  const stage = node("section", "olympia-stage");
+  const header = node("div", "olympia-header");
+  header.append(
+    node("span", "obstacle-kicker", "ĐƯỜNG LÊN ĐỈNH OLYMPIA"),
+    node("span", "olympia-question-count", snapshot.phase === "introReading" || snapshot.phase === "intro"
+      ? "CÂU HỎI MỞ ĐẦU"
+      : `CÂU ${snapshot.currentQuestion?.number || 1} / ${snapshot.questionCount}`),
+  );
+  const image = node("img", "olympia-image");
+  image.src = state.image;
+  image.alt = `Hình minh họa ${snapshot.topic}`;
+  image.loading = "eager";
+  stage.append(header, image);
+
+  if (snapshot.phase === "introReading" || snapshot.phase === "intro") {
+    stage.append(node("h2", "olympia-prompt", "Câu hỏi mở bao quát"));
+    stage.append(renderOlympiaCaption(state.introQuestion));
+    const reading = snapshot.phase === "introReading";
+    const timer = node("div", reading ? "olympia-reading-status" : "olympia-intro-timer",
+      reading ? (snapshot.isHost ? "AI đang đọc câu hỏi…" : "Người tạo phòng đang phát câu hỏi…")
+        : `${Math.ceil(state.introTimeLeftMs / 1000)} giây để suy nghĩ`);
+    stage.append(timer);
+    if (!reading) {
+      const deadline = Date.now() + state.introTimeLeftMs;
+      countdownTimer = window.setInterval(() => {
+        const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+        timer.textContent = `${seconds} giây để suy nghĩ`;
+      }, 150);
+    } else {
+      const speechKey = `${snapshot.code}:intro`;
+      speakAiQuestion(snapshot, state.introQuestion, speechKey);
+    }
+  } else if (snapshot.currentQuestion) {
+    const question = snapshot.currentQuestion;
+    stage.append(node("h2", "olympia-prompt", question.prompt));
+    stage.append(renderOlympiaCaption(question.question));
+    const reading = snapshot.phase === "questionReading";
+    if (reading) {
+      stage.append(node("p", "olympia-reading-status",
+        snapshot.isHost ? "AI đang đọc câu hỏi nhánh…" : "Người tạo phòng đang phát câu hỏi nhánh…"));
+      speakAiQuestion(snapshot, `${question.prompt}. ${question.question}`, `${snapshot.code}:question:${question.number}`);
+    } else if (snapshot.phase === "countdown") {
+      const overlay = node("div", "olympia-countdown-overlay");
+      overlay.setAttribute("role", "status");
+      overlay.setAttribute("aria-live", "assertive");
+      const seconds = Math.max(1, Math.ceil(state.countdownTimeLeftMs / 1000));
+      overlay.append(node("span", "olympia-countdown-label", "CHUẨN BỊ BẤM CHUÔNG"), node("strong", "olympia-countdown-number", String(seconds)));
+      stage.append(overlay);
+    } else {
+      const timer = node("div", "olympia-round-timer", `${Math.ceil(question.timeLeftMs / 1000)} giây còn lại`);
+      stage.append(timer);
+      const deadline = question.deadline;
+      const ownerDeadline = Date.now() + state.answerTimeLeftMs;
+      const owner = state.buzzOwnerName;
+      const status = node("p", "olympia-turn-status", owner
+        ? `${owner} đang có quyền trả lời · ${Math.ceil(state.answerTimeLeftMs / 1000)} giây`
+        : state.hasLostTurn ? "Bạn đã mất lượt câu này. Hãy cổ vũ người chơi khác!"
+          : "Chỉ người bấm chuông trước mới được trả lời.");
+      stage.append(status);
+      countdownTimer = window.setInterval(() => {
+        const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+        timer.textContent = `${seconds} giây còn lại`;
+        timer.classList.toggle("urgent", seconds <= 5);
+        if (owner) status.textContent = `${owner} đang có quyền trả lời · ${Math.max(0, Math.ceil((ownerDeadline - Date.now()) / 1000))} giây`;
+      }, 150);
+
+      const buzzButton = node("button", "olympia-buzz-button", owner
+        ? `🔔 ${owner} đang trả lời`
+        : state.canBuzz ? "🔔 BẤM CHUÔNG GIÀNH QUYỀN"
+          : "🔔 CHUÔNG ĐANG KHÓA");
+      buzzButton.type = "button";
+      buzzButton.disabled = !state.canBuzz;
+      buzzButton.addEventListener("click", async () => {
+        buzzButton.disabled = true;
+        try {
+          await request(`/api/minigame/rooms/${roomCode}/buzz`, { method: "POST", body: "{}" });
+          await pollRoom();
+        } catch (error) {
+          setError(error.message);
+          await pollRoom();
+        }
+      });
+      stage.append(buzzButton);
+
+      if (state.canAnswer) {
+        const form = node("form", "olympia-answer-form");
+        const answer = node("input", "olympia-answer-input");
+        answer.type = "text";
+        answer.name = "answer";
+        answer.maxLength = 300;
+        answer.autocomplete = "off";
+        answer.placeholder = "Nhập câu trả lời hoặc bấm micro để nói…";
+        answer.setAttribute("aria-label", "Câu trả lời của bạn");
+        const submit = node("button", "primary-action", "Gửi câu trả lời");
+        submit.type = "submit";
+        const recognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const voiceButton = node("button", "olympia-voice-button", recognitionConstructor ? "🎙️ Trả lời bằng giọng nói" : "🎙️ Trình duyệt chưa hỗ trợ nhận giọng nói");
+        voiceButton.type = "button";
+        voiceButton.disabled = !recognitionConstructor;
+        voiceButton.addEventListener("click", () => {
+          if (!recognitionConstructor) return;
+          const recognition = new recognitionConstructor();
+          olympiaRecognition = recognition;
+          recognition.lang = "vi-VN";
+          recognition.interimResults = false;
+          recognition.maxAlternatives = 1;
+          voiceButton.disabled = true;
+          voiceButton.textContent = "Đang nghe…";
+          recognition.onresult = (event) => {
+            answer.value = event.results[0][0].transcript;
+            answer.focus();
+          };
+          recognition.onerror = () => setError("Không nhận được giọng nói; bạn có thể nhập câu trả lời bằng chữ.");
+          recognition.onend = () => {
+            olympiaRecognition = null;
+            voiceButton.disabled = false;
+            voiceButton.textContent = "🎙️ Trả lời bằng giọng nói";
+          };
+          try {
+            recognition.start();
+          } catch {
+            olympiaRecognition = null;
+            voiceButton.disabled = false;
+            voiceButton.textContent = "🎙️ Trả lời bằng giọng nói";
+            setError("Không thể bật micro; hãy nhập câu trả lời bằng chữ.");
+          }
+        });
+        form.append(answer, voiceButton, submit);
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          if (!answer.value.trim()) {
+            setError("Hãy nhập hoặc đọc câu trả lời trước khi gửi.");
+            answer.focus();
+            return;
+          }
+          submit.disabled = true;
+          try {
+            await request(`/api/minigame/rooms/${roomCode}/olympia-answer`, {
+              method: "POST",
+              body: JSON.stringify({ answer: answer.value.trim() }),
+            });
+            await pollRoom();
+          } catch (error) {
+            setError(error.message);
+            await pollRoom();
+          }
+        });
+        stage.append(form);
+      }
+    }
+  }
+  stage.append(node("p", "game-error"));
+  content.replaceChildren(stage);
 }
 
 function renderQuestion(snapshot) {
@@ -585,7 +1127,6 @@ function renderQuestion(snapshot) {
     scoreRows.append(item);
   });
   content.replaceChildren(
-    ...(snapshot.mode === "obstacle" ? [renderObstacleBoard(snapshot)] : []),
     top,
     prompt,
     title,
@@ -625,9 +1166,6 @@ function renderRoundResult(snapshot, username) {
     : node("p", "playful-reaction", ownResult?.correct ? "✨ Bạn vừa ghi điểm! Cùng cổ vũ cả phòng nhé." : "🦊 Cố lên, ván sau mình gỡ nhé!");
   const progress = node("p", "result-progress", `Đang chuẩn bị câu ${Math.min(result.number + 1, snapshot.questionCount)}…`);
   content.replaceChildren(node("section", "round-result"));
-  if (snapshot.mode === "obstacle") {
-    content.firstChild.append(renderObstacleBoard(snapshot));
-  }
   content.firstChild.append(emoji, heading, copy, answer, rows, reactionBox, progress);
 }
 
@@ -715,19 +1253,44 @@ function renderRoom(snapshot) {
   const username = snapshot.you.username;
   const question = snapshot.currentQuestion;
   const key = JSON.stringify({
+    mode: snapshot.mode,
     phase: snapshot.phase,
     players: snapshot.players.map(({ username: name, score, hasAnswered, correctAnswers }) => [name, score, hasAnswered, correctAnswers]),
-    question: question && [question.number, question.prompt, question.question, question.options, Math.ceil(question.timeLeftMs / 1000)],
+    question: question && [question.number, question.prompt, question.question, question.options, question.image,
+      snapshot.mode === "olympia" ? null : Math.ceil(question.timeLeftMs / 1000)],
     picture: snapshot.pictureQuestion && [snapshot.pictureQuestion.number, snapshot.pictureQuestion.buzzOwnerName, snapshot.pictureQuestion.buzzTimeLeftMs, snapshot.pictureQuestion.canBuzz],
+    olympia: snapshot.olympia && [
+      Math.ceil(snapshot.olympia.introTimeLeftMs / 1000),
+      Math.ceil(snapshot.olympia.countdownTimeLeftMs / 1000),
+      snapshot.olympia.buzzOwnerName,
+      snapshot.olympia.canBuzz,
+      snapshot.olympia.canAnswer,
+      snapshot.olympia.hasLostTurn,
+    ],
     obstacle: snapshot.obstacle,
     result: snapshot.roundResult,
     final: snapshot.finalResult,
   });
-  if (key === lastRenderKey && snapshot.phase === "playing") return;
+  const activeOlympiaPhase = snapshot.mode === "olympia"
+    && !["lobby", "roundResult", "finished"].includes(snapshot.phase);
+  const activeObstaclePhase = snapshot.mode === "obstacle" && snapshot.phase !== "lobby";
+  const speakingQuestion = activeOlympiaPhase
+    || (snapshot.mode === "obstacle" && snapshot.phase === "obstacleReading");
+  document.querySelector(".game-columns")?.classList.toggle("obstacle-mode-active", activeObstaclePhase);
+  if (key === lastRenderKey && (snapshot.phase === "playing" || activeOlympiaPhase || activeObstaclePhase)) return;
   lastRenderKey = key;
+  if (!speakingQuestion) stopOlympiaVoice();
   if (snapshot.phase === "lobby") {
     playLobbyMusic();
     renderLobby(snapshot);
+  } else if (snapshot.mode === "obstacle" && snapshot.phase === "finished") {
+    stopOlympiaVoice();
+    renderObstacleFinal(snapshot);
+    stopRoomPolling();
+  } else if (snapshot.mode === "obstacle") {
+    renderObstacleGame(snapshot);
+  } else if (activeOlympiaPhase) {
+    renderOlympia(snapshot);
   } else if (snapshot.phase === "playing") {
     if (!activeGameTrackStarted) {
       playNextGameMusic();
@@ -738,6 +1301,7 @@ function renderRoom(snapshot) {
   } else if (snapshot.phase === "roundResult") {
     renderRoundResult(snapshot, username);
   } else if (snapshot.phase === "finished") {
+    stopOlympiaVoice();
     if (snapshot.finalResult?.players?.some((player) => player.outcome === "win")) playVictoryMusic();
     renderFinalResult(snapshot);
     loadLeaderboard();
@@ -773,6 +1337,8 @@ function startRoomPolling() {
 }
 
 async function leaveRoom() {
+  stopOlympiaVoice();
+  olympiaSpeechKey = "";
   if (roomCode) {
     try {
       await request(`/api/minigame/rooms/${encodeURIComponent(roomCode)}/leave`, {

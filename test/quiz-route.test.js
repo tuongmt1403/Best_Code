@@ -28,6 +28,155 @@ test("leaves an imperfect-score analysis unchanged", () => {
   assert.equal(adaptPerfectScoreAnalysis(analysis, 4, 5, "History"), analysis);
 });
 
+test("opens direct lessons for menu topics without claiming quiz results", async () => {
+  const app = express();
+  app.use(express.json());
+  app.use(createQuizRouter({ groqApiKeys: [] }));
+  const server = app.listen(0);
+
+  try {
+    await new Promise((resolve, reject) => {
+      server.once("listening", resolve);
+      server.once("error", reject);
+    });
+    const baseUrl = `http://127.0.0.1:${server.address().port}`;
+    const requestLesson = (topicId, focusTopic, stepIndex = 0) => fetch(`${baseUrl}/api/study-roadmap/lesson`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ topicId, quizResults: [], stepIndex, focusTopic }),
+    });
+
+    const menuLessons = [
+      ["antiUsWar", "Hiệp định Genève", "Lịch sử: Hiệp định Genève"],
+      ["antiUsWar", "Hiệp định Paris", "Lịch sử: Hiệp định Paris"],
+      ["geography", "Khí hậu", "Địa lý: Khí hậu"],
+      ["cProgramming", "Con trỏ", "Lập trình C: Tìm hiểu về Con trỏ"],
+    ];
+    for (const [topicId, focusTopic, expectedTitle] of menuLessons) {
+      const response = await requestLesson(topicId, focusTopic);
+      const lesson = await response.json();
+      assert.equal(response.status, 200);
+      assert.equal(lesson.title, expectedTitle);
+      assert.equal(lesson.focusTopic, focusTopic);
+      assert.equal(lesson.totalSteps, 3);
+      assert.match(lesson.practiceQuestion, new RegExp(focusTopic));
+      assert.equal(Object.hasOwn(lesson, "quizQuestion"), false);
+      assert.equal(Object.hasOwn(lesson, "quizOptions"), false);
+      assert.equal(Object.hasOwn(lesson, "correctIndex"), false);
+      assert.equal(Object.hasOwn(lesson, "answerIndex"), false);
+      assert.doesNotMatch(lesson.theory, /Bạn đã làm tốt câu|bạn đã chọn/);
+      if (focusTopic === "Hiệp định Genève") {
+        assert.doesNotMatch(`${lesson.title} ${lesson.theory} ${lesson.practiceQuestion}`, /Hiệp định Paris/);
+      }
+    }
+
+    const advancedResponse = await requestLesson("cProgramming", "Con trỏ", 2);
+    const advanced = await advancedResponse.json();
+    assert.equal(advanced.phase, "advanced");
+    assert.match(advanced.practiceQuestion, /trường hợp đặc biệt/);
+
+    const invalidTopic = await requestLesson("geography", "Hiệp định Paris");
+    assert.equal(invalidTopic.status, 400);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("reviews open-ended chat answers with specific feedback and a detailed explanation", async () => {
+  const originalFetch = globalThis.fetch;
+  let aiRequests = 0;
+  const prompts = [];
+  globalThis.fetch = async (url, options = {}) => {
+    if (typeof url === "string" && url.startsWith("http://127.0.0.1:")) {
+      return originalFetch(url, options);
+    }
+    if (String(url).startsWith("http://localhost:11434/api/chat")) {
+      aiRequests += 1;
+      prompts.push(JSON.parse(options.body).messages[1].content);
+      const correct = aiRequests === 2;
+      return Response.json({
+        message: {
+          content: JSON.stringify({
+            correct,
+            feedback: correct ? "Em đã nêu đúng trọng tâm." : "Em đang nhầm hai hiệp định khác nhau.",
+            whyWrong: correct ? "" : "Câu trả lời đang gắn nội dung Paris với câu hỏi về Genève.",
+            focus: "Phân biệt mục tiêu và nội dung của từng hiệp định.",
+            hint: "Xác định hội nghị và thời điểm gắn với hiệp định đang được hỏi.",
+            explanation: correct ? "Hiệp định Genève được ký tháng 7 năm 1954 sau chiến thắng Điện Biên Phủ." : "",
+            example: correct ? "Có thể nêu mối liên hệ giữa chiến thắng Điện Biên Phủ và đàm phán tại Genève." : "",
+          }),
+        },
+      });
+    }
+    throw new Error(`Unexpected external request: ${url}`);
+  };
+
+  const app = express();
+  app.use(express.json());
+  app.use(createQuizRouter({ groqApiKeys: [] }));
+  const server = app.listen(0);
+
+  try {
+    await new Promise((resolve, reject) => {
+      server.once("listening", resolve);
+      server.once("error", reject);
+    });
+    const baseUrl = `http://127.0.0.1:${server.address().port}`;
+    const request = (path, body) => originalFetch(`${baseUrl}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const lessonResponse = await request("/api/study-roadmap/lesson", {
+      topicId: "antiUsWar",
+      quizResults: [],
+      stepIndex: 0,
+      focusTopic: "Hiệp định Genève",
+    });
+    const lesson = await lessonResponse.json();
+    assert.equal(lessonResponse.status, 200);
+    assert.match(lesson.practiceQuestion, /Hiệp định Genève/);
+    assert.doesNotMatch(lesson.practiceQuestion, /Hiệp định Paris/);
+    assert.equal(Object.hasOwn(lesson, "quizQuestion"), false);
+    assert.equal(Object.hasOwn(lesson, "quizOptions"), false);
+
+    const answerBody = {
+      topicId: "antiUsWar",
+      focusTopic: lesson.focusTopic,
+      phase: lesson.phase,
+      question: lesson.practiceQuestion,
+      answer: "Hiệp định Paris kết thúc chiến tranh ở Việt Nam.",
+      hintLevel: 0,
+      attemptNumber: 1,
+    };
+    const wrongResponse = await request("/api/study-roadmap/answer", answerBody);
+    const wrong = await wrongResponse.json();
+    assert.equal(wrongResponse.status, 200);
+    assert.equal(wrong.correct, false);
+    assert.match(wrong.whyWrong, /Paris.*Genève/);
+    assert.match(wrong.focus, /hiệp định/);
+    assert.match(wrong.hint, /hiệp định/);
+    assert.equal(Object.hasOwn(wrong, "solution"), false);
+    assert.match(prompts[0], /Câu trả lời của học sinh: Hiệp định Paris kết thúc chiến tranh ở Việt Nam/);
+    assert.match(prompts[0], /Câu hỏi:.*Hiệp định Genève/);
+
+    const correctResponse = await request("/api/study-roadmap/answer", {
+      ...answerBody,
+      answer: "Hiệp định Genève được ký tháng 7 năm 1954 sau chiến thắng Điện Biên Phủ.",
+      attemptNumber: 2,
+    });
+    const correct = await correctResponse.json();
+    assert.equal(correctResponse.status, 200);
+    assert.equal(correct.correct, true);
+    assert.match(correct.explanation, /tháng 7 năm 1954/);
+    assert.match(correct.example, /chiến thắng Điện Biên Phủ/);
+    assert.equal(aiRequests, 2);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("builds foundation, practice, and advanced roadmap steps from quiz performance", async () => {
   const originalFetch = globalThis.fetch;
   let aiRequests = 0;
@@ -60,7 +209,11 @@ test("builds foundation, practice, and advanced roadmap steps from quiz performa
           content: JSON.stringify({
             correct: false,
             feedback: "Đáp án là 0.",
-            hint: "Hãy chọn 0.",
+            whyWrong: "Bạn đang tính phần tử đầu tiên từ một thay vì từ vị trí đầu của mảng.",
+            focus: "Quy tắc đánh chỉ số trong mảng C.",
+            hint: "Hãy xem lại chỉ số của phần tử đầu tiên.",
+            explanation: "",
+            example: "",
           }),
         },
       });

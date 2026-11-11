@@ -129,7 +129,74 @@ function shuffleLetters(answer, suppliedLetters) {
   return letters;
 }
 
-async function createObstacleQuestionSet(topicId, generateQuestions, recentGeneratedQuestions) {
+function obstacleNumber(value, min, max) {
+  if (!Number.isFinite(value) || value < min || value > max) {
+    throw new Error("Hình minh họa AI tạo có tọa độ không hợp lệ.");
+  }
+  return Number(value.toFixed(2));
+}
+
+function obstacleColor(value) {
+  if (typeof value !== "string" || !/^#[0-9a-f]{6}$/i.test(value)) {
+    throw new Error("Hình minh họa AI tạo có màu không hợp lệ.");
+  }
+  return value;
+}
+
+function createObstacleIllustration(illustration) {
+  const background = obstacleColor(illustration?.background);
+  if (!Array.isArray(illustration.elements) || illustration.elements.length < 10 || illustration.elements.length > 30) {
+    throw new Error("AI phải tự vẽ hình minh họa bằng ít nhất 10 chi tiết vector.");
+  }
+  const shapes = illustration.elements.map((shape) => {
+    if (!shape || typeof shape !== "object") throw new Error("Hình minh họa AI tạo không đúng định dạng.");
+    if (shape.type === "circle") {
+      const cx = obstacleNumber(shape.cx, 0, 100);
+      const cy = obstacleNumber(shape.cy, 0, 100);
+      const r = obstacleNumber(shape.r, 0.5, 50);
+      return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${obstacleColor(shape.fill)}"/>`;
+    }
+    if (shape.type === "ellipse") {
+      const cx = obstacleNumber(shape.cx, 0, 100);
+      const cy = obstacleNumber(shape.cy, 0, 100);
+      const rx = obstacleNumber(shape.rx, 0.5, 50);
+      const ry = obstacleNumber(shape.ry, 0.5, 50);
+      return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${obstacleColor(shape.fill)}"/>`;
+    }
+    if (shape.type === "rect") {
+      const x = obstacleNumber(shape.x, 0, 100);
+      const y = obstacleNumber(shape.y, 0, 100);
+      const width = obstacleNumber(shape.width, 0.5, 100);
+      const height = obstacleNumber(shape.height, 0.5, 100);
+      if (x + width > 100 || y + height > 100) throw new Error("Hình chữ nhật trong tranh AI nằm ngoài khung vẽ.");
+      const rx = obstacleNumber(shape.rx ?? 0, 0, Math.min(width, height) / 2);
+      return `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${rx}" fill="${obstacleColor(shape.fill)}"/>`;
+    }
+    if (shape.type === "line") {
+      const x1 = obstacleNumber(shape.x1, 0, 100);
+      const y1 = obstacleNumber(shape.y1, 0, 100);
+      const x2 = obstacleNumber(shape.x2, 0, 100);
+      const y2 = obstacleNumber(shape.y2, 0, 100);
+      const strokeWidth = obstacleNumber(shape.strokeWidth, 0.5, 8);
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${obstacleColor(shape.stroke)}" stroke-width="${strokeWidth}" stroke-linecap="round"/>`;
+    }
+    if (shape.type === "polygon") {
+      if (!Array.isArray(shape.points) || shape.points.length < 3 || shape.points.length > 16) {
+        throw new Error("Đa giác trong tranh AI không hợp lệ.");
+      }
+      const points = shape.points.map((point) => {
+        if (!Array.isArray(point) || point.length !== 2) throw new Error("Điểm vẽ trong tranh AI không hợp lệ.");
+        return `${obstacleNumber(point[0], 0, 100)},${obstacleNumber(point[1], 0, 100)}`;
+      }).join(" ");
+      return `<polygon points="${points}" fill="${obstacleColor(shape.fill)}"/>`;
+    }
+    throw new Error("Hình minh họa AI dùng một loại hình chưa được hỗ trợ.");
+  });
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="${background}"/>${shapes.join("")}</svg>`;
+  return svg;
+}
+
+async function createObstacleQuestionSet(topicId, clueCount, generateQuestions, recentGeneratedQuestions) {
   if (typeof generateQuestions !== "function") {
     throw new Error("Chế độ này cần AI để tạo bộ chướng ngại vật theo chủ đề.");
   }
@@ -139,23 +206,24 @@ async function createObstacleQuestionSet(topicId, generateQuestions, recentGener
   const result = await generateQuestions({
     topicId,
     topic: bank.title,
-    count: 5,
+    count: clueCount,
     avoidQuestions: previousQuestions,
     avoidKeywords: recentGeneratedQuestions.get(`${historyKey}:keywords`) || [],
     mode: "obstacle",
   });
   const generated = result?.questions;
   const obstacle = result?.obstacle;
-  validateGeneratedQuestions(generated, 5);
+  validateGeneratedQuestions(generated, clueCount + 1);
   if (!obstacle || typeof obstacle.keyword !== "string" || !obstacle.keyword.trim()
     || typeof obstacle.logic !== "string" || !obstacle.logic.trim()) {
     throw new Error("AI không trả đúng từ khóa và giải thích logic của chướng ngại vật.");
   }
+  const illustration = createObstacleIllustration(obstacle.illustration);
   const keyword = normalizeQuestionText(obstacle.keyword).replaceAll(" ", "");
   if (!/^[\p{L}\p{N}]{2,32}$/u.test(keyword)) {
     throw new Error("Từ khóa AI tạo không hợp lệ.");
   }
-  const centralQuestion = generated[4];
+  const centralQuestion = generated[clueCount];
   if (normalizeQuestionText(centralQuestion.options[centralQuestion.answer]).replaceAll(" ", "") !== keyword) {
     throw new Error("Đáp án đúng của ô trung tâm phải khớp chính xác với từ khóa chướng ngại vật.");
   }
@@ -174,14 +242,89 @@ async function createObstacleQuestionSet(topicId, generateQuestions, recentGener
   return {
     questions: generated,
     obstacleKeywordLength: [...keyword].length,
+    obstacleClueCount: clueCount,
     obstacleKeyword: keyword.toLocaleUpperCase("vi"),
     obstacleLogic: obstacle.logic.trim(),
+    obstacleImage: illustration,
+    questionReview: result.review || null,
+  };
+}
+
+const olympiaImages = {
+  english: "/images/picture-maybay.svg",
+  cProgramming: "/images/picture-c-pointer.svg",
+  history: "/images/picture-history-dienbien.svg",
+  geography: "/images/obstacle-mystery.svg",
+};
+
+function validateOlympiaQuestions(result, questionCount) {
+  if (!result || typeof result.introQuestion !== "string" || !result.introQuestion.trim()
+    || result.introQuestion.length > 500) {
+    throw new Error("AI chưa tạo câu hỏi mở đầu cho Đường lên đỉnh Olympia.");
+  }
+  if (!Array.isArray(result.questions) || result.questions.length !== questionCount) {
+    throw new Error(`AI phải tạo đúng ${questionCount} câu hỏi Olympia.`);
+  }
+  for (const [index, question] of result.questions.entries()) {
+    if (!question || typeof question.question !== "string" || !question.question.trim()
+      || question.question.length > 500
+      || (question.prompt !== undefined && typeof question.prompt !== "string")
+      || typeof question.answer !== "string" || !question.answer.trim()
+      || typeof question.explanation !== "string" || !question.explanation.trim()
+      || (question.acceptedAnswers !== undefined
+        && (!Array.isArray(question.acceptedAnswers)
+          || question.acceptedAnswers.some((answer) => typeof answer !== "string" || !answer.trim())))) {
+      throw new Error(`Câu hỏi Olympia số ${index + 1} không đúng định dạng.`);
+    }
+  }
+}
+
+async function createOlympiaQuestionSet(topicId, questionCount, generateQuestions, recentGeneratedQuestions) {
+  if (typeof generateQuestions !== "function") {
+    throw new Error("Chế độ Olympia cần AI để tạo câu hỏi theo chủ đề.");
+  }
+  const historyKey = `olympia:${topicId}`;
+  const previousQuestions = recentGeneratedQuestions.get(historyKey) || [];
+  const result = await generateQuestions({
+    topicId,
+    topic: questionBanks[topicId].title,
+    count: questionCount,
+    avoidQuestions: previousQuestions,
+    mode: "olympia",
+  });
+  validateOlympiaQuestions(result, questionCount);
+  const previousSet = new Set(previousQuestions.map(normalizeQuestionText));
+  if (result.questions.some((question) => previousSet.has(normalizeQuestionText(question.question)))) {
+    throw new Error("AI lặp lại câu hỏi Olympia của ván gần đây.");
+  }
+  recentGeneratedQuestions.set(
+    historyKey,
+    [...previousQuestions, ...result.questions.map((question) => question.question)].slice(-60),
+  );
+  const image = olympiaImages[topicId];
+  return {
+    introQuestion: result.introQuestion.trim(),
+    introExplanation: typeof result.introExplanation === "string" ? result.introExplanation.trim() : "",
+    image,
+    questions: result.questions.map((question) => ({
+      prompt: question.prompt?.trim() || "CÂU HỎI GIÀNH QUYỀN",
+      question: question.question.trim(),
+      answer: question.answer.trim(),
+      acceptedAnswers: [...new Set([question.answer, ...(question.acceptedAnswers || [])].map((answer) => answer.trim()))],
+      explanation: question.explanation.trim(),
+      image,
+    })),
     questionReview: result.review || null,
   };
 }
 
 const ROUND_DURATION_MS = 15_000;
 const PICTURE_BUZZ_DURATION_MS = 10_000;
+const OLYMPIA_INTRO_DURATION_MS = 25_000;
+const OLYMPIA_BUZZ_COUNTDOWN_MS = 3_000;
+const OLYMPIA_ANSWER_DURATION_MS = 10_000;
+const OLYMPIA_QUESTION_DURATION_MS = 30_000;
+const OLYMPIA_SPEECH_TIMEOUT_MS = 60_000;
 const RESULT_DURATION_MS = 2_500;
 const ROOM_IDLE_MS = 30 * 60 * 1000;
 const ROOM_CODE_LENGTH = 6;
@@ -259,7 +402,14 @@ function validateGeneratedQuestions(questions, questionCount) {
 
 function roomSnapshot(room, userId, now) {
   const ownPlayer = room.players.get(userId);
-  const currentQuestion = room.phase === "playing" ? room.questions[room.questionIndex] : null;
+  const isOlympiaQuestionPhase = room.mode === "olympia"
+    && ["questionReading", "countdown", "playing"].includes(room.phase);
+  const isObstacleQuestionPhase = room.mode === "obstacle"
+    && ["obstacleReading", "playing", "obstacleResult"].includes(room.phase);
+  const currentQuestion = (room.phase === "playing" || isOlympiaQuestionPhase || isObstacleQuestionPhase)
+    && room.questionIndex >= 0
+    ? room.questions[room.questionIndex]
+    : null;
   const response = {
     code: room.code,
     phase: room.phase,
@@ -267,7 +417,8 @@ function roomSnapshot(room, userId, now) {
     mode: room.mode || "quiz",
     topic: room.mode === "picture"
       ? pictureQuestionBanks[room.topicId]?.title || pictureQuestionBanks.english.title
-      : room.mode === "obstacle" ? `Vượt Chướng Ngại Vật · ${questionBanks[room.topicId].title}` : questionBanks[room.topicId].title,
+      : room.mode === "obstacle" ? `Vượt Chướng Ngại Vật · ${questionBanks[room.topicId].title}`
+        : room.mode === "olympia" ? `Đường lên đỉnh Olympia · ${questionBanks[room.topicId].title}` : questionBanks[room.topicId].title,
     questionCount: room.questionCount,
     questionReview: room.questionReview || null,
     players: [...room.players.values()].map(publicPlayer),
@@ -275,10 +426,14 @@ function roomSnapshot(room, userId, now) {
     currentQuestion: currentQuestion
       ? {
         number: room.questionIndex + 1,
-        total: room.questionCount,
+        total: room.mode === "obstacle" ? room.obstacleClueCount + 1 : room.questionCount,
         prompt: currentQuestion.prompt,
         question: currentQuestion.question,
-        options: currentQuestion.options,
+        ...(room.mode === "olympia"
+          ? { image: currentQuestion.image }
+          : room.mode === "obstacle" && room.questionIndex === room.obstacleClueCount
+            ? {}
+            : { options: currentQuestion.options }),
         deadline: room.roundDeadline,
         timeLeftMs: Math.max(0, room.roundDeadline - now),
       }
@@ -303,18 +458,42 @@ function roomSnapshot(room, userId, now) {
       : null,
     obstacle: room.mode === "obstacle"
       ? {
+        image: `/api/minigame/rooms/${encodeURIComponent(room.code)}/obstacle/image`,
+        clueCount: room.obstacleClueCount,
         keywordLength: room.obstacleKeywordLength,
         revealedRows: room.obstacleRevealedRows.map((revealed) => revealed),
+        completedRows: room.obstacleCompletedRows.map((completed) => completed),
+        centerRevealed: room.obstacleCenterRevealed,
+        centerResolved: room.obstacleCenterResolved,
+        canSelectCenter: room.obstacleCompletedRows.every(Boolean) && !room.obstacleCenterResolved,
+        selectedRow: room.phase === "obstacleReading" || room.phase === "playing" || room.phase === "obstacleResult"
+          ? room.questionIndex + 1
+          : null,
         revealedAnswers: room.obstacleRevealedRows.map((revealed, index) =>
           revealed ? room.questions[index].options[room.questions[index].answer] : null),
-        centralQuestion: room.phase === "playing" && room.questionIndex === 4,
-        keyword: room.mode === "obstacle"
-          && (room.phase === "finished" || (room.phase === "roundResult" && room.questionIndex === 4))
-          ? room.obstacleKeyword
-          : null,
-        logic: room.phase === "finished" || (room.phase === "roundResult" && room.questionIndex === 4)
-          ? room.obstacleLogic
-          : null,
+        centralQuestion: room.questionIndex === room.obstacleClueCount && isObstacleQuestionPhase,
+        keyword: room.phase === "finished" ? room.obstacleKeyword : null,
+        logic: room.phase === "finished" ? room.obstacleLogic : null,
+        canBuzz: room.phase === "playing" && !room.buzzOwnerId && !room.buzzBlockedIds.has(userId),
+        canAnswer: room.phase === "playing" && room.buzzOwnerId === userId,
+        buzzOwnerName: room.buzzOwnerId ? room.players.get(room.buzzOwnerId)?.username || "" : "",
+        hasLostTurn: room.buzzBlockedIds.has(userId),
+        answerResult: room.obstacleAnswerResult,
+        finalOutcome: room.obstacleFinalOutcome || null,
+      }
+      : null,
+    olympia: room.mode === "olympia"
+      ? {
+        image: room.olympiaImage,
+        introQuestion: room.olympiaIntroQuestion,
+        introExplanation: room.phase === "finished" ? room.olympiaIntroExplanation : null,
+        introTimeLeftMs: room.phase === "intro" ? Math.max(0, room.introDeadline - now) : 0,
+        countdownTimeLeftMs: room.phase === "countdown" ? Math.max(0, room.buzzAvailableAt - now) : 0,
+        answerTimeLeftMs: room.buzzOwnerId ? Math.max(0, room.buzzDeadline - now) : 0,
+        buzzOwnerName: room.buzzOwnerId ? room.players.get(room.buzzOwnerId)?.username || "" : "",
+        canBuzz: room.phase === "playing" && !room.buzzOwnerId && !room.buzzBlockedIds.has(userId),
+        canAnswer: room.phase === "playing" && room.buzzOwnerId === userId,
+        hasLostTurn: room.buzzBlockedIds.has(userId),
       }
       : null,
     roundResult: room.phase === "roundResult" ? room.roundResult : null,
@@ -360,6 +539,55 @@ function finishRoom(room, db, now) {
   room.finishedAt = now;
 }
 
+function finishObstacleRoom(room, now, outcome) {
+  room.phase = "finished";
+  room.finishedAt = now;
+  room.obstacleFinalOutcome = outcome;
+  room.finalResult = {
+    winnerIds: [],
+    players: [...room.players.values()].map((player) => ({
+      username: player.username,
+      score: 0,
+      correctAnswers: 0,
+      outcome: "draw",
+    })),
+  };
+}
+
+function settleObstacleQuestion(room, now, correct) {
+  const index = room.questionIndex;
+  const question = room.questions[index];
+  const answer = question.options[question.answer];
+  room.obstacleAnswerResult = {
+    rowNumber: index + 1,
+    correct,
+    correctAnswer: answer,
+    explanation: question.explanation,
+  };
+  room.buzzOwnerId = null;
+  room.buzzDeadline = 0;
+  room.speechDeadline = 0;
+  if (index === room.obstacleClueCount) {
+    room.obstacleCenterResolved = true;
+    room.obstacleCenterRevealed = correct;
+    finishObstacleRoom(room, now, correct ? "solved" : "not-solved");
+  } else {
+    room.obstacleCompletedRows[index] = true;
+    room.obstacleRevealedRows[index] = correct;
+    room.phase = "obstacleResult";
+  }
+  room.lastActivityAt = now;
+}
+
+function normalizeObstacleAnswer(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "");
+}
+
 function resolveRound(room, now) {
   const question = room.questions[room.questionIndex];
   const players = [...room.players.values()];
@@ -383,7 +611,7 @@ function resolveRound(room, now) {
     };
   });
   const bestPoints = Math.max(...results.map((result) => result.points));
-  if (room.mode === "obstacle" && results.some((result) => result.correct) && room.questionIndex < 4) {
+  if (room.mode === "obstacle" && results.some((result) => result.correct) && room.questionIndex < room.obstacleClueCount) {
     room.obstacleRevealedRows[room.questionIndex] = true;
   }
   const winners = results.filter((result) => result.points === bestPoints && result.points > 0);
@@ -440,8 +668,121 @@ function resolvePictureRound(room, db, now, winnerId, timedOut) {
   room.lastActivityAt = now;
 }
 
+function resolveOlympiaRound(room, now, winnerId, answerTimedOut = false) {
+  const question = room.questions[room.questionIndex];
+  const winner = winnerId ? room.players.get(winnerId) : null;
+  const players = [...room.players.values()].map((player) => {
+    const correct = player.id === winnerId;
+    return {
+      username: player.username,
+      correct,
+      points: correct ? 100 : 0,
+      response: correct
+        ? "Giành quyền và trả lời đúng!"
+        : player.id === room.buzzOwnerId && answerTimedOut
+          ? "Hết thời gian trả lời"
+          : room.buzzBlockedIds.has(player.id)
+            ? "Đã mất lượt câu này"
+            : "Chưa giành quyền",
+      isRoundWinner: correct,
+    };
+  });
+  if (winner) {
+    winner.score += 100;
+    winner.correctAnswers += 1;
+  }
+  room.phase = "roundResult";
+  room.roundResult = {
+    number: room.questionIndex + 1,
+    correctAnswer: question.answer,
+    explanation: question.explanation,
+    players,
+  };
+  room.nextRoundAt = now + RESULT_DURATION_MS;
+  room.buzzOwnerId = null;
+  room.buzzDeadline = 0;
+  room.lastActivityAt = now;
+}
+
 function advanceRoom(room, db, now) {
   let transitions = 0;
+  if (room.mode === "obstacle") {
+    if (room.phase === "obstacleReading" && now >= room.speechDeadline) {
+      room.phase = "playing";
+      room.speechDeadline = 0;
+      room.lastActivityAt = now;
+    }
+    return;
+  }
+  if (room.mode === "olympia") {
+    while (transitions <= room.questionCount * 3 + 4) {
+      if (room.phase === "introReading" && now >= room.speechDeadline) {
+        room.phase = "intro";
+        room.introDeadline = now + OLYMPIA_INTRO_DURATION_MS;
+        room.lastActivityAt = now;
+        transitions += 1;
+        continue;
+      }
+      if (room.phase === "questionReading" && now >= room.speechDeadline) {
+        room.phase = "countdown";
+        room.buzzAvailableAt = now + OLYMPIA_BUZZ_COUNTDOWN_MS;
+        room.lastActivityAt = now;
+        transitions += 1;
+        continue;
+      }
+      if (room.phase === "intro" && now >= room.introDeadline) {
+        room.questionIndex = 0;
+        room.phase = "questionReading";
+        room.speechDeadline = now + OLYMPIA_SPEECH_TIMEOUT_MS;
+        room.buzzBlockedIds = new Set();
+        room.lastActivityAt = now;
+        transitions += 1;
+        continue;
+      }
+      if (room.phase === "countdown" && now >= room.buzzAvailableAt) {
+        room.phase = "playing";
+        room.roundStartedAt = now;
+        room.roundDeadline = now + OLYMPIA_QUESTION_DURATION_MS;
+        room.lastActivityAt = now;
+        transitions += 1;
+        continue;
+      }
+      if (room.phase === "playing" && room.buzzOwnerId && now >= room.buzzDeadline) {
+        room.buzzBlockedIds.add(room.buzzOwnerId);
+        room.buzzOwnerId = null;
+        room.buzzDeadline = 0;
+        if ([...room.players.keys()].every((id) => room.buzzBlockedIds.has(id))) {
+          resolveOlympiaRound(room, now, null, true);
+        }
+        room.lastActivityAt = now;
+        transitions += 1;
+        continue;
+      }
+      if (room.phase === "playing" && now >= room.roundDeadline) {
+        resolveOlympiaRound(room, now, null);
+        transitions += 1;
+        continue;
+      }
+      if (room.phase === "roundResult" && now >= room.nextRoundAt) {
+        if (room.questionIndex + 1 >= room.questionCount) {
+          finishRoom(room, db, now);
+        } else {
+          room.questionIndex += 1;
+          room.phase = "questionReading";
+          room.speechDeadline = now + OLYMPIA_SPEECH_TIMEOUT_MS;
+          room.buzzOwnerId = null;
+          room.buzzDeadline = 0;
+          room.buzzBlockedIds = new Set();
+          room.roundResult = null;
+          room.lastActivityAt = now;
+        }
+        transitions += 1;
+        continue;
+      }
+      break;
+    }
+    return;
+  }
   if (room.mode === "picture") {
     while (transitions <= room.questionCount * 2 + 2) {
       if (room.phase === "playing" && room.buzzOwnerId && now >= room.buzzDeadline) {
@@ -627,11 +968,12 @@ export function createMiniGame({
     const { topicId, questionCount, mode } = req.body || {};
     const isPictureMode = mode === "picture";
     const isObstacleMode = mode === "obstacle";
+    const isOlympiaMode = mode === "olympia";
     if (!isPictureMode && !questionBanks[topicId]) return res.status(400).json({ error: "Chọn một chủ đề hợp lệ." });
     if (isPictureMode && !pictureQuestionBanks[topicId] && topicId !== "picture") {
       return res.status(400).json({ error: "Chọn một chủ đề hợp lệ cho Đuổi hình bắt chữ." });
     }
-    if (!isPictureMode && !isObstacleMode && ![5, 10, 15].includes(questionCount)) {
+    if (!isPictureMode && ![5, 10, 15].includes(questionCount)) {
       return res.status(400).json({ error: "Số câu hỏi phải là 5, 10 hoặc 15." });
     }
     if (playerRooms.has(req.authUser.id)) {
@@ -652,20 +994,35 @@ export function createMiniGame({
           questionReview: null,
         }
         : isObstacleMode
-          ? await createObstacleQuestionSet(topicId, generateQuestions, recentGeneratedQuestions)
+          ? await createObstacleQuestionSet(topicId, questionCount, generateQuestions, recentGeneratedQuestions)
+          : isOlympiaMode
+            ? await createOlympiaQuestionSet(topicId, questionCount, generateQuestions, recentGeneratedQuestions)
         : await createQuestionSet(topicId, questionCount);
       let code = getRoomCode();
       while (rooms.has(code)) code = getRoomCode();
       const room = {
         code,
-        mode: isPictureMode ? "picture" : isObstacleMode ? "obstacle" : "quiz",
+        mode: isPictureMode ? "picture" : isObstacleMode ? "obstacle" : isOlympiaMode ? "olympia" : "quiz",
         topicId: isPictureMode ? (pictureQuestionBanks[topicId] ? topicId : "english") : topicId,
-        questionCount: isPictureMode || isObstacleMode ? 5 : questionCount,
+        questionCount: isPictureMode ? 5 : questionCount,
         questions: questionSet.questions,
-        obstacleRevealedRows: isObstacleMode ? [false, false, false, false] : null,
+        olympiaIntroQuestion: isOlympiaMode ? questionSet.introQuestion : null,
+        olympiaIntroExplanation: isOlympiaMode ? questionSet.introExplanation : null,
+        olympiaImage: isOlympiaMode ? questionSet.image : null,
+        introDeadline: 0,
+        speechDeadline: 0,
+        buzzAvailableAt: 0,
+        obstacleClueCount: isObstacleMode ? questionSet.obstacleClueCount : null,
+        obstacleRevealedRows: isObstacleMode ? Array(questionSet.obstacleClueCount).fill(false) : null,
+        obstacleCompletedRows: isObstacleMode ? Array(questionSet.obstacleClueCount).fill(false) : null,
+        obstacleCenterRevealed: false,
+        obstacleCenterResolved: false,
         obstacleKeywordLength: isObstacleMode ? questionSet.obstacleKeywordLength : null,
         obstacleKeyword: isObstacleMode ? questionSet.obstacleKeyword : null,
         obstacleLogic: isObstacleMode ? questionSet.obstacleLogic : null,
+        obstacleImage: isObstacleMode ? questionSet.obstacleImage : null,
+        obstacleAnswerResult: null,
+        obstacleFinalOutcome: null,
         questionReview: questionSet.questionReview,
         phase: "lobby",
         players: new Map(),
@@ -716,6 +1073,18 @@ export function createMiniGame({
     return res.status(200).json(roomSnapshot(room, req.authUser.id, clock()));
   });
 
+  router.get("/api/minigame/rooms/:code/obstacle/image", (req, res) => {
+    const room = getRoom(req.params.code);
+    if (!room || room.mode !== "obstacle") return res.status(404).json({ error: "Không tìm thấy tranh chướng ngại vật." });
+    if (!room.players.has(req.authUser.id)) return res.status(403).json({ error: "Bạn chưa tham gia phòng này." });
+    res.set({
+      "Cache-Control": "private, max-age=3600",
+      "Content-Security-Policy": "default-src 'none'; style-src 'none'; script-src 'none'",
+      "X-Content-Type-Options": "nosniff",
+    });
+    return res.type("image/svg+xml").send(room.obstacleImage);
+  });
+
   router.get("/api/minigame/rooms/:code", (req, res) => {
     const room = getRoom(req.params.code);
     if (!room) return res.status(404).json({ error: "Phòng không còn hoạt động." });
@@ -754,10 +1123,13 @@ export function createMiniGame({
       return res.status(409).json({ error: `Chờ ${unacknowledged.map((player) => player.username).join(", ")} xác nhận đã hiểu luật chơi.` });
     }
     const now = clock();
-    room.phase = "playing";
-    room.questionIndex = 0;
-    room.roundStartedAt = now;
-    room.roundDeadline = now + ROUND_DURATION_MS;
+    room.phase = room.mode === "olympia" ? "introReading" : room.mode === "obstacle" ? "obstacleSelect" : "playing";
+    room.questionIndex = room.mode === "olympia" || room.mode === "obstacle" ? -1 : 0;
+    room.roundStartedAt = room.mode === "olympia" || room.mode === "obstacle" ? 0 : now;
+    room.roundDeadline = room.mode === "olympia" || room.mode === "obstacle" ? 0 : now + ROUND_DURATION_MS;
+    room.introDeadline = 0;
+    room.speechDeadline = room.mode === "olympia" ? now + OLYMPIA_SPEECH_TIMEOUT_MS : 0;
+    room.buzzAvailableAt = 0;
     room.buzzOwnerId = null;
     room.buzzDeadline = 0;
     room.buzzBlockedIds = new Set();
@@ -765,21 +1137,138 @@ export function createMiniGame({
     return res.json(roomSnapshot(room, req.authUser.id, now));
   });
 
+  router.post("/api/minigame/rooms/:code/obstacle/select", (req, res) => {
+    const room = getRoom(req.params.code);
+    if (!room) return res.status(404).json({ error: "Không tìm thấy phòng." });
+    if (room.mode !== "obstacle") return res.status(409).json({ error: "Phòng này không dùng bảng chướng ngại vật." });
+    if (!room.players.has(req.authUser.id)) return res.status(403).json({ error: "Bạn chưa tham gia phòng này." });
+    advanceRoom(room, db, clock());
+    if (!["obstacleSelect", "obstacleResult"].includes(room.phase)) {
+      return res.status(409).json({ error: "Hãy hoàn thành câu đang mở trước." });
+    }
+    const rowNumber = req.body?.rowNumber;
+    const centerNumber = room.obstacleClueCount + 1;
+    if (!Number.isInteger(rowNumber) || rowNumber < 1 || rowNumber > centerNumber) {
+      return res.status(400).json({ error: `Chọn một ô từ 1 đến ${centerNumber}.` });
+    }
+    const index = rowNumber - 1;
+    if (index === room.obstacleClueCount && !room.obstacleCompletedRows.every(Boolean)) {
+      return res.status(409).json({ error: "Hãy hoàn thành tất cả hàng ngang trước khi mở ô trung tâm." });
+    }
+    if (index < room.obstacleClueCount && room.obstacleCompletedRows[index]) {
+      return res.status(409).json({ error: "Hàng ngang này đã được mở hoặc đã khép lại." });
+    }
+    if (index === room.obstacleClueCount && room.obstacleCenterResolved) {
+      return res.status(409).json({ error: "Ô trung tâm đã được trả lời." });
+    }
+    const now = clock();
+    room.questionIndex = index;
+    room.phase = "obstacleReading";
+    room.speechDeadline = now + OLYMPIA_SPEECH_TIMEOUT_MS;
+    room.buzzOwnerId = null;
+    room.buzzDeadline = 0;
+    room.buzzBlockedIds = new Set();
+    room.obstacleAnswerResult = null;
+    room.lastActivityAt = now;
+    return res.json(roomSnapshot(room, req.authUser.id, now));
+  });
+
+  router.post("/api/minigame/rooms/:code/speech-complete", (req, res) => {
+    const room = getRoom(req.params.code);
+    if (!room) return res.status(404).json({ error: "Không tìm thấy phòng." });
+    if (room.mode !== "olympia" && room.mode !== "obstacle") return res.status(409).json({ error: "Phòng này không dùng phần đọc câu hỏi." });
+    if (room.hostId !== req.authUser.id) return res.status(403).json({ error: "Chỉ người tạo phòng mới có thể xác nhận AI đã đọc xong." });
+    const now = clock();
+    advanceRoom(room, db, now);
+    if (room.mode === "obstacle" && room.phase === "obstacleReading") {
+      room.phase = "playing";
+      room.speechDeadline = 0;
+    } else if (room.phase === "introReading") {
+      room.phase = "intro";
+      room.introDeadline = now + OLYMPIA_INTRO_DURATION_MS;
+      room.speechDeadline = 0;
+    } else if (room.phase === "questionReading") {
+      room.phase = "countdown";
+      room.buzzAvailableAt = now + OLYMPIA_BUZZ_COUNTDOWN_MS;
+      room.speechDeadline = 0;
+    } else {
+      return res.status(409).json({ error: "Hiện không có câu hỏi Olympia nào đang chờ đọc xong." });
+    }
+    room.lastActivityAt = now;
+    return res.json(roomSnapshot(room, req.authUser.id, now));
+  });
+
   router.post("/api/minigame/rooms/:code/buzz", (req, res) => {
     const room = getRoom(req.params.code);
     if (!room) return res.status(404).json({ error: "Không tìm thấy phòng." });
-    if (room.mode !== "picture") return res.status(409).json({ error: "Chế độ hiện tại không dùng chuông giành quyền." });
-    if (room.phase !== "playing") return res.status(409).json({ error: "Chưa đến lượt giành quyền trả lời." });
+    if (room.mode !== "picture" && room.mode !== "olympia" && room.mode !== "obstacle") return res.status(409).json({ error: "Chế độ hiện tại không dùng chuông giành quyền." });
     const player = room.players.get(req.authUser.id);
     if (!player) return res.status(403).json({ error: "Bạn chưa tham gia phòng này." });
     const now = clock();
     advanceRoom(room, db, now);
     if (room.phase !== "playing") return res.status(409).json({ error: "Câu hỏi đã kết thúc." });
-    if (room.buzzBlockedIds.has(player.id)) return res.status(409).json({ error: "Bạn vừa trả lời sai; hãy nhường cơ hội cho người kia." });
+    if (room.buzzBlockedIds.has(player.id)) return res.status(409).json({ error: "Bạn đã mất lượt ở câu này; hãy nhường cơ hội cho người khác." });
     if (room.buzzOwnerId) return res.status(409).json({ error: "Đã có người giành quyền trả lời." });
-    if (now >= room.roundDeadline) return res.status(409).json({ error: "Hết thời gian giành quyền." });
+    if (room.mode !== "obstacle" && now >= room.roundDeadline) return res.status(409).json({ error: "Hết thời gian giành quyền." });
     room.buzzOwnerId = player.id;
-    room.buzzDeadline = now + PICTURE_BUZZ_DURATION_MS;
+    room.buzzDeadline = room.mode === "obstacle"
+      ? 0
+      : now + (room.mode === "olympia" ? OLYMPIA_ANSWER_DURATION_MS : PICTURE_BUZZ_DURATION_MS);
+    room.lastActivityAt = now;
+    return res.json(roomSnapshot(room, req.authUser.id, now));
+  });
+
+  router.post("/api/minigame/rooms/:code/obstacle/answer", (req, res) => {
+    const room = getRoom(req.params.code);
+    if (!room) return res.status(404).json({ error: "Không tìm thấy phòng." });
+    if (room.mode !== "obstacle") return res.status(409).json({ error: "Phòng này không dùng câu hỏi chướng ngại vật." });
+    const player = room.players.get(req.authUser.id);
+    if (!player) return res.status(403).json({ error: "Bạn chưa tham gia phòng này." });
+    advanceRoom(room, db, clock());
+    if (room.phase !== "playing") return res.status(409).json({ error: "Câu hỏi chưa mở hoặc đã kết thúc." });
+    if (room.buzzOwnerId !== player.id) return res.status(409).json({ error: "Hãy bấm chuông để nhận lượt trả lời trước." });
+    const question = room.questions[room.questionIndex];
+    const hasOption = Number.isInteger(req.body?.optionIndex);
+    const answerText = typeof req.body?.answer === "string" ? req.body.answer.trim() : "";
+    if (room.questionIndex === room.obstacleClueCount && hasOption) {
+      return res.status(400).json({ error: "Ô trung tâm cần nhập từ khóa bằng chữ." });
+    }
+    if ((!hasOption && !answerText)
+      || (hasOption && (req.body.optionIndex < 0 || req.body.optionIndex >= question.options.length))
+      || (answerText && answerText.length > 300)) {
+      return res.status(400).json({ error: "Hãy chọn một đáp án hợp lệ hoặc nhập câu trả lời ngắn." });
+    }
+    const expected = question.options[question.answer];
+    const correct = hasOption
+      ? req.body.optionIndex === question.answer
+      : normalizeObstacleAnswer(answerText) === normalizeObstacleAnswer(expected);
+    const now = clock();
+    if (correct) {
+      settleObstacleQuestion(room, now, true);
+    } else {
+      room.buzzBlockedIds.add(player.id);
+      room.buzzOwnerId = null;
+      room.buzzDeadline = 0;
+      if ([...room.players.keys()].every((id) => room.buzzBlockedIds.has(id))) {
+        settleObstacleQuestion(room, now, false);
+      } else {
+        room.lastActivityAt = now;
+      }
+    }
+    return res.json(roomSnapshot(room, req.authUser.id, now));
+  });
+
+  router.post("/api/minigame/rooms/:code/obstacle/continue", (req, res) => {
+    const room = getRoom(req.params.code);
+    if (!room) return res.status(404).json({ error: "Không tìm thấy phòng." });
+    if (room.mode !== "obstacle") return res.status(409).json({ error: "Phòng này không dùng bảng chướng ngại vật." });
+    if (!room.players.has(req.authUser.id)) return res.status(403).json({ error: "Bạn chưa tham gia phòng này." });
+    if (room.phase !== "obstacleResult") return res.status(409).json({ error: "Chưa có kết quả hàng ngang để tiếp tục." });
+    const now = clock();
+    room.phase = "obstacleSelect";
+    room.questionIndex = -1;
+    room.obstacleAnswerResult = null;
+    room.buzzBlockedIds = new Set();
     room.lastActivityAt = now;
     return res.json(roomSnapshot(room, req.authUser.id, now));
   });
@@ -815,9 +1304,41 @@ export function createMiniGame({
     return res.json(roomSnapshot(room, req.authUser.id, now));
   });
 
+  router.post("/api/minigame/rooms/:code/olympia-answer", (req, res) => {
+    const room = getRoom(req.params.code);
+    if (!room) return res.status(404).json({ error: "Không tìm thấy phòng." });
+    if (room.mode !== "olympia") return res.status(409).json({ error: "API trả lời này chỉ dùng cho Đường lên đỉnh Olympia." });
+    const player = room.players.get(req.authUser.id);
+    if (!player) return res.status(403).json({ error: "Bạn chưa tham gia phòng này." });
+    const answer = typeof req.body?.answer === "string" ? req.body.answer.trim() : "";
+    if (!answer || answer.length > 300) return res.status(400).json({ error: "Hãy nhập câu trả lời từ 1 đến 300 ký tự." });
+    const now = clock();
+    advanceRoom(room, db, now);
+    if (room.phase !== "playing") return res.status(409).json({ error: "Câu hỏi này đã khép lại." });
+    if (room.buzzOwnerId !== player.id) return res.status(409).json({ error: "Chỉ người bấm chuông giành quyền mới được trả lời." });
+    if (now >= room.buzzDeadline) return res.status(409).json({ error: "Hết thời gian trả lời; lượt đã chuyển cho người khác." });
+    const question = room.questions[room.questionIndex];
+    const normalizeAnswer = (value) => normalizeQuestionText(value).replaceAll(" ", "");
+    const acceptedAnswers = question.acceptedAnswers || [question.answer];
+    const correct = acceptedAnswers.some((candidate) => normalizeAnswer(candidate) === normalizeAnswer(answer));
+    if (correct) {
+      resolveOlympiaRound(room, now, player.id);
+    } else {
+      room.buzzBlockedIds.add(player.id);
+      room.buzzOwnerId = null;
+      room.buzzDeadline = 0;
+      if ([...room.players.keys()].every((id) => room.buzzBlockedIds.has(id))) {
+        resolveOlympiaRound(room, now, null);
+      }
+      room.lastActivityAt = now;
+    }
+    return res.json(roomSnapshot(room, req.authUser.id, now));
+  });
+
   router.post("/api/minigame/rooms/:code/answer", (req, res) => {
     const room = getRoom(req.params.code);
     if (!room) return res.status(404).json({ error: "Không tìm thấy phòng." });
+    if (room.mode === "obstacle") return res.status(409).json({ error: "Hãy dùng chuông và câu trả lời của bảng chướng ngại vật." });
     const player = room.players.get(req.authUser.id);
     if (!player) return res.status(403).json({ error: "Bạn chưa tham gia phòng này." });
     const now = clock();
@@ -843,7 +1364,7 @@ export function createMiniGame({
     const room = getRoom(req.params.code);
     if (!room) return res.json({ ok: true });
     if (!room.players.has(req.authUser.id)) return res.json({ ok: true });
-    if (room.phase === "playing" || room.phase === "roundResult") {
+    if (room.phase !== "lobby" && room.phase !== "finished") {
       return res.status(409).json({ error: "Hãy hoàn thành ván chơi trước khi rời phòng." });
     }
     removePlayer(room, req.authUser.id);

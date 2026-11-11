@@ -17,8 +17,27 @@ or private/incognito window.
 
 The current offline question bank includes English vocabulary, introductory C, and
 Vietnamese history. Question and option order are randomized per room. Correct answers
-stay on the server until a round ends. No external AI or quiz-provider key is needed
-to play.
+stay on the server until a round ends. Standard quiz and picture modes need no AI key.
+
+The AI-powered **Vượt Chướng Ngại Vật** mode lets the host choose 5, 10, or 15 clue
+rows. It creates one clue question per row, a separate central keyword question,
+and a custom vector illustration for each room. Gemini describes
+the illustration as bounded SVG shapes; the server validates and renders those shapes
+instead of embedding model-provided markup. Players choose any unfinished clue row,
+hear the AI read it while the caption appears progressively, and use the buzzer to
+claim an untimed answer attempt. A wrong answer passes the turn to other players;
+correct answers open their matching image piece. The center question is available
+after all selected rows; the center is numbered one higher than the row count.
+This cooperative mode has no timer, points, or speed bonus and
+requires Gemini and ElevenLabs keys (browser speech is used if ElevenLabs is unavailable).
+
+The AI-powered **Đường lên đỉnh Olympia** mode opens with an illustrated broad question.
+The AI voice reads it, players get 25 seconds to think, and the game then reads each
+short-answer branch question aloud. A prominent three-second countdown appears
+before the buzzer opens. Only the first player to buzz can answer by typing or using
+speech recognition; a wrong or timed-out attempt forfeits that player's turn for the
+question so another player can buzz. Olympia mode requires configured Gemini and
+ElevenLabs keys; browser speech is used if ElevenLabs audio is unavailable.
 
 Live lobby and score updates use authenticated same-origin HTTP polling; this does not
 require an extra WebSocket dependency. Account data remains in the existing account

@@ -5,25 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Quiz AI - Trợ lý tạo đề riêng</title>
   <link rel="stylesheet" href="/dangKy_dangNhap/auth.css">
+  <script src="/app-shell.js" defer></script>
   <script src="/dangKy_dangNhap/session.js" defer></script>
   <style>
-    :root { --bg:#f7f8fc; --ink:#20243b; --accent:#635bda; --accent-dark:#5149c5; --muted:#70758a;
+    :root { --bg:#f5f6fc; --ink:#20243b; --accent:#635bda; --accent-dark:#5149c5; --muted:#70758a;
       --line:#e7e9f2; --good:#20784b; --bad:#b32637; --surface:#fff; }
     * { box-sizing:border-box; }
     body { margin:0; min-height:100vh; background:
-      radial-gradient(ellipse at 12% 0%,#e4e5ff 0,transparent 35%),
-      radial-gradient(ellipse at 95% 78%,#e8f6f0 0,transparent 25%),
+      radial-gradient(ellipse at 8% 2%,#e9e7ff 0,transparent 35%),
+      radial-gradient(ellipse at 95% 52%,#e3f7ef 0,transparent 27%),
       linear-gradient(145deg,#fafaff 0%,var(--bg) 70%); color:var(--ink); font-family:system-ui,"Segoe UI",sans-serif; }
-    header { display:flex; justify-content:space-between; align-items:center; gap:16px; width:min(1120px,calc(100% - 40px)); margin:0 auto; padding:20px 0 10px; }
+    header { display:flex; justify-content:space-between; align-items:center; gap:16px; width:min(1180px,calc(100% - 48px)); margin:0 auto; padding:19px 0 12px; }
     .quiz-brand { display:flex; align-items:center; gap:10px; color:#25213f; font-size:1.08rem; font-weight:850; text-decoration:none; }
     .brand-mark { display:grid; width:42px; height:42px; place-items:center; border-radius:14px; color:#ff6a32;
       background:linear-gradient(145deg,#fff,#ffe9df); border:1px solid #f7ddd1;
       box-shadow:0 7px 16px #d8b9aa20;font-size:1.28rem; }
-    .quiz-nav { display:flex; align-items:center; gap:3px; margin-left:auto; padding:6px; border:1px solid #e5e6ef; border-radius:999px; background:#fff; box-shadow:0 5px 18px #272c4b0b; }
+    .quiz-nav { position:relative; display:flex; align-items:center; gap:3px; margin-left:auto; padding:6px; border:1px solid #e5e6ef; border-radius:999px; background:#fff; box-shadow:0 5px 18px #272c4b0b; }
     .quiz-nav a { min-height:38px; display:inline-flex; align-items:center; padding:8px 16px; border-radius:999px; color:#62677c; font-size:.88rem; font-weight:750; text-decoration:none; }
     .quiz-nav a.active { color:#fff; background:linear-gradient(105deg,#746cf0,#635bda); box-shadow:0 4px 12px #635bda28; }
+    .subject-picker { position:relative; flex:none; }
+    .subject-picker-trigger { min-height:38px!important; padding:8px 14px!important; border:0!important; border-radius:999px!important;
+      color:#62677c!important; background:transparent!important; box-shadow:none!important; font-size:.86rem!important; font-weight:750!important; white-space:nowrap; }
+    .subject-picker-trigger:hover,.subject-picker.open .subject-picker-trigger { color:#5149c5!important; background:#f1efff!important; }
+    .mega-menu { position:absolute; z-index:40; top:calc(100% + 10px); left:0; display:none; grid-template-columns:repeat(3,minmax(170px,1fr));
+      gap:10px; width:min(780px,calc(100vw - 32px)); padding:14px; border:1px solid #e9e7f7; border-radius:18px;
+      background:#fff; box-shadow:0 20px 55px #272c4b24; }
+    .subject-picker.open .mega-menu { display:grid; }
+    .mega-menu-column { min-width:0; padding:12px; border-radius:13px; background:linear-gradient(145deg,#faf9ff,#fff); }
+    .mega-menu-column h3 { margin:0 0 8px; color:#302b58; font-size:.94rem; }
+    .mega-menu-column button { display:block; width:100%; min-height:36px; margin-top:4px; padding:7px 9px; border:0; border-radius:9px;
+      color:#64677a; background:transparent; box-shadow:none; text-align:left; font-size:.84rem; font-weight:600; }
+    .mega-menu-column button:hover,.mega-menu-column button:focus-visible { color:#5149c5; background:#efedff; }
+    .tutor-subject-picker { z-index:6; }
+    .tutor-subject-picker .mega-menu { top:calc(100% + 6px); }
+    .study-learning .tutor-subject-picker .subject-picker-trigger { min-height:38px!important; padding:7px 12px!important;
+      border:1px solid var(--tutor-line)!important; color:#5149c5!important; background:#fff!important; font-size:.8rem!important; }
+    .study-learning .tutor-subject-picker .subject-picker-trigger:hover { background:#efedff!important; }
     header a.home-link { display:none; }
-    main { width:min(1120px,calc(100% - 40px)); margin:20px auto 64px; }
+    main { width:min(1180px,calc(100% - 48px)); margin:20px auto 64px; }
     h1 { margin:0 0 10px; font-size:clamp(2rem,5vw,3rem); line-height:1.12; letter-spacing:-.045em; }
     .eyebrow { margin-bottom:12px; color:var(--accent-dark); font-size:.8rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
     .hero-copy { max-width:740px; margin:0; color:var(--muted); font-size:1.02rem; line-height:1.75; }
@@ -59,11 +78,59 @@
       background:linear-gradient(110deg,#f3f1ff,#fff); font-size:.82rem; font-weight:750; box-shadow:0 3px 9px #635bda0c; }
     .apps { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:14px; }
     #topic-screen { min-height:calc(100vh - 110px); }
-    #topic-screen > h1 { margin-top:8px; font-size:clamp(2rem,4vw,3.25rem); color:#302761; }
-    #topic-screen .eyebrow { margin-bottom:4px; }
-    #topic-screen .settings-panel { margin-top:16px; min-height:88px; }
-    .topic-card { min-height:210px !important; padding:22px !important; border-radius:16px !important; }
-    .topic-card button { min-height:40px; border-radius:999px !important; padding:8px 14px !important; }
+    .quiz-hero { position:relative; display:grid; grid-template-columns:minmax(0,1.35fr) minmax(240px,.65fr); align-items:center; gap:24px;
+      min-height:255px; overflow:hidden; padding:clamp(25px,4vw,44px); border:1px solid #e4e0ff; border-radius:28px;
+      background:linear-gradient(112deg,#fff 0%,#f8f6ff 58%,#eceaff 100%); box-shadow:0 20px 50px #5046a412,inset 0 1px 0 #fff; }
+    .quiz-hero::before,.quiz-hero::after { position:absolute; border-radius:50%; content:""; pointer-events:none; }
+    .quiz-hero::before { width:280px; height:280px; top:-150px; left:42%; background:#fff9; }
+    .quiz-hero::after { width:360px; height:360px; right:-130px; bottom:-240px; background:#d8d4ff70; }
+    .quiz-hero-copy,.quiz-hero-art { position:relative; z-index:1; }
+    .quiz-hero .eyebrow { display:inline-flex; align-items:center; gap:8px; margin:0 0 13px; padding:7px 11px;
+      border:1px solid #e6e2ff; border-radius:999px; background:#fff; letter-spacing:.04em; }
+    .quiz-hero .eyebrow::before { width:8px; height:8px; border-radius:50%; background:#796df0; box-shadow:0 0 0 4px #796df01c; content:""; }
+    #topic-screen > .quiz-hero h1 { max-width:620px; margin:0; color:#2b2455; font-size:clamp(2.1rem,4.6vw,3.55rem); line-height:1.08; letter-spacing:-.055em; }
+    .quiz-hero .hero-copy { max-width:610px; margin-top:13px; font-size:1rem; }
+    .quiz-hero-art { display:grid; min-height:175px; place-items:center; }
+    .quiz-art-orbit { position:relative; display:grid; width:176px; height:176px; place-items:center; border:1px solid #dcd7ff;
+      border-radius:50%; background:radial-gradient(circle,#fff 0 45%,#eeeaff 46% 68%,#e4e0ff 69%); box-shadow:0 16px 35px #5149c52b; }
+    .quiz-art-book { display:grid; width:102px; height:112px; place-items:center; border:1px solid #f5d6c6; border-radius:20px 24px 20px 24px;
+      color:#ff7444; background:linear-gradient(145deg,#fff,#fff0e8); box-shadow:0 14px 24px #d9774933; font-size:3.5rem; transform:rotate(-8deg); }
+    .quiz-art-spark { position:absolute; display:grid; width:38px; height:38px; place-items:center; border:1px solid #ebe7ff; border-radius:13px;
+      color:#665bd5; background:#fff; box-shadow:0 8px 20px #39316f18; font-size:1.15rem; }
+    .quiz-art-spark.one { top:3px; right:8px; transform:rotate(9deg); }
+    .quiz-art-spark.two { bottom:7px; left:-5px; color:#e58a31; transform:rotate(-10deg); }
+    .quiz-hero-tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+    .quiz-hero-tags span { padding:7px 11px; border:1px solid #e7e4f6; border-radius:999px; color:#625d7c; background:#ffffffbb; font-size:.78rem; font-weight:700; }
+    .quiz-section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:31px 2px 12px; }
+    .quiz-section-head h2 { margin:0; color:#302761; font-size:1.4rem; letter-spacing:-.03em; }
+    .quiz-section-head p { margin:4px 0 0; color:var(--muted); font-size:.9rem; }
+    #topic-screen .settings-panel { position:relative; margin-top:18px; min-height:82px; padding:15px 19px; border-color:#e4e6f0; border-radius:19px; }
+    .settings-label-wrap { display:flex; align-items:center; gap:13px; }
+    .settings-icon { display:grid; width:43px; height:43px; flex:none; place-items:center; border-radius:14px; color:#5f56ca; background:#efedff; font-size:1.25rem; }
+    #topic-screen .settings-panel label { margin:0 0 3px; color:#292545; }
+    #topic-screen .settings-panel input { width:82px; border-color:#dedcf0; border-radius:13px; background:#fbfaff; font-weight:800; text-align:center; }
+    .topic-card { --topic-color:#685ed7; --topic-wash:#f0eeff; min-height:216px !important; padding:22px !important; border-color:#e5e5f0; border-radius:21px !important;
+      background:linear-gradient(145deg,#fff 0%,#fff 58%,var(--topic-wash) 160%)!important; box-shadow:0 12px 30px #272c4b0d,inset 0 1px 0 #fff!important; }
+    .topic-card[data-topic-id="geography"] { --topic-color:#25866c; --topic-wash:#e8f8f1; }
+    .topic-card[data-topic-id="cProgramming"] { --topic-color:#d17a35; --topic-wash:#fff2e4; }
+    .topic-card::after { top:-72px; right:-55px; width:200px; height:200px; background:radial-gradient(circle at 35% 35%,#fff 0,var(--topic-wash) 53%,transparent 73%); opacity:.95; }
+    .topic-card:hover { border-color:color-mix(in srgb,var(--topic-color) 38%,white); transform:translateY(-3px); box-shadow:0 18px 38px #272c4b14!important; }
+    .topic-card .topic-period { padding:6px 10px; border-color:color-mix(in srgb,var(--topic-color) 16%,white); color:var(--topic-color); background:var(--topic-wash); }
+    .topic-card .topic-symbol { display:grid; width:48px; height:48px; flex:none; place-items:center; border:1px solid color-mix(in srgb,var(--topic-color) 12%,white);
+      border-radius:16px; color:var(--topic-color); background:var(--topic-wash); font-size:1.45rem; }
+    .topic-card .topic-heading { display:flex; align-items:center; gap:12px; }
+    .topic-card h2 { color:#292545; }
+    .topic-card .muted { max-width:520px; font-size:.92rem; }
+    .topic-card button { min-height:42px; margin-top:auto; padding:9px 15px!important; border-radius:12px!important; background:var(--topic-color); box-shadow:0 6px 16px color-mix(in srgb,var(--topic-color) 25%,transparent); }
+    .topic-card button::after { content:"  →"; }
+    .apps { gap:18px; margin-top:0; }
+    .provider-status { display:flex; align-items:center; gap:10px; margin:17px 0 0; padding:11px 14px; border-radius:13px; font-size:.85rem; }
+    .quiz-mode-note { margin:18px 0 0; padding:12px 15px; border:1px solid #e7e4f6; border-radius:14px; color:#5e5a76; background:#ffffffba; font-size:.84rem; line-height:1.55; }
+    .quiz-mode-note strong { color:#403779; }
+    #quiz-screen { padding:clamp(15px,3vw,30px); border:1px solid #e7e6f0; border-radius:26px; background:#ffffffd9; box-shadow:0 18px 50px #272c4b0d; }
+    #quiz-title { margin:0; color:#302761; font-size:clamp(1.7rem,3.5vw,2.4rem); }
+    #quiz-screen > #status { padding:10px 13px; border:1px solid #e9e7f5; border-radius:12px; background:#faf9ff; }
+    #quiz-screen > #back-to-topics { margin-bottom:16px; border:1px solid #e3e1f4; border-radius:12px; box-shadow:none; }
     .provider-status { margin:20px 0 0; padding:13px 15px; border:1px solid var(--line); border-radius:13px;
       background:linear-gradient(110deg,#fff,#fafaff); line-height:1.6; box-shadow:0 4px 14px #272c4b08; }
     .provider-status.ready { border-color:#d8eee0; color:var(--good); background:linear-gradient(110deg,#f1faf4,#e8f6ee); }
@@ -73,6 +140,10 @@
     .option { display:flex; align-items:flex-start; gap:11px; margin:10px 0; padding:14px; border:1px solid var(--line); border-radius:12px; cursor:pointer; line-height:1.55; transition:border-color .15s,background .15s; }
     .option:hover { border-color:#c5c2f5; background:linear-gradient(110deg,#fafaff,#f6f5ff); }
     .option:has(input:checked) { border-color:var(--accent); background:linear-gradient(110deg,#f7f6ff,#efedff); box-shadow:0 3px 11px #635bda12; }
+    #quiz-results .question { padding:clamp(18px,3vw,26px); border-radius:20px; }
+    #quiz-results .option { min-height:50px; align-items:center; padding:13px 15px; border-radius:14px; background:#fff; }
+    #quiz-results > button { width:100%; min-height:52px; margin:8px 0 4px; border-radius:15px; font-size:1rem; }
+    #analysis-results > .score { margin:18px 0; padding:16px 18px; border:1px solid #e1defb; border-radius:16px; background:#f6f5ff; }
     .option input { width:17px; height:17px; flex:none; margin:3px 0 0; accent-color:var(--accent); }
     .feedback { margin-top:12px; padding:13px 14px; border:1px solid transparent; border-radius:12px; background:#f6f5f8; line-height:1.65; }
     .feedback.correct { color:var(--good); background:#eaf7ef; }
@@ -241,12 +312,32 @@
     .commentary-status { color:var(--muted); }
     @media (max-width:620px) {
       header { width:calc(100% - 32px); padding:14px 0; flex-wrap:wrap; }
-      .quiz-nav { order:3; width:100%; justify-content:center; overflow-x:auto; }
-      .quiz-nav a { flex:1; justify-content:center; padding-inline:8px; white-space:nowrap; }
-      main { width:calc(100% - 32px); margin:22px auto 40px; }
+      .quiz-nav { order:3; width:100%; justify-content:center; flex-wrap:wrap; overflow:visible; }
+      .quiz-nav a { flex:1 1 auto; justify-content:center; padding-inline:8px; white-space:nowrap; }
+      .study-learning .tutor-lesson-head { align-items:flex-start; flex-direction:row; flex-wrap:wrap; }
+      .study-learning .tutor-subject-picker { order:2; }
+      .study-learning .tutor-subject-picker .mega-menu { left:0; grid-template-columns:1fr; width:min(420px,calc(100vw - 24px)); max-height:65vh; overflow-y:auto; }
+      main { width:calc(100% - 32px); margin:18px auto 40px; }
       .settings-panel { align-items:flex-start; flex-direction:column; }
+      #topic-screen .settings-panel { align-items:center; flex-direction:row; }
+      .quiz-hero { grid-template-columns:1fr; gap:0; min-height:0; }
+      .quiz-hero-art { position:absolute; right:-8px; bottom:-22px; min-height:0; opacity:.34; transform:scale(.8); transform-origin:bottom right; }
+      .quiz-hero-copy { max-width:100%; }
+      .quiz-section-head { align-items:flex-start; flex-direction:column; gap:4px; margin-top:25px; }
+      .quiz-hero { padding:24px 21px; border-radius:23px; }
+      #topic-screen > .quiz-hero h1 { max-width:540px; font-size:clamp(2rem,8vw,2.7rem); }
+      .quiz-hero .hero-copy { max-width:490px; font-size:.94rem; }
+      .quiz-hero-art { z-index:0; }
+      .quiz-hero-tags { max-width:310px; }
+      .quiz-hero-tags span { padding:6px 9px; font-size:.72rem; }
+      .quiz-art-orbit { width:150px; height:150px; }
+      .quiz-art-book { width:85px; height:95px; font-size:3rem; }
+      #topic-screen .settings-panel { padding:12px; }
+      .settings-icon { width:38px; height:38px; }
+      #topic-screen .settings-note { max-width:240px; line-height:1.45; }
       .topic-card { min-height:0; }
       .topic-card button { width:100%; }
+      .apps { grid-template-columns:1fr; }
     }
     @media (max-width:900px) {
       .study-learning .tutor-layout { grid-template-columns:minmax(0,.55fr) minmax(0,.8fr) minmax(0,1.4fr); gap:8px; }
@@ -257,6 +348,8 @@
       .study-learning .tutor-progress { width:min(150px,20%); }
       .study-learning .tutor-layout.roadmap-collapsed { grid-template-columns:48px minmax(250px,.95fr) minmax(320px,1.35fr); gap:10px; }
       .study-learning .roadmap-collapsed .tutor-avatar-stage .fox-avatar { width:clamp(260px,33vw,420px); height:clamp(250px,32vw,410px); max-width:94%; }
+      .quiz-hero { grid-template-columns:minmax(0,1.3fr) minmax(170px,.7fr); }
+      .quiz-art-orbit { width:150px; height:150px; }
     }
     @media (max-width:760px) {
       .study-learning .tutor-layout { grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(160px,30%) minmax(0,1fr); }
@@ -280,6 +373,7 @@
     }
     @media (max-width:620px) {
       #study-screen > .study-learning { padding:10px; }
+      .quiz-hero { grid-template-columns:1fr; gap:0; }
       .tutor-lesson-head { align-items:flex-start; flex-direction:column; gap:10px; }
       .tutor-lesson-head .back-button { align-self:flex-start; }
       .study-learning .tutor-lesson-head { gap:5px; margin-bottom:8px; }
@@ -297,6 +391,7 @@
       .tutor-composer button { align-self:flex-end; }
       .tutor-quick-actions { padding:7px 9px; }
       .study-learning .tutor-quick-actions button { min-height:28px; padding:4px 7px; font-size:.68rem; }
+      .study-quiz-options { grid-template-columns:1fr; }
       .study-learning .tutor-lesson-head .back-button { font-size:0; }
       .study-learning .tutor-lesson-head .back-button::after { content:"←"; font-size:1rem; }
       .study-learning .tutor-lesson-head .back-button { width:38px; padding:5px; }
@@ -306,7 +401,131 @@
       button,.option,.topic-card,.roadmap-step,.tutor-log,.tutor-layout,.tutor-roadmap-panel { transition:none; scroll-behavior:auto; }
       .fox-avatar.happy.celebrate,.firework { animation:none; }
     }
+    #study-screen:not([hidden]) { display:flex; justify-content:center; overflow:auto; background:linear-gradient(160deg,#f3efff,#fff3e6); }
+    #study-screen > .study-learning.study-quiz-ui { --quiz-ui-ink:#2a2350; --quiz-ui-muted:#706a95; --quiz-ui-line:#e8e3fb;
+      --quiz-ui-primary:#5b4bdb; --quiz-ui-primary-soft:#eeebff; --quiz-ui-good:#0fa77a; --quiz-ui-good-soft:#dcf8ee;
+      --quiz-ui-bad:#e5484d; --quiz-ui-bad-soft:#ffe8ea; display:block; flex:none; width:min(1120px,100%); height:auto;
+      min-height:100%; margin:0 auto; padding:22px 18px 40px; overflow:visible; border:0; border-radius:0;
+      color:var(--quiz-ui-ink); background:transparent; box-shadow:none; }
+    .study-quiz-ui * { box-sizing:border-box; }
+    .study-ui-topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    .study-ui-topbar .back-button { margin:0; color:var(--quiz-ui-primary); background:var(--quiz-ui-primary-soft); }
+    .study-ui-topbar .tutor-subject-picker { z-index:12; }
+    .study-ui-topbar .subject-picker-trigger { border:1px solid var(--quiz-ui-line)!important; color:var(--quiz-ui-primary)!important; background:#fff!important; }
+    .study-ui-heading { margin:0 0 5px!important; color:var(--quiz-ui-ink)!important; font-size:clamp(1.5rem,3.4vw,2.2rem)!important;
+      font-weight:900; line-height:1.2; letter-spacing:-.02em; }
+    .study-ui-chip { display:inline-block; padding:5px 14px; border-radius:999px; color:var(--quiz-ui-primary);
+      background:var(--quiz-ui-primary-soft); font-size:.85rem; font-weight:800; }
+    .study-ui-subtitle { margin:4px 0 0; color:var(--quiz-ui-muted); font-weight:700; }
+    .study-ui-progress { display:flex; gap:6px; margin:16px 0 22px; }
+    .study-ui-progress span { height:9px; flex:1; border-radius:9px; background:var(--quiz-ui-line); }
+    .study-ui-progress span.current { background:var(--quiz-ui-primary); }
+    .study-ui-progress span.done { background:var(--quiz-ui-good); }
+    .study-ui-grid { display:grid; grid-template-columns:330px minmax(0,1fr); grid-template-areas:"tutor question" "road question";
+      grid-template-rows:auto 1fr; gap:18px; align-items:stretch; }
+    .study-ui-card { min-width:0; padding:22px; border:1px solid var(--quiz-ui-line); border-radius:25px; background:#fff;
+      box-shadow:0 10px 34px #4632aa1a; }
+    .study-ui-tutor { grid-area:tutor; text-align:center; }
+    .study-ui-tutor .fox-avatar { width:160px; height:160px; margin:0 auto 6px; border:5px solid #fff;
+      background:radial-gradient(circle,#ffe3d0,#ffd0b0); box-shadow:0 8px 24px #ff7a2f47; animation:study-ui-bob 4s ease-in-out infinite; }
+    @keyframes study-ui-bob { 50% { transform:translateY(-5px); } }
+    .study-ui-tutor-name { margin:4px 0 0!important; color:var(--quiz-ui-ink)!important; font-size:1.5rem!important; font-weight:900; }
+    .study-ui-role { margin:0 0 12px; color:var(--quiz-ui-muted); font-size:.9rem; font-weight:700; }
+    .study-ui-bubble { position:relative; min-height:70px; margin:0 0 14px; padding:14px 16px; border-radius:18px;
+      color:var(--quiz-ui-ink); background:var(--quiz-ui-primary-soft); text-align:left; font-size:.94rem; font-weight:700;
+      line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .study-ui-bubble::before { position:absolute; top:-8px; left:calc(50% - 8px); border:8px solid transparent;
+      border-top:0; border-bottom-color:var(--quiz-ui-primary-soft); content:""; }
+    .study-ui-tutor-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:7px; }
+    .study-ui-tutor-actions button { min-height:36px; padding:7px 12px; border:0; border-radius:999px;
+      color:var(--quiz-ui-primary); background:var(--quiz-ui-primary-soft); font-size:.82rem; font-weight:800; box-shadow:none; }
+    .study-ui-tutor-actions button:hover:not(:disabled) { background:#e4e0ff; box-shadow:none; }
+    .study-ui-road { grid-area:road; border-radius:22px; }
+    .study-ui-road h3 { margin:0 0 12px; color:var(--quiz-ui-ink); font-size:1.1rem; font-weight:900; }
+    .study-ui-road-list { display:grid; gap:8px; margin:0; padding:0; list-style:none; }
+    .study-ui-road-step { display:grid; grid-template-columns:34px minmax(0,1fr); gap:11px; padding:11px; border:2px solid transparent; border-radius:17px; }
+    .study-ui-road-step.current { border-color:var(--quiz-ui-primary); background:var(--quiz-ui-primary-soft); }
+    .study-ui-road-step.done { color:var(--quiz-ui-good); }
+    .study-ui-road-dot { display:grid; width:34px; height:34px; place-items:center; border-radius:50%; color:var(--quiz-ui-muted);
+      background:var(--quiz-ui-line); font-weight:900; }
+    .study-ui-road-step.current .study-ui-road-dot { color:#fff; background:var(--quiz-ui-primary); }
+    .study-ui-road-step.done .study-ui-road-dot { color:#fff; background:var(--quiz-ui-good); }
+    .study-ui-road-step strong,.study-ui-road-step small { display:block; }
+    .study-ui-road-step strong { font-size:.9rem; line-height:1.35; }
+    .study-ui-road-step small { margin-top:3px; color:var(--quiz-ui-muted); font-size:.76rem; font-weight:700; line-height:1.4; }
+    .study-ui-question { grid-area:question; padding:clamp(20px,3vw,28px); }
+    .study-ui-question-meta { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+    .study-ui-question-meta .study-ui-chip { max-width:80%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .study-ui-attempts { color:#ff7a2f; font-size:.88rem; font-weight:900; white-space:nowrap; }
+    .study-ui-visual { display:grid; min-height:185px; place-items:center; overflow:hidden; padding:10px; border:2px dashed var(--quiz-ui-primary);
+      border-radius:20px; background:linear-gradient(135deg,var(--quiz-ui-primary-soft),#fff3e6); }
+    .study-ui-visual .tutor-illustration { width:100%; margin:0; border:0; background:transparent; }
+    .study-ui-visual .tutor-illustration figcaption { color:var(--quiz-ui-muted); }
+    .study-ui-question-title { margin:19px 0 15px!important; color:var(--quiz-ui-ink)!important;
+      font-size:clamp(1.2rem,2.5vw,1.6rem)!important; font-weight:900; line-height:1.4; }
+    .study-ui-options { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+    .study-ui-option { display:flex; min-height:62px; align-items:center; gap:11px; padding:11px 13px; border:2px solid var(--quiz-ui-line);
+      border-radius:17px; color:var(--quiz-ui-ink)!important; background:#fff!important; text-align:left; line-height:1.45; box-shadow:none!important; }
+    .study-ui-option:hover:not(:disabled) { transform:translateY(-2px); border-color:var(--quiz-ui-primary); background:#fff!important; }
+    .study-ui-option.selected { border-color:var(--quiz-ui-primary); background:var(--quiz-ui-primary-soft)!important; }
+    .study-ui-option.correct { border-color:var(--quiz-ui-good); background:var(--quiz-ui-good-soft)!important; }
+    .study-ui-option.incorrect { border-color:var(--quiz-ui-bad); background:var(--quiz-ui-bad-soft)!important; }
+    .study-ui-option-letter { display:grid; width:36px; height:36px; flex:none; place-items:center; border-radius:11px;
+      color:var(--quiz-ui-primary); background:var(--quiz-ui-primary-soft); font-weight:900; }
+    .study-ui-option.selected .study-ui-option-letter { color:#fff; background:var(--quiz-ui-primary); }
+    .study-ui-option.correct .study-ui-option-letter { color:#fff; background:var(--quiz-ui-good); }
+    .study-ui-option.incorrect .study-ui-option-letter { color:#fff; background:var(--quiz-ui-bad); }
+    .study-ui-option:disabled { cursor:default; opacity:1; }
+    .study-ui-feedback { margin-top:15px; padding:14px 16px; border-radius:17px; font-weight:700; line-height:1.6; }
+    .study-ui-feedback[hidden] { display:none; }
+    .study-ui-feedback.incorrect { color:#7f2930; background:var(--quiz-ui-bad-soft); }
+    .study-ui-feedback.correct { color:#1e614d; background:var(--quiz-ui-good-soft); }
+    .study-ui-feedback p { margin:0; white-space:pre-wrap; }
+    .study-ui-feedback p + p { margin-top:9px; }
+    .study-ui-feedback strong { font-weight:900; }
+    .study-ui-reasoning { margin-top:13px; }
+    .study-ui-reasoning summary,.study-ui-theory summary { color:var(--quiz-ui-primary); cursor:pointer; font-size:.88rem; font-weight:800; }
+    .study-ui-reasoning-content { display:flex; align-items:flex-end; gap:8px; margin-top:8px; }
+    .study-ui-reasoning textarea { width:100%; min-height:58px; max-height:120px; padding:10px; border:1px solid var(--quiz-ui-line);
+      border-radius:12px; color:var(--quiz-ui-ink); font:inherit; font-size:.88rem; resize:vertical; }
+    .study-ui-reasoning-content button { flex:none; min-height:40px; padding:8px 11px; }
+    .study-ui-theory { margin-top:13px; padding-top:11px; border-top:1px solid var(--quiz-ui-line); }
+    .study-ui-theory p { margin:8px 0 0; color:var(--quiz-ui-muted); font-size:.88rem; line-height:1.65; white-space:pre-wrap; }
+    .study-ui-actions { display:flex; justify-content:flex-end; margin-top:18px; }
+    .study-ui-actions .study-ui-check,.study-ui-actions .study-ui-next { min-height:48px; padding:12px 27px; border-radius:999px;
+      color:#fff; background:var(--quiz-ui-primary); font-size:1rem; font-weight:900; box-shadow:0 6px 16px #5b4bdb4d; }
+    .study-ui-actions .study-ui-check:disabled { opacity:.42; box-shadow:none; cursor:not-allowed; }
+    .study-ui-actions .study-ui-next { background:var(--quiz-ui-good); }
+    .study-ui-end { max-width:720px; margin:10vh auto; text-align:center; }
+    .study-ui-end .big { font-size:4rem; }
+    .study-ui-end p { color:var(--quiz-ui-muted); font-weight:700; }
+    .study-ui-speech-log { display:none!important; }
+    @media (max-width:860px) {
+      #study-screen > .study-learning.study-quiz-ui { padding:18px 16px 30px; }
+      .study-ui-grid { grid-template-columns:1fr; grid-template-areas:"tutor" "question" "road"; }
+      .study-ui-tutor { padding:17px; }
+      .study-ui-tutor .fox-avatar { width:120px; height:120px; }
+      .study-ui-options { grid-template-columns:1fr; }
+      .study-ui-road-list { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
+    }
+    @media (max-width:620px) {
+      #study-screen > .study-learning.study-quiz-ui { padding:14px 12px 24px; }
+      .study-ui-card { padding:16px; border-radius:20px; }
+      .study-ui-topbar { align-items:flex-start; }
+      .study-ui-topbar .back-button { width:42px; min-width:42px; padding:8px; overflow:hidden; font-size:0; }
+      .study-ui-topbar .back-button::after { content:"←"; font-size:1rem; }
+      .study-ui-topbar .mega-menu { left:auto; right:0; grid-template-columns:1fr; width:min(360px,calc(100vw - 24px)); max-height:65vh; overflow-y:auto; }
+      .study-ui-heading { font-size:1.45rem!important; }
+      .study-ui-visual { min-height:145px; }
+      .study-ui-question-meta { align-items:flex-start; }
+      .study-ui-option { min-height:54px; }
+      .study-ui-reasoning-content { align-items:stretch; flex-direction:column; }
+      .study-ui-reasoning-content button { align-self:flex-end; }
+      .study-ui-actions .study-ui-check,.study-ui-actions .study-ui-next { width:100%; }
+    }
   </style>
+  <link rel="stylesheet" href="/bright-theme.css">
+  <link rel="stylesheet" href="/app-theme.css">
 </head>
 <body>
   <header>
@@ -320,9 +539,25 @@
   </header>
   <main>
     <section id="topic-screen">
-      <div class="eyebrow">Luyện tập · Theo dõi · Tiến bộ</div>
-      <h1>Hôm nay mình học gì?</h1>
-      <p class="hero-copy">Chọn một chủ đề để bắt đầu. Sau bài Quiz, Lụa sẽ giúp bạn xem lại kết quả và tạo lộ trình học có thể theo dõi.</p>
+      <section class="quiz-hero" aria-labelledby="quiz-hero-title">
+        <div class="quiz-hero-copy">
+          <div class="eyebrow">Không gian Quiz học tập riêng</div>
+          <h1 id="quiz-hero-title">Học chắc từng chủ đề, tiến bộ sau mỗi lượt chơi.</h1>
+          <p class="hero-copy">Chọn môn học, làm bộ câu hỏi mới và xem kết quả của riêng bạn. Gia sư Lụa nằm trong lộ trình riêng — chỉ mở khi bạn muốn học tiếp.</p>
+          <div class="quiz-hero-tags" aria-label="Điểm nổi bật">
+            <span>✦ Câu hỏi theo chủ đề</span>
+            <span>✓ Chấm điểm tức thì</span>
+            <span>↗ Theo dõi tiến bộ</span>
+          </div>
+        </div>
+        <div class="quiz-hero-art" aria-hidden="true">
+          <div class="quiz-art-orbit">
+            <div class="quiz-art-book">📚</div>
+            <span class="quiz-art-spark one">✦</span>
+            <span class="quiz-art-spark two">✓</span>
+          </div>
+        </div>
+      </section>
       <p id="quiz-provider-status" class="provider-status" role="status" aria-live="polite">Đang kiểm tra cấu hình Groq và QuizAPI.io...</p>
       <section id="saved-roadmaps" class="panel" hidden aria-labelledby="saved-roadmaps-heading">
         <h2 id="saved-roadmaps-heading">Lộ trình học đã lưu</h2>
@@ -330,14 +565,23 @@
         <div id="saved-roadmap-list"></div>
       </section>
       <section class="panel settings-panel" aria-label="Cài đặt bài Quiz">
-        <div>
-          <label for="question-count">Số câu hỏi mỗi bài</label>
-          <p class="settings-note">Chọn từ 1 đến 20 câu trước khi bắt đầu.</p>
+        <div class="settings-label-wrap">
+          <span class="settings-icon" aria-hidden="true">☷</span>
+          <div>
+            <label for="question-count">Độ dài bài Quiz</label>
+            <p class="settings-note">Tùy chỉnh số câu hỏi cho lượt học này (1–20 câu).</p>
+          </div>
         </div>
         <input id="question-count" type="number" min="1" max="20" value="5" required>
       </section>
-      <h2 class="section-heading">Chọn chủ đề</h2>
+      <div class="quiz-section-head">
+        <div>
+          <h2>Chọn chủ đề để bắt đầu</h2>
+          <p>Mỗi lượt Quiz tạo câu hỏi mới, phù hợp với môn bạn chọn.</p>
+        </div>
+      </div>
       <div id="topic-list" class="apps" aria-label="Danh sách chủ đề"></div>
+      <p class="quiz-mode-note"><strong>Quiz và Gia sư Lụa là hai không gian riêng.</strong> Hoàn thành Quiz để xem kết quả; bạn có thể tự chọn mở lộ trình gia sư sau đó.</p>
     </section>
     <section id="quiz-screen" hidden>
       <button id="back-to-topics" class="back-button" type="button">← Chọn chủ đề khác</button>
@@ -362,6 +606,24 @@
     const quizProviderStatus = document.querySelector("#quiz-provider-status");
     const savedRoadmaps = document.querySelector("#saved-roadmaps");
     const savedRoadmapList = document.querySelector("#saved-roadmap-list");
+    const subjectChoices = [
+      {
+        title: "Lịch sử",
+        topicId: "antiUsWar",
+        topics: ["Phong trào Đồng Khởi", "Hiệp định Paris", "Chiến dịch Điện Biên Phủ"],
+      },
+      {
+        title: "Địa lý",
+        topicId: "geography",
+        topics: ["Địa lý tự nhiên", "Địa lý dân cư", "Khí hậu"],
+      },
+      {
+        title: "Ngôn ngữ lập trình C",
+        topicId: "cProgramming",
+        titlePrefix: "Lập trình C",
+        topics: ["Biến & Kiểu dữ liệu", "Cấu trúc điều khiển", "Hàm", "Con trỏ"],
+      },
+    ];
     const ROADMAP_STORAGE_KEY = "lua-study-roadmaps";
     let roadmapStorageWarning = "";
     let activeQuiz = [];
@@ -374,6 +636,117 @@
     let activeSpeechRecognition = null;
     let commentaryAudio = null;
     let commentaryAudioUrl = null;
+
+    function closeSubjectPickers() {
+      document.querySelectorAll(".subject-picker.open").forEach((picker) => {
+        picker.classList.remove("open");
+        picker.querySelector(".subject-picker-trigger")?.setAttribute("aria-expanded", "false");
+      });
+    }
+
+    function createSubjectPicker(className = "") {
+      const picker = document.createElement("div");
+      picker.className = `subject-picker ${className}`.trim();
+      const trigger = document.createElement("button");
+      trigger.type = "button";
+      trigger.className = "subject-picker-trigger";
+      trigger.textContent = "Chọn Môn Học ▾";
+      trigger.setAttribute("aria-haspopup", "true");
+      trigger.setAttribute("aria-expanded", "false");
+      const menu = document.createElement("div");
+      menu.className = "mega-menu";
+      menu.setAttribute("role", "group");
+      menu.setAttribute("aria-label", "Chọn môn học và bài học");
+
+      for (const subject of subjectChoices) {
+        const column = document.createElement("section");
+        column.className = "mega-menu-column";
+        const heading = document.createElement("h3");
+        heading.textContent = subject.title;
+        column.append(heading);
+        for (const topic of subject.topics) {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.textContent = topic;
+          item.addEventListener("click", () => {
+            closeSubjectPickers();
+            startSubjectLesson(subject, topic);
+          });
+          column.append(item);
+        }
+        menu.append(column);
+      }
+
+      const setOpen = (open) => {
+        picker.classList.toggle("open", open);
+        trigger.setAttribute("aria-expanded", String(open));
+      };
+      let openedByHover = false;
+      trigger.addEventListener("click", () => {
+        if (openedByHover) {
+          openedByHover = false;
+          setOpen(true);
+          return;
+        }
+        setOpen(!picker.classList.contains("open"));
+      });
+      picker.addEventListener("pointerenter", (event) => {
+        if (event.pointerType === "mouse") {
+          openedByHover = true;
+          setOpen(true);
+        }
+      });
+      picker.addEventListener("pointerleave", () => {
+        openedByHover = false;
+        setOpen(false);
+      });
+      picker.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          setOpen(false);
+          trigger.focus();
+        }
+      });
+      picker.append(trigger, menu);
+      return picker;
+    }
+
+    document.addEventListener("pointerdown", (event) => {
+      if (!(event.target instanceof Element) || !event.target.closest(".subject-picker")) closeSubjectPickers();
+    });
+
+    async function startSubjectLesson(subject, focusTopic) {
+      stopTutorListening();
+      stopCommentary();
+      const phaseLabels = ["Ôn lý thuyết nền tảng", "Luyện tập có hướng dẫn", "Thử thách nâng cao"];
+      activeRoadmap = {
+        topicId: subject.topicId,
+        quizResults: [],
+        learningStepIndex: 0,
+        learningTotalSteps: phaseLabels.length,
+        learningCompleted: false,
+        isDirectLesson: true,
+        focusTopic,
+        steps: phaseLabels.map((title, index) => ({
+          title,
+          activity: index === 0
+            ? `Nắm kiến thức cốt lõi về ${focusTopic}.`
+            : index === 1
+              ? `Vận dụng ${focusTopic} vào ví dụ mới.`
+              : `Kết nối và mở rộng kiến thức về ${focusTopic}.`,
+        })),
+      };
+      activeTopicId = subject.topicId;
+      topicScreen.hidden = true;
+      quizScreen.hidden = false;
+      results.hidden = true;
+      analysisResults.hidden = true;
+      studyScreen.hidden = false;
+      await loadStudyLesson(0);
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeSubjectPickers();
+    });
 
     function readRoadmaps() {
       try {
@@ -505,7 +878,9 @@
       if (!activeRoadmap) return;
       stopTutorListening();
       studyScreen.replaceChildren();
-      status.textContent = "Lụa đang chuẩn bị bài học theo kết quả Quiz của bạn...";
+      status.textContent = activeRoadmap.isDirectLesson
+        ? "Lụa đang chuẩn bị bài học bạn đã chọn..."
+        : "Lụa đang chuẩn bị bài học theo kết quả Quiz của bạn...";
       try {
         const response = await fetch("/api/study-roadmap/lesson", {
           method: "POST",
@@ -514,20 +889,26 @@
             topicId: activeRoadmap.topicId,
             quizResults: activeRoadmap.quizResults,
             stepIndex,
+            ...(activeRoadmap.isDirectLesson ? { focusTopic: activeRoadmap.focusTopic } : {}),
           }),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Không tải được bài học.");
+        if (typeof data.practiceQuestion !== "string" || !data.practiceQuestion.trim()
+          || typeof data.theory !== "string" || !data.theory.trim()
+          || !Array.isArray(activeRoadmap.steps) || activeRoadmap.steps.length === 0) {
+          throw new Error("Máy chủ chưa trả về đủ nội dung bài học. Hãy khởi động lại ứng dụng rồi tải lại trang.");
+        }
         activeRoadmap.learningTotalSteps = data.totalSteps;
-        saveRoadmap(activeRoadmap);
+        if (!activeRoadmap.isDirectLesson) saveRoadmap(activeRoadmap);
         studyHintLevel = 0;
         studyWrongAttempts = 0;
-        renderStudyLesson(data);
+        renderStudyChatLesson(data);
         status.textContent = `Bước ${data.stepIndex + 1}/${data.totalSteps} · ${data.generator || "AI"} đang đồng hành cùng bạn.`;
       } catch (error) {
         const message = document.createElement("p");
         message.className = "feedback warning";
-        message.textContent = `${error.message} Hãy kiểm tra kết nối AI rồi thử lại.`;
+        message.textContent = error.message;
         const retry = document.createElement("button");
         retry.type = "button";
         retry.textContent = "Thử tải lại";
@@ -697,64 +1078,195 @@
       log.scrollTop = log.scrollHeight;
     }
 
-    function appendStudyIllustration(log, topic) {
+    function appendStudyIllustration(log, topic, topicId) {
       const figure = document.createElement("figure");
       figure.className = "tutor-illustration";
+      figure.dataset.subject = topicId;
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("viewBox", "0 0 520 170");
+      svg.setAttribute("viewBox", "0 0 640 300");
       svg.setAttribute("role", "img");
-      svg.setAttribute("aria-label", `Sơ đồ minh họa ${topic}`);
-      const lowerTopic = topic.toLocaleLowerCase("vi");
+      svg.setAttribute("aria-label", `Sơ đồ ${topic} theo môn ${topicId}`);
+
+      const historyMap = `
+        <defs>
+          <linearGradient id="history-ground" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#f6edd8"/><stop offset="1" stop-color="#e7d9bb"/></linearGradient>
+          <marker id="history-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#bd4c3a"/></marker>
+          <marker id="history-arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#3c70a5"/></marker>
+        </defs>
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="url(#history-ground)"/>
+        <path d="M42 84 Q115 38 181 82T313 78T443 82T598 65M34 224 Q102 184 176 225T319 216T458 229T608 205" fill="none" stroke="#cdbd9a" stroke-width="2"/>
+        <path d="M48 143 C115 112 176 175 240 139S365 112 423 151 530 177 590 130" fill="none" stroke="#87b8c2" stroke-width="15" opacity=".8"/>
+        <path d="M94 207 C152 173 189 167 250 151" fill="none" stroke="#bd4c3a" stroke-width="6" stroke-dasharray="10 8" marker-end="url(#history-arrow)"/>
+        <path d="M548 82 C489 104 458 112 405 141" fill="none" stroke="#3c70a5" stroke-width="6" stroke-dasharray="10 8" marker-end="url(#history-arrow-blue)"/>
+        <path d="M198 92 218 75 238 92 218 109Z" fill="#fff8e9" stroke="#825f39" stroke-width="3"/>
+        <path d="M430 199 451 181 472 199 451 217Z" fill="#fff8e9" stroke="#825f39" stroke-width="3"/>
+        <circle cx="325" cy="147" r="28" fill="#fff4dd" stroke="#bd4c3a" stroke-width="4"/><circle cx="325" cy="147" r="8" fill="#bd4c3a"/>
+        <path d="M293 147h64M325 115v64" stroke="#bd4c3a" stroke-width="2" opacity=".65"/>
+        <g fill="#6c8c59" opacity=".75"><circle cx="114" cy="92" r="7"/><circle cx="130" cy="100" r="5"/><circle cx="513" cy="218" r="7"/><circle cx="527" cy="207" r="5"/></g>
+        <g fill="#704f3c" font-family="system-ui" font-size="12" font-weight="700"><text x="75" y="246">A</text><text x="548" y="72">B</text><text x="319" y="196">C</text></g>
+        <text x="320" y="265" text-anchor="middle" fill="#705d43" font-family="system-ui" font-size="12">Sơ đồ chiến trường khái quát · không theo tỷ lệ</text>`;
+      const geographyMap = `
+        <defs>
+          <linearGradient id="geo-lowland" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#b6df9f"/><stop offset="1" stop-color="#5aab78"/></linearGradient>
+          <linearGradient id="geo-mountain" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#f2d783"/><stop offset=".55" stop-color="#df9e65"/><stop offset="1" stop-color="#a86665"/></linearGradient>
+          <linearGradient id="geo-sea" x1="0" x2="1"><stop stop-color="#c5eaf2"/><stop offset="1" stop-color="#6eb5cf"/></linearGradient>
+        </defs>
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="#eff7f3"/>
+        <path d="M28 202 Q83 183 122 199T220 192T310 201T419 192T612 197V276H28Z" fill="url(#geo-sea)"/>
+        <path d="M64 206 Q93 178 113 165L129 139 150 151 168 115 189 130 210 93 231 111 251 82 269 105 283 130 300 139 318 163 337 158 353 181 373 171 389 193 411 187 429 206 450 203 462 220 438 239 409 230 386 241 364 226 342 239 321 223 299 233 275 217 249 228 224 211 198 220 175 202 149 217 128 204 106 219Z" fill="url(#geo-mountain)" stroke="#668a69" stroke-width="3"/>
+        <path d="M88 206Q118 187 144 202T199 199M146 176Q176 158 201 178T258 171M205 143Q230 126 255 148T299 147M262 112Q285 98 306 119T346 127" fill="none" stroke="#fff4c9" stroke-width="3" opacity=".9"/>
+        <path d="M104 198Q154 191 186 203T254 203T321 213T391 211" fill="none" stroke="#438b69" stroke-width="12" opacity=".85"/>
+        <path d="M462 61v66M449 75l13-14 13 14" fill="none" stroke="#df7651" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="502" cy="79" r="20" fill="#ffd974"/><g stroke="#e8aa45" stroke-width="3" stroke-linecap="round"><path d="M502 48v-9M502 119v-9M471 79h-9M542 79h-9M480 57l-7-7M531 108l-7-7M524 57l7-7M473 108l7-7"/></g>
+        <path d="M548 151c12-18 25-18 37 0M551 157h31M554 164h25" fill="none" stroke="#508eab" stroke-width="4" stroke-linecap="round"/>
+        <g fill="#347e66"><circle cx="161" cy="190" r="4"/><circle cx="171" cy="196" r="4"/><circle cx="180" cy="188" r="4"/><circle cx="213" cy="201" r="4"/><circle cx="221" cy="194" r="4"/><circle cx="229" cy="203" r="4"/><circle cx="395" cy="207" r="4"/><circle cx="402" cy="214" r="4"/></g>
+        <g fill="#fff" opacity=".85"><circle cx="88" cy="70" r="19"/><circle cx="109" cy="62" r="24"/><circle cx="132" cy="72" r="17"/></g>
+        <text x="320" y="263" text-anchor="middle" fill="#526f70" font-family="system-ui" font-size="12">Mặt cắt địa hình khái quát · màu sắc mang tính minh họa</text>`;
+      const cPointer = `
+        <defs><marker id="pointer-arrow" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M0 0 11 5.5 0 11Z" fill="#655bd5"/></marker></defs>
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="#f1f3fb"/>
+        <rect x="43" y="53" width="236" height="190" rx="18" fill="#e5e9f5" stroke="#8995b2" stroke-width="3"/>
+        <rect x="56" y="39" width="210" height="38" rx="11" fill="#394766"/><text x="161" y="64" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="16" font-weight="700">STACK</text>
+        <rect x="76" y="105" width="170" height="62" rx="13" fill="#fff" stroke="#756bdb" stroke-width="3"/>
+        <text x="161" y="131" text-anchor="middle" fill="#5149c5" font-family="system-ui" font-size="17" font-weight="700">p</text>
+        <text x="161" y="153" text-anchor="middle" fill="#57617a" font-family="system-ui" font-size="13">0x104</text>
+        <text x="161" y="211" text-anchor="middle" fill="#6d7890" font-family="system-ui" font-size="13">BIẾN CON TRỎ</text>
+        <path d="M254 135 C320 135 335 101 405 101" fill="none" stroke="#655bd5" stroke-width="6" marker-end="url(#pointer-arrow)"/>
+        <rect x="410" y="67" width="172" height="130" rx="18" fill="#e6f4ea" stroke="#4b9b70" stroke-width="3"/>
+        <rect x="425" y="81" width="142" height="34" rx="8" fill="#3b7657"/><text x="496" y="104" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="14" font-weight="700">Ô NHỚ 0x104</text>
+        <text x="496" y="155" text-anchor="middle" fill="#24583d" font-family="system-ui" font-size="28" font-weight="800">42</text>
+        <text x="496" y="181" text-anchor="middle" fill="#4a765d" font-family="system-ui" font-size="12">GIÁ TRỊ ĐƯỢC TRỎ TỚI</text>
+        <circle cx="338" cy="202" r="23" fill="#fff" stroke="#c9cde0" stroke-width="2"/><text x="338" y="209" text-anchor="middle" fill="#655bd5" font-family="system-ui" font-size="22" font-weight="800">*</text>
+        <text x="320" y="262" text-anchor="middle" fill="#68718a" font-family="system-ui" font-size="12">p lưu địa chỉ · *p truy cập giá trị tại địa chỉ đó</text>`;
+      const cVariables = `
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="#f1f3fb"/>
+        <rect x="44" y="43" width="552" height="39" rx="11" fill="#394766"/>
+        <text x="320" y="69" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="15" font-weight="700">VÙNG NHỚ · MỖI BIẾN CÓ KIỂU VÀ GIÁ TRỊ</text>
+        <g font-family="system-ui" text-anchor="middle">
+          <rect x="48" y="110" width="165" height="112" rx="17" fill="#e9e6ff" stroke="#756bdb" stroke-width="3"/>
+          <text x="130" y="142" fill="#5149c5" font-size="17" font-weight="800">int</text>
+          <rect x="76" y="158" width="108" height="43" rx="11" fill="#fff"/><text x="130" y="187" fill="#353c57" font-size="22" font-weight="800">42</text>
+          <rect x="238" y="110" width="165" height="112" rx="17" fill="#e4f4f4" stroke="#58a7a5" stroke-width="3"/>
+          <text x="320" y="142" fill="#2f7775" font-size="17" font-weight="800">float</text>
+          <rect x="266" y="158" width="108" height="43" rx="11" fill="#fff"/><text x="320" y="187" fill="#353c57" font-size="22" font-weight="800">3.14</text>
+          <rect x="428" y="110" width="165" height="112" rx="17" fill="#fff0dd" stroke="#dc9b54" stroke-width="3"/>
+          <text x="510" y="142" fill="#a16b2f" font-size="17" font-weight="800">char</text>
+          <rect x="458" y="158" width="104" height="43" rx="11" fill="#fff"/><text x="510" y="187" fill="#353c57" font-size="22" font-weight="800">'A'</text>
+        </g>
+        <text x="320" y="257" text-anchor="middle" fill="#68718a" font-family="system-ui" font-size="12">Kiểu dữ liệu quyết định cách diễn giải giá trị được lưu</text>`;
+      const cFunction = `
+        <defs><marker id="function-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#665bd2"/></marker></defs>
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="#f5f4ff"/>
+        <rect x="42" y="90" width="128" height="94" rx="19" fill="#fff" stroke="#e0a45f" stroke-width="3"/>
+        <circle cx="106" cy="119" r="15" fill="#ffe2b8"/><path d="M84 160q22-32 44 0" fill="#f3bb79"/>
+        <text x="106" y="176" text-anchor="middle" fill="#79542f" font-family="system-ui" font-size="12" font-weight="700">ĐẦU VÀO</text>
+        <path d="M176 137H250" stroke="#665bd2" stroke-width="5" marker-end="url(#function-arrow)"/>
+        <rect x="258" y="66" width="132" height="142" rx="22" fill="#e9e6ff" stroke="#756bdb" stroke-width="3"/>
+        <path d="M285 112h78M285 136h60M285 160h70" stroke="#8c83e7" stroke-width="7" stroke-linecap="round"/>
+        <text x="324" y="94" text-anchor="middle" fill="#5149c5" font-family="system-ui" font-size="15" font-weight="800">HÀM</text>
+        <path d="M396 137H470" stroke="#665bd2" stroke-width="5" marker-end="url(#function-arrow)"/>
+        <rect x="480" y="90" width="118" height="94" rx="19" fill="#e4f5ea" stroke="#54a477" stroke-width="3"/>
+        <circle cx="539" cy="124" r="19" fill="#78c797"/><path d="m530 124 7 7 13-16" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="539" y="165" text-anchor="middle" fill="#347852" font-family="system-ui" font-size="12" font-weight="700">GIÁ TRỊ TRẢ VỀ</text>
+        <path d="M326 214v25H108v-43" fill="none" stroke="#b09ce7" stroke-width="3" stroke-dasharray="6 6"/>
+        <text x="320" y="267" text-anchor="middle" fill="#68617e" font-family="system-ui" font-size="12">Nhận tham số → thực hiện thân hàm → trả kết quả</text>`;
+      const cControl = `
+        <defs><marker id="flow-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#665bd2"/></marker></defs>
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="#f5f4ff"/>
+        <rect x="52" y="48" width="120" height="48" rx="14" fill="#e8e5ff" stroke="#756bdb" stroke-width="2"/>
+        <text x="112" y="78" text-anchor="middle" fill="#5149c5" font-family="system-ui" font-size="14" font-weight="700">BẮT ĐẦU</text>
+        <path d="M172 72h56" stroke="#665bd2" stroke-width="4" marker-end="url(#flow-arrow)"/>
+        <path d="m285 43 58 34-58 34-58-34z" fill="#fff0d3" stroke="#d59b44" stroke-width="3"/>
+        <text x="285" y="82" text-anchor="middle" fill="#795a29" font-family="system-ui" font-size="13" font-weight="700">ĐIỀU KIỆN?</text>
+        <path d="M343 77h88" stroke="#665bd2" stroke-width="4" marker-end="url(#flow-arrow)"/>
+        <rect x="440" y="50" width="130" height="49" rx="14" fill="#e4f5ea" stroke="#54a477" stroke-width="2"/>
+        <text x="505" y="80" text-anchor="middle" fill="#347852" font-family="system-ui" font-size="14" font-weight="700">THỰC HIỆN</text>
+        <path d="M285 111v68h112" fill="none" stroke="#b88437" stroke-width="3" marker-end="url(#flow-arrow)"/>
+        <text x="300" y="143" fill="#906d37" font-family="system-ui" font-size="12">SAI</text>
+        <rect x="402" y="159" width="128" height="48" rx="14" fill="#fce8e7" stroke="#d4766d" stroke-width="2"/>
+        <text x="466" y="189" text-anchor="middle" fill="#9b4b44" font-family="system-ui" font-size="14" font-weight="700">KẾT THÚC</text>
+        <path d="M505 100v35H378v-27" fill="none" stroke="#54a477" stroke-width="3" marker-end="url(#flow-arrow)"/>
+        <text x="448" y="128" fill="#347852" font-family="system-ui" font-size="12">LẶP</text>
+        <text x="320" y="259" text-anchor="middle" fill="#68617e" font-family="system-ui" font-size="12">Rẽ nhánh và lặp lại theo điều kiện</text>`;
+      const englishTimeline = `
+        <defs><marker id="english-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#665bd2"/></marker></defs>
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="#f3f7ff"/>
+        <path d="M92 150H546" stroke="#7481c9" stroke-width="5" marker-end="url(#english-arrow)"/>
+        <circle cx="153" cy="150" r="44" fill="#fce6d6" stroke="#df9165" stroke-width="3"/>
+        <circle cx="320" cy="150" r="44" fill="#e5e3ff" stroke="#756bdb" stroke-width="3"/>
+        <circle cx="487" cy="150" r="44" fill="#e2f4e8" stroke="#54a477" stroke-width="3"/>
+        <path d="M140 145h26M146 158h20" stroke="#a66041" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="311" cy="137" r="8" fill="#7d74dc"/><path d="M296 163q15-24 30 0" fill="#7d74dc"/>
+        <path d="M470 162h31M484 142v20M477 142h15" stroke="#438861" stroke-width="4" stroke-linecap="round"/>
+        <g fill="#454b75" font-family="system-ui" font-size="14" font-weight="800" text-anchor="middle">
+          <text x="153" y="222">PAST</text><text x="320" y="222">NOW</text><text x="487" y="222">FUTURE</text>
+        </g>
+        <text x="320" y="65" text-anchor="middle" fill="#5149c5" font-family="system-ui" font-size="16" font-weight="800">THREE TIME MARKERS</text>
+        <text x="320" y="258" text-anchor="middle" fill="#68718a" font-family="system-ui" font-size="12">Time word → verb form → sentence meaning</text>`;
+
       let markup;
-      if (/kháng chiến|đồng khởi|mậu thân|lịch sử|genève|paris/.test(lowerTopic)) {
-        markup = `<text x="260" y="28" text-anchor="middle" fill="#5149c5" font-size="17" font-weight="700">Các mốc chính 1954–1975</text>
-          <g font-family="system-ui" text-anchor="middle">
-            <path d="M66 88 H454" stroke="#746cf0" stroke-width="4"/><path d="M454 88 l-13 -8 v16 z" fill="#746cf0"/>
-            <circle cx="78" cy="88" r="13" fill="#746cf0"/><circle cx="190" cy="88" r="13" fill="#746cf0"/>
-            <circle cx="302" cy="88" r="13" fill="#746cf0"/><circle cx="414" cy="88" r="13" fill="#50a477"/>
-            <text x="78" y="64" fill="#20243b" font-size="14" font-weight="700">1954</text><text x="78" y="124" fill="#70758a" font-size="13">Genève</text>
-            <text x="190" y="64" fill="#20243b" font-size="14" font-weight="700">1960</text><text x="190" y="124" fill="#70758a" font-size="13">Đồng Khởi</text>
-            <text x="302" y="64" fill="#20243b" font-size="14" font-weight="700">1973</text><text x="302" y="124" fill="#70758a" font-size="13">Paris</text>
-            <text x="414" y="64" fill="#20784b" font-size="14" font-weight="700">1975</text><text x="414" y="124" fill="#70758a" font-size="13">Kết thúc chiến tranh</text>
-          </g>`;
-      } else if (/mảng|chuỗi/.test(lowerTopic)) {
-        markup = `<text x="260" y="28" text-anchor="middle" fill="#5149c5" font-size="17" font-weight="700">Ví dụ: các ô nhớ nằm liền nhau</text>
-          <g font-family="system-ui" text-anchor="middle">
-            <rect x="36" y="52" width="104" height="62" rx="12" fill="#f1efff" stroke="#746cf0" stroke-width="2"/><text x="88" y="89" fill="#20243b" font-size="22">12</text><text x="88" y="143" fill="#70758a" font-size="15">chỉ số 0</text>
-            <rect x="151" y="52" width="104" height="62" rx="12" fill="#f7f6ff" stroke="#746cf0" stroke-width="2"/><text x="203" y="89" fill="#20243b" font-size="22">7</text><text x="203" y="143" fill="#70758a" font-size="15">chỉ số 1</text>
-            <rect x="266" y="52" width="104" height="62" rx="12" fill="#f7f6ff" stroke="#746cf0" stroke-width="2"/><text x="318" y="89" fill="#20243b" font-size="22">25</text><text x="318" y="143" fill="#70758a" font-size="15">chỉ số 2</text>
-            <rect x="381" y="52" width="104" height="62" rx="12" fill="#f7f6ff" stroke="#746cf0" stroke-width="2"/><text x="433" y="89" fill="#20243b" font-size="22">...</text><text x="433" y="143" fill="#70758a" font-size="15">các ô tiếp</text>
-          </g>`;
-      } else if (/con trỏ|pointer/.test(lowerTopic)) {
-        markup = `<text x="260" y="28" text-anchor="middle" fill="#5149c5" font-size="17" font-weight="700">Con trỏ giữ địa chỉ để tìm đến giá trị</text>
-          <g font-family="system-ui" text-anchor="middle">
-            <rect x="22" y="56" width="145" height="67" rx="12" fill="#f1efff" stroke="#746cf0" stroke-width="2"/><text x="94" y="83" fill="#20243b" font-size="16">biến p</text><text x="94" y="106" fill="#5149c5" font-size="17" font-weight="700">địa chỉ ô nhớ</text>
-            <path d="M175 89 H319" stroke="#746cf0" stroke-width="4"/><path d="M319 89 l-13 -9 v18 z" fill="#746cf0"/>
-            <rect x="332" y="56" width="164" height="67" rx="12" fill="#eaf7ef" stroke="#50a477" stroke-width="2"/><text x="414" y="83" fill="#20243b" font-size="16">ô nhớ được trỏ tới</text><text x="414" y="106" fill="#20784b" font-size="17" font-weight="700">giá trị</text>
-          </g>`;
-      } else if (/hàm/.test(lowerTopic)) {
-        markup = `<text x="260" y="28" text-anchor="middle" fill="#5149c5" font-size="17" font-weight="700">Hàm: nhận dữ liệu → xử lý → trả kết quả</text>
-          <g font-family="system-ui" text-anchor="middle">
-            <rect x="22" y="60" width="120" height="58" rx="13" fill="#f1efff" stroke="#746cf0" stroke-width="2"/><text x="82" y="95" fill="#20243b" font-size="18">đầu vào</text>
-            <path d="M150 89 H196" stroke="#746cf0" stroke-width="4"/><path d="M196 89 l-12 -8 v16 z" fill="#746cf0"/>
-            <rect x="207" y="52" width="130" height="74" rx="16" fill="#eeedff" stroke="#635bda" stroke-width="2"/><text x="272" y="84" fill="#5149c5" font-size="18" font-weight="700">hàm</text><text x="272" y="107" fill="#70758a" font-size="14">xử lý</text>
-            <path d="M345 89 H391" stroke="#746cf0" stroke-width="4"/><path d="M391 89 l-12 -8 v16 z" fill="#746cf0"/>
-            <rect x="402" y="60" width="96" height="58" rx="13" fill="#eaf7ef" stroke="#50a477" stroke-width="2"/><text x="450" y="95" fill="#20784b" font-size="18">kết quả</text>
-          </g>`;
+      let caption;
+      if (topicId === "antiUsWar") {
+        markup = historyMap;
+        caption = "Lịch sử · sơ đồ chiến trường khái quát. Mũi tên chỉ quan hệ/luồng minh họa, không biểu thị hướng hành quân cụ thể.";
+      } else if (topicId === "geography") {
+        const normalizedTopic = topic.toLocaleLowerCase("vi");
+        if (/khí hậu/.test(normalizedTopic)) {
+          markup = geographyMap.replace(
+            '<path d="M88 206Q118 187 144 202T199 199T254 203T321 213T391 211" fill="none" stroke="#438b69" stroke-width="12" opacity=".85"/>',
+            `<path d="M88 206Q118 187 144 202T199 199T254 203T321 213T391 211" fill="none" stroke="#438b69" stroke-width="12" opacity=".85"/>
+             <path d="M74 98h344M66 144h366M61 185h387" stroke="#ffffff" stroke-width="2" stroke-dasharray="7 7" opacity=".85"/>
+             <rect x="470" y="113" width="30" height="35" rx="12" fill="#f6c95d" opacity=".8"/><rect x="470" y="151" width="30" height="39" rx="12" fill="#74bfd0" opacity=".8"/>
+             <g fill="#e88758"><circle cx="485" cy="119" r="4"/><circle cx="485" cy="132" r="4"/></g>
+             <g fill="#4a8ba9"><circle cx="485" cy="161" r="4"/><circle cx="485" cy="176" r="4"/></g>`,
+          );
+          caption = "Địa lý · dải khí hậu và biểu tượng nhiệt độ/mưa mang tính khái quát, không phải số liệu dự báo.";
+        } else if (/dân cư/.test(normalizedTopic)) {
+          markup = geographyMap.replace(
+            '<g fill="#347e66"><circle cx="161" cy="190" r="4"/><circle cx="171" cy="196" r="4"/><circle cx="180" cy="188" r="4"/><circle cx="213" cy="201" r="4"/><circle cx="221" cy="194" r="4"/><circle cx="229" cy="203" r="4"/><circle cx="395" cy="207" r="4"/><circle cx="402" cy="214" r="4"/></g>',
+            `<g fill="#e65d4f" opacity=".2"><circle cx="168" cy="194" r="26"/><circle cx="220" cy="199" r="22"/><circle cx="398" cy="210" r="16"/></g>
+             <g fill="#c94c43"><circle cx="161" cy="190" r="5"/><circle cx="171" cy="196" r="5"/><circle cx="180" cy="188" r="5"/><circle cx="213" cy="201" r="5"/><circle cx="221" cy="194" r="5"/><circle cx="229" cy="203" r="5"/><circle cx="395" cy="207" r="5"/><circle cx="402" cy="214" r="5"/></g>`,
+          );
+          caption = "Địa lý · chấm màu biểu thị mật độ dân cư tương đối trong sơ đồ khái quát, không phải bản đồ thống kê.";
+        } else {
+          markup = geographyMap;
+          caption = "Địa lý · mô hình địa hình, sông, đồng bằng và các yếu tố khí hậu; hình không theo tỷ lệ bản đồ.";
+        }
+      } else if (topicId === "cProgramming" && /con trỏ|pointer/i.test(topic)) {
+        markup = cPointer;
+        caption = "Lập trình C · con trỏ lưu địa chỉ ô nhớ; giải tham chiếu để truy cập giá trị.";
+      } else if (topicId === "cProgramming" && /biến|kiểu dữ liệu/.test(topic.toLocaleLowerCase("vi"))) {
+        markup = cVariables;
+        caption = "Lập trình C · các kiểu dữ liệu mẫu và giá trị tương ứng; kích thước thực tế phụ thuộc môi trường.";
+      } else if (topicId === "cProgramming" && /hàm/.test(topic.toLocaleLowerCase("vi"))) {
+        markup = cFunction;
+        caption = "Lập trình C · luồng dữ liệu vào, xử lý trong hàm và giá trị trả về.";
+      } else if (topicId === "cProgramming" && /cấu trúc điều khiển|vòng lặp|rẽ nhánh/.test(topic.toLocaleLowerCase("vi"))) {
+        markup = cControl;
+        caption = "Lập trình C · nhánh điều kiện và đường lặp trong luồng điều khiển.";
+      } else if (topicId === "english" || /tiếng anh|english/.test(topic.toLocaleLowerCase("vi"))) {
+        markup = englishTimeline;
+        caption = "Tiếng Anh · trục thời gian minh họa ba mốc để liên hệ trạng từ thời gian với dạng động từ.";
       } else {
-        markup = `<text x="260" y="28" text-anchor="middle" fill="#5149c5" font-size="17" font-weight="700">Mình cùng phân tích từng bước</text>
-          <g font-family="system-ui" text-anchor="middle">
-            <rect x="26" y="58" width="134" height="62" rx="13" fill="#f1efff" stroke="#746cf0" stroke-width="2"/><text x="93" y="95" fill="#20243b" font-size="17">Dữ kiện</text>
-            <path d="M168 89 H205" stroke="#746cf0" stroke-width="4"/><path d="M205 89 l-12 -8 v16 z" fill="#746cf0"/>
-            <rect x="215" y="58" width="134" height="62" rx="13" fill="#fff6de" stroke="#e0b944" stroke-width="2"/><text x="282" y="95" fill="#755400" font-size="17">Suy luận</text>
-            <path d="M357 89 H394" stroke="#746cf0" stroke-width="4"/><path d="M394 89 l-12 -8 v16 z" fill="#746cf0"/>
-            <rect x="404" y="58" width="90" height="62" rx="13" fill="#eaf7ef" stroke="#50a477" stroke-width="2"/><text x="449" y="95" fill="#20784b" font-size="17">Kết quả</text>
-          </g>`;
+        markup = `<rect x="18" y="18" width="604" height="264" rx="22" fill="#f5f4ff"/>
+          <path d="M170 150h82M388 150h82" stroke="#756bdb" stroke-width="5"/>
+          <rect x="62" y="102" width="108" height="96" rx="24" fill="#e8e5ff" stroke="#756bdb" stroke-width="3"/>
+          <circle cx="116" cy="150" r="23" fill="#756bdb"/>
+          <rect x="265" y="83" width="110" height="134" rx="25" fill="#fff0d3" stroke="#d59b44" stroke-width="3"/>
+          <path d="M292 125h56M292 150h56M292 175h42" stroke="#d59b44" stroke-width="7" stroke-linecap="round"/>
+          <rect x="470" y="102" width="108" height="96" rx="24" fill="#e4f5ea" stroke="#54a477" stroke-width="3"/>
+          <path d="m499 150 13 13 34-36" fill="none" stroke="#438861" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`;
+        caption = `Sơ đồ khái quát ${topic} · dùng hình khối và mũi tên để làm nổi bật mối liên hệ chính.`;
       }
+
+      const figureId = `study-illustration-${document.querySelectorAll(".tutor-illustration").length + 1}`;
+      markup = markup
+        .replace(/\bid="([^"]+)"/g, (_match, id) => `id="${figureId}-${id}"`)
+        .replace(/url\(#([^)]+)\)/g, (_match, id) => `url(#${figureId}-${id})`);
       svg.innerHTML = markup;
-      const caption = document.createElement("figcaption");
-      caption.textContent = `Hình minh họa ${topic}: mình dùng sơ đồ để cùng bạn hình dung thay vì chỉ đọc lý thuyết.`;
-      figure.append(svg, caption);
+      const captionElement = document.createElement("figcaption");
+      captionElement.textContent = caption;
+      figure.append(svg, captionElement);
       log.append(figure);
       return figure;
     }
@@ -919,61 +1431,54 @@
       }, 1_800);
     }
 
-    function renderStudyLesson(lesson) {
+    function renderStudyChatLesson(lesson) {
       const roadmap = activeRoadmap;
       if (!roadmap) return;
+
       const card = document.createElement("article");
       card.className = "study-learning";
+      const head = document.createElement("div");
+      head.className = "tutor-lesson-head";
       const back = document.createElement("button");
       back.type = "button";
       back.className = "back-button";
-      back.textContent = "← Quay lại nhận xét";
+      back.textContent = roadmap.isDirectLesson ? "← Chọn chủ đề khác" : "← Quay lại nhận xét";
       back.addEventListener("click", () => {
         stopTutorListening();
         stopCommentary();
         studyScreen.hidden = true;
-        analysisResults.hidden = false;
-        results.hidden = false;
-        status.textContent = "Bạn có thể xem lại nhận xét hoặc tiếp tục lộ trình học.";
+        if (roadmap.isDirectLesson) {
+          quizScreen.hidden = true;
+          topicScreen.hidden = false;
+        } else {
+          analysisResults.hidden = false;
+          results.hidden = false;
+          status.textContent = "Bạn có thể xem lại nhận xét hoặc tiếp tục lộ trình học.";
+        }
       });
+
       const roadmapToggle = document.createElement("button");
       roadmapToggle.type = "button";
       roadmapToggle.className = "tutor-roadmap-toggle";
-      roadmapToggle.textContent = "▣";
-      roadmapToggle.setAttribute("aria-label", "Thu gọn lộ trình học");
-      roadmapToggle.setAttribute("aria-expanded", "true");
-
-      const phaseLabels = {
-        foundation: "Ôn lý thuyết nền tảng",
-        practice: "Luyện tập có hướng dẫn",
-        advanced: "Thử thách nâng cao",
-      };
-      const phase = document.createElement("span");
-      phase.className = "study-phase";
-      phase.textContent = phaseLabels[lesson.phase] || "Bài học cá nhân hóa";
-      const lessonHead = document.createElement("div");
-      lessonHead.className = "tutor-lesson-head";
-      const lessonTitle = document.createElement("div");
-      lessonTitle.className = "tutor-lesson-title";
+      roadmapToggle.textContent = "☰ Lộ trình";
       const title = document.createElement("h2");
+      title.className = "tutor-lesson-title";
       title.textContent = lesson.title;
-      const stepLabel = document.createElement("p");
-      stepLabel.textContent = `Bước ${lesson.stepIndex + 1}/${lesson.totalSteps} · ${lesson.focusTopic}`;
-      lessonTitle.append(phase, title, stepLabel);
-      const stepProgress = document.createElement("div");
-      stepProgress.className = "tutor-progress";
-      stepProgress.setAttribute("role", "progressbar");
-      stepProgress.setAttribute("aria-label", "Tiến độ lộ trình");
-      stepProgress.setAttribute("aria-valuemin", "1");
-      stepProgress.setAttribute("aria-valuemax", String(lesson.totalSteps));
-      stepProgress.setAttribute("aria-valuenow", String(lesson.stepIndex + 1));
+      const progress = document.createElement("div");
+      progress.className = "tutor-progress";
+      progress.setAttribute("role", "progressbar");
+      progress.setAttribute("aria-label", "Tiến độ lộ trình");
+      progress.setAttribute("aria-valuemin", "1");
+      progress.setAttribute("aria-valuemax", String(lesson.totalSteps));
+      progress.setAttribute("aria-valuenow", String(lesson.stepIndex + 1));
       for (let index = 0; index < lesson.totalSteps; index += 1) {
         const segment = document.createElement("span");
-        if (index <= lesson.stepIndex) segment.classList.add("active");
-        stepProgress.append(segment);
+        if (index < lesson.stepIndex) segment.classList.add("active");
+        if (index === lesson.stepIndex) segment.classList.add("active");
+        progress.append(segment);
       }
-      lessonHead.append(back, lessonTitle, stepProgress);
-      lessonHead.insertBefore(roadmapToggle, lessonTitle);
+      const picker = createSubjectPicker("tutor-subject-picker");
+      head.append(back, roadmapToggle, title, progress, picker);
 
       const layout = document.createElement("div");
       layout.className = "tutor-layout";
@@ -982,8 +1487,8 @@
       roadmapPanel.setAttribute("aria-label", "Lộ trình học");
       const roadmapHeading = document.createElement("h3");
       roadmapHeading.textContent = "Lộ trình học";
-      const roadmapSummary = document.createElement("p");
-      roadmapSummary.textContent = `${phaseLabels[lesson.phase] || "Lộ trình cá nhân hóa"} · Bước ${lesson.stepIndex + 1}/${lesson.totalSteps}`;
+      const roadmapCaption = document.createElement("p");
+      roadmapCaption.textContent = `${lesson.stepIndex + 1}/${lesson.totalSteps} · ${lesson.focusTopic}`;
       const roadmapList = document.createElement("ol");
       roadmapList.className = "tutor-roadmap-list";
       roadmap.steps.forEach((step, index) => {
@@ -995,40 +1500,31 @@
         else if (isDone) item.classList.add("done");
         const dot = document.createElement("span");
         dot.className = "tutor-roadmap-dot";
-        dot.textContent = isDone && !isCurrent ? "✓" : "";
+        dot.textContent = isDone && !isCurrent ? "✓" : String(index + 1);
         const details = document.createElement("span");
         const stepTitle = document.createElement("strong");
         stepTitle.textContent = step.title;
         const stepDescription = document.createElement("small");
-        stepDescription.textContent = step.activity;
+        stepDescription.textContent = `${step.activity}${isCurrent ? " · Đang học" : isDone ? " · Hoàn thành" : ""}`;
         details.append(stepTitle, stepDescription);
         item.append(dot, details);
         roadmapList.append(item);
       });
-      roadmapPanel.append(roadmapHeading, roadmapSummary, roadmapList);
-      roadmapPanel.dataset.railStep = `BƯỚC ${lesson.stepIndex + 1}/${lesson.totalSteps}`;
-      roadmapPanel.dataset.railProgress = `${lesson.stepIndex + 1}/${lesson.totalSteps}`;
-      roadmapPanel.style.setProperty("--rail-progress", `${((lesson.stepIndex + 1) / lesson.totalSteps) * 100}%`);
-      const setRoadmapCollapsed = (collapsed) => {
-        layout.classList.toggle("roadmap-collapsed", collapsed);
-        roadmapToggle.setAttribute("aria-expanded", String(!collapsed));
-        roadmapToggle.setAttribute("aria-label", collapsed ? "Mở lộ trình học" : "Thu gọn lộ trình học");
-        roadmapToggle.textContent = collapsed ? "▶" : "◀";
-      };
-      roadmapToggle.addEventListener("click", () => setRoadmapCollapsed(!layout.classList.contains("roadmap-collapsed")));
-      const avatarStage = document.createElement("section");
-      avatarStage.className = "tutor-avatar-stage";
+      roadmapPanel.append(roadmapHeading, roadmapCaption, roadmapList);
+
+      const tutorPanel = document.createElement("section");
+      tutorPanel.className = "tutor-avatar-stage";
+      tutorPanel.setAttribute("aria-label", "Gia sư AI Lụa");
       const fox = createFoxAvatar("happy");
       const identity = document.createElement("div");
       identity.className = "tutor-identity";
-      const identityName = document.createElement("strong");
-      identityName.textContent = "Lụa";
-      const identityStatus = document.createElement("span");
-      identityStatus.className = "tutor-status";
-      identityStatus.textContent = "Gia sư AI 1–1 · Đang đồng hành";
-      identity.append(identityName, identityStatus);
-      const avatarControls = document.createElement("div");
-      avatarControls.className = "tutor-avatar-controls";
+      const tutorName = document.createElement("strong");
+      tutorName.textContent = "Lụa";
+      const tutorRole = document.createElement("span");
+      tutorRole.textContent = "Gia sư AI đồng hành cùng bạn";
+      identity.append(tutorName, tutorRole);
+      const voiceControls = document.createElement("div");
+      voiceControls.className = "tutor-avatar-controls";
       const listenButton = document.createElement("button");
       listenButton.type = "button";
       listenButton.className = "primary";
@@ -1036,45 +1532,437 @@
       const replayButton = document.createElement("button");
       replayButton.type = "button";
       replayButton.textContent = "🔊 Nghe lại";
-      const voiceToggle = document.createElement("button");
-      voiceToggle.type = "button";
-      const updateVoiceToggle = () => {
-        voiceToggle.textContent = tutorAutoRead ? "Tự động đọc: bật" : "Tự động đọc: tắt";
-        voiceToggle.setAttribute("aria-pressed", String(tutorAutoRead));
-      };
-      updateVoiceToggle();
-      voiceToggle.addEventListener("click", () => {
-        tutorAutoRead = !tutorAutoRead;
-        if (!tutorAutoRead) {
-          stopCommentary();
-          resetTutorReadButtons();
-        }
-        updateVoiceToggle();
-      });
-      avatarControls.append(listenButton, replayButton, voiceToggle);
-      avatarStage.append(fox, identity, avatarControls);
+      const autoReadButton = document.createElement("button");
+      autoReadButton.type = "button";
+      autoReadButton.setAttribute("aria-pressed", String(tutorAutoRead));
+      autoReadButton.textContent = tutorAutoRead ? "Tự đọc: bật" : "Tự đọc: tắt";
+      const tutorStatus = document.createElement("small");
+      tutorStatus.className = "tutor-status";
+      tutorStatus.textContent = "Bạn có thể nhập hoặc trả lời bằng giọng nói.";
+      voiceControls.append(listenButton, replayButton, autoReadButton, tutorStatus);
+      tutorPanel.append(fox, identity, voiceControls);
 
       const dialogue = document.createElement("section");
       dialogue.className = "tutor-dialogue";
+      dialogue.setAttribute("aria-label", "Trò chuyện với gia sư Lụa");
       const dialogueHead = document.createElement("div");
       dialogueHead.className = "tutor-dialogue-head";
-      dialogueHead.textContent = "Lời thoại";
-      const chatLog = document.createElement("section");
-      chatLog.className = "tutor-log";
-      chatLog.setAttribute("role", "log");
-      chatLog.setAttribute("aria-label", "Cuộc trò chuyện học tập với Lụa");
+      dialogueHead.textContent = `${lesson.focusTopic} · ${lesson.phase === "foundation" ? "Củng cố nền tảng" : lesson.phase === "practice" ? "Luyện tập vận dụng" : "Thử thách nâng cao"}`;
+      const log = document.createElement("div");
+      log.className = "tutor-log";
+      log.setAttribute("role", "log");
+      log.setAttribute("aria-live", "polite");
       const quickActions = document.createElement("div");
       quickActions.className = "tutor-quick-actions";
-      const hintSuggestion = document.createElement("button");
-      hintSuggestion.type = "button";
-      hintSuggestion.textContent = "Gợi ý thêm cho mình";
-      const exampleSuggestion = document.createElement("button");
-      exampleSuggestion.type = "button";
-      exampleSuggestion.textContent = "Cho mình một ví dụ";
-      const diagramSuggestion = document.createElement("button");
-      diagramSuggestion.type = "button";
-      diagramSuggestion.textContent = "Xem bản đồ minh họa";
-      quickActions.append(hintSuggestion, exampleSuggestion, diagramSuggestion);
+      const hintButton = document.createElement("button");
+      hintButton.type = "button";
+      hintButton.textContent = "💡 Gợi ý";
+      quickActions.append(hintButton);
+      const composer = document.createElement("form");
+      composer.className = "tutor-composer";
+      const answer = document.createElement("textarea");
+      answer.rows = 2;
+      answer.setAttribute("aria-label", "Câu trả lời của bạn");
+      answer.placeholder = "Viết câu trả lời hoặc giải thích cách bạn suy nghĩ…";
+      const sendButton = document.createElement("button");
+      sendButton.type = "submit";
+      sendButton.className = "send";
+      sendButton.textContent = "Gửi";
+      composer.append(answer, sendButton);
+      const hint = document.createElement("p");
+      hint.className = "tutor-hint";
+      hint.textContent = "Trả lời bằng lời của bạn. Nếu chưa đúng, Lụa sẽ chỉ rõ phần cần xem lại và gợi ý để bạn tự sửa.";
+      dialogue.append(dialogueHead, log, quickActions, composer, hint);
+      layout.append(roadmapPanel, tutorPanel, dialogue);
+      card.append(head, layout);
+
+      let lastTutorText = "";
+      let lastReadButton = null;
+      let attempts = 0;
+      let hintLevel = 0;
+      let checking = false;
+      let canAdvance = false;
+      let nextButton = null;
+      const say = (text, emotion = "happy", autoRead = true) => {
+        lastTutorText = text;
+        const message = appendTutorMessage(log, text, { emotion, autoRead });
+        lastReadButton = message.querySelector(".tutor-message-tools button");
+        setFoxEmotion(fox, emotion);
+      };
+      const addNextStepButton = () => {
+        if (nextButton) return;
+        nextButton = document.createElement("button");
+        nextButton.type = "button";
+        nextButton.className = "send";
+        nextButton.textContent = lesson.stepIndex + 1 < lesson.totalSteps ? "Sang bước tiếp theo →" : "Hoàn thành lộ trình";
+        quickActions.append(nextButton);
+        composer.hidden = true;
+        hint.hidden = true;
+        nextButton.addEventListener("click", async () => {
+          nextButton.disabled = true;
+          if (roadmap.steps[lesson.stepIndex]) roadmap.steps[lesson.stepIndex].completed = true;
+          if (lesson.stepIndex + 1 >= lesson.totalSteps) {
+            roadmap.learningCompleted = true;
+            roadmap.learningStepIndex = 0;
+            roadmap.steps.forEach((step) => { step.completed = true; });
+            if (!roadmap.isDirectLesson) saveRoadmap(roadmap);
+            const done = document.createElement("section");
+            done.className = "study-learning";
+            const doneTitle = document.createElement("h2");
+            doneTitle.textContent = "Bạn đã hoàn thành lộ trình!";
+            const doneText = document.createElement("p");
+            doneText.textContent = `Bạn đã cùng Lụa học xong ${roadmap.title}. Hãy quay lại bất cứ lúc nào để ôn tập.`;
+            const review = document.createElement("button");
+            review.type = "button";
+            review.textContent = "Quay lại nhận xét";
+            review.addEventListener("click", () => {
+              studyScreen.hidden = true;
+              analysisResults.hidden = false;
+              results.hidden = false;
+            });
+            done.append(doneTitle, doneText, review);
+            studyScreen.replaceChildren(done);
+            status.textContent = "Đã hoàn thành tất cả các bước trong lộ trình.";
+            return;
+          }
+          roadmap.learningStepIndex = lesson.stepIndex + 1;
+          if (!roadmap.isDirectLesson) saveRoadmap(roadmap);
+          await loadStudyLesson(lesson.stepIndex + 1);
+        });
+      };
+
+      say(`Chào bạn! Hôm nay mình cùng học "${lesson.focusTopic}" nhé.\n\n${lesson.theory}`, "happy", true);
+      appendStudyIllustration(log, lesson.focusTopic, roadmap.topicId);
+      say(lesson.practiceQuestion, "happy", true);
+
+      roadmapToggle.addEventListener("click", () => {
+        layout.classList.toggle("roadmap-collapsed");
+      });
+      hintButton.addEventListener("click", () => {
+        hintLevel = Math.min(hintLevel + 1, 3);
+        say(`Gợi ý: ${lesson.focusTopic} — hãy quay lại phần ý chính ở trên, xác định từ khóa trong câu hỏi và giải thích mối liên hệ bằng lời của bạn.`, "happy", false);
+      });
+      replayButton.addEventListener("click", () => {
+        if (lastReadButton) speakTutorText(lastTutorText, lastReadButton, true);
+      });
+      autoReadButton.addEventListener("click", () => {
+        tutorAutoRead = !tutorAutoRead;
+        autoReadButton.setAttribute("aria-pressed", String(tutorAutoRead));
+        autoReadButton.textContent = tutorAutoRead ? "Tự đọc: bật" : "Tự đọc: tắt";
+      });
+      listenButton.addEventListener("click", () => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          say("Trình duyệt này chưa hỗ trợ nhập liệu bằng giọng nói. Bạn có thể viết câu trả lời vào ô chat nhé.", "sad", false);
+          return;
+        }
+        if (activeSpeechRecognition) {
+          stopTutorListening();
+          listenButton.textContent = "🎙 Nói với Lụa";
+          tutorStatus.textContent = "Bạn có thể nhập hoặc trả lời bằng giọng nói.";
+          return;
+        }
+        const recognition = new SpeechRecognition();
+        activeSpeechRecognition = recognition;
+        recognition.lang = "vi-VN";
+        recognition.interimResults = false;
+        recognition.onstart = () => {
+          listenButton.textContent = "⏹ Dừng nghe";
+          tutorStatus.textContent = "Đang nghe bạn nói...";
+        };
+        recognition.onresult = (event) => {
+          answer.value = [...event.results].map((result) => result[0].transcript).join(" ").trim();
+          answer.focus();
+        };
+        recognition.onerror = (event) => {
+          const reason = event.error === "not-allowed" ? "Bạn chưa cấp quyền dùng micro." : `Micro gặp sự cố (${event.error}).`;
+          say(`${reason} Bạn có thể nhập câu trả lời bằng bàn phím.`, "sad", false);
+        };
+        recognition.onend = () => {
+          if (activeSpeechRecognition === recognition) activeSpeechRecognition = null;
+          listenButton.textContent = "🎙 Nói với Lụa";
+          tutorStatus.textContent = "Bạn có thể nhập hoặc trả lời bằng giọng nói.";
+        };
+        try {
+          recognition.start();
+        } catch (error) {
+          activeSpeechRecognition = null;
+          say(`Không thể bật micro: ${error.message}`, "sad", false);
+        }
+      });
+      composer.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const learnerAnswer = answer.value.trim();
+        if (!learnerAnswer || checking || canAdvance) return;
+        checking = true;
+        sendButton.disabled = true;
+        appendLearnerMessage(log, learnerAnswer);
+        answer.value = "";
+        tutorStatus.textContent = "Lụa đang đọc câu trả lời của bạn…";
+        try {
+          const response = await fetch("/api/study-roadmap/answer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              topicId: roadmap.topicId,
+              focusTopic: lesson.focusTopic,
+              phase: lesson.phase,
+              question: lesson.practiceQuestion,
+              answer: learnerAnswer,
+              hintLevel,
+              attemptNumber: attempts + 1,
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || "Lụa chưa kiểm tra được câu trả lời.");
+          attempts += 1;
+          hintLevel = Math.min(hintLevel + 1, 3);
+          if (data.correct) {
+            const explanation = [
+              data.feedback,
+              data.explanation ? `Giải thích chi tiết: ${data.explanation}` : "",
+              data.example ? `Ví dụ: ${data.example}` : "",
+            ].filter(Boolean).join("\n\n");
+            say(explanation, "happy", true);
+            canAdvance = true;
+            addNextStepButton();
+            progress.children[lesson.stepIndex]?.classList.add("active");
+            celebrateTutor(card, fox);
+            status.textContent = "Câu trả lời đúng. Lụa đã giải thích kỹ; bạn chủ động sang bước tiếp theo khi sẵn sàng.";
+          } else if (data.solution) {
+            say(`Mình đã cùng bạn thử ${attempts} lần. Giờ mình đưa lời giải mẫu để bạn đối chiếu.\n\nLời giải: ${data.solution.answer}\n\nGiải thích: ${data.solution.explanation}`, "happy", true);
+            if (data.solution.diagram) appendSolutionDiagram(log, data.solution.diagram, lesson.focusTopic);
+            canAdvance = true;
+            addNextStepButton();
+            status.textContent = "Lụa đã trình bày lời giải mẫu và sơ đồ minh họa.";
+          } else {
+            const feedback = [
+              data.feedback,
+              data.whyWrong ? `Chỗ cần sửa: ${data.whyWrong}` : "",
+              data.focus ? `Nên tập trung: ${data.focus}` : "",
+              data.hint ? `Gợi ý: ${data.hint}` : "",
+              "Bạn thử diễn đạt lại nhé; mình chưa bật mí đáp án.",
+            ].filter(Boolean).join("\n\n");
+            say(feedback, "sad", true);
+            tutorStatus.textContent = `Mình sẽ cùng bạn xem lại — lượt ${attempts}/3.`;
+            status.textContent = `Lụa đã phản hồi vào câu trả lời của bạn (${attempts}/3 lượt).`;
+          }
+        } catch (error) {
+          say(`${error.message} Câu trả lời chưa được chấm; bạn có thể gửi lại.`, "sad", false);
+          tutorStatus.textContent = "Chưa kiểm tra được câu trả lời.";
+        } finally {
+          checking = false;
+          sendButton.disabled = false;
+          if (!canAdvance) answer.focus();
+        }
+      });
+
+      studyScreen.replaceChildren(card);
+    }
+
+    function renderStudyLesson(lesson) {
+      const roadmap = activeRoadmap;
+      if (!roadmap) return;
+      const card = document.createElement("article");
+      card.className = "study-learning study-quiz-ui";
+      const phaseLabels = {
+        foundation: "Ôn lý thuyết nền tảng",
+        practice: "Luyện tập có hướng dẫn",
+        advanced: "Thử thách nâng cao",
+      };
+      let selectedOptionIndex = null;
+      let lastTutorMessage = "";
+      let lastHint = "";
+      let lastReadButton = null;
+
+      const speechLog = document.createElement("section");
+      speechLog.className = "study-ui-speech-log";
+      speechLog.hidden = true;
+      const presentTutorMessage = (text, { emotion = "happy", autoRead = true } = {}) => {
+        lastTutorMessage = text;
+        speechBubble.textContent = text;
+        setFoxEmotion(fox, emotion);
+        const message = appendTutorMessage(speechLog, text, { emotion, autoRead });
+        lastReadButton = message.querySelector(".tutor-message-tools button");
+      };
+
+      const back = document.createElement("button");
+      back.type = "button";
+      back.className = "back-button";
+      back.textContent = roadmap.isDirectLesson ? "← Chọn chủ đề khác" : "← Quay lại nhận xét";
+      back.addEventListener("click", () => {
+        stopTutorListening();
+        stopCommentary();
+        studyScreen.hidden = true;
+        if (roadmap.isDirectLesson) {
+          quizScreen.hidden = true;
+          topicScreen.hidden = false;
+        } else {
+          analysisResults.hidden = false;
+          results.hidden = false;
+          status.textContent = "Bạn có thể xem lại nhận xét hoặc tiếp tục lộ trình học.";
+        }
+      });
+      const topbar = document.createElement("div");
+      topbar.className = "study-ui-topbar";
+      topbar.append(back, createSubjectPicker("tutor-subject-picker"));
+      const phase = document.createElement("span");
+      phase.className = "study-ui-chip";
+      phase.textContent = phaseLabels[lesson.phase] || "Bài học cá nhân hóa";
+      const title = document.createElement("h2");
+      title.className = "study-ui-heading";
+      title.textContent = lesson.title;
+      const stepLabel = document.createElement("p");
+      stepLabel.className = "study-ui-subtitle";
+      stepLabel.textContent = `Bước ${lesson.stepIndex + 1}/${lesson.totalSteps} · ${lesson.focusTopic}`;
+      const stepProgress = document.createElement("div");
+      stepProgress.className = "study-ui-progress";
+      stepProgress.setAttribute("role", "progressbar");
+      stepProgress.setAttribute("aria-label", "Tiến độ lộ trình");
+      stepProgress.setAttribute("aria-valuemin", "1");
+      stepProgress.setAttribute("aria-valuemax", String(lesson.totalSteps));
+      stepProgress.setAttribute("aria-valuenow", String(lesson.stepIndex + 1));
+      for (let index = 0; index < lesson.totalSteps; index += 1) {
+        const segment = document.createElement("span");
+        if (index < lesson.stepIndex) segment.classList.add("done");
+        else if (index === lesson.stepIndex) segment.classList.add("current");
+        stepProgress.append(segment);
+      }
+      card.append(topbar, phase, title, stepLabel, stepProgress);
+
+      const layout = document.createElement("div");
+      layout.className = "study-ui-grid";
+      const tutorPanel = document.createElement("section");
+      tutorPanel.className = "study-ui-card study-ui-tutor";
+      tutorPanel.setAttribute("aria-label", "Gia sư Lụa");
+      const fox = createFoxAvatar("happy");
+      const tutorName = document.createElement("h2");
+      tutorName.className = "study-ui-tutor-name";
+      tutorName.textContent = "Lụa";
+      const tutorRole = document.createElement("p");
+      tutorRole.className = "study-ui-role";
+      tutorRole.textContent = "Gia sư AI đồng hành cùng bạn";
+      const speechBubble = document.createElement("div");
+      speechBubble.className = "study-ui-bubble";
+      speechBubble.setAttribute("role", "status");
+      speechBubble.setAttribute("aria-live", "polite");
+      const tutorActions = document.createElement("div");
+      tutorActions.className = "study-ui-tutor-actions";
+      const hintButton = document.createElement("button");
+      hintButton.type = "button";
+      hintButton.textContent = "💡 Gợi ý cho mình";
+      const replayButton = document.createElement("button");
+      replayButton.type = "button";
+      replayButton.textContent = "🔊 Nghe lại";
+      const voiceToggle = document.createElement("button");
+      voiceToggle.type = "button";
+      voiceToggle.setAttribute("aria-pressed", String(tutorAutoRead));
+      voiceToggle.textContent = tutorAutoRead ? "Tự đọc: bật" : "Tự đọc: tắt";
+      tutorActions.append(hintButton, replayButton, voiceToggle);
+      tutorPanel.append(fox, tutorName, tutorRole, speechBubble, tutorActions);
+
+      const roadmapPanel = document.createElement("aside");
+      roadmapPanel.className = "study-ui-card study-ui-road";
+      roadmapPanel.setAttribute("aria-label", "Lộ trình học");
+      const roadmapHeading = document.createElement("h3");
+      roadmapHeading.textContent = "Lộ trình học";
+      const roadmapList = document.createElement("ol");
+      roadmapList.className = "study-ui-road-list";
+      roadmap.steps.forEach((step, index) => {
+        const item = document.createElement("li");
+        item.className = "study-ui-road-step";
+        const isCurrent = index === lesson.stepIndex;
+        const isDone = Boolean(step.completed) || index < lesson.stepIndex;
+        if (isCurrent) item.classList.add("current");
+        else if (isDone) item.classList.add("done");
+        const dot = document.createElement("span");
+        dot.className = "study-ui-road-dot";
+        dot.textContent = isDone && !isCurrent ? "✓" : String(index + 1);
+        const details = document.createElement("span");
+        const stepTitle = document.createElement("strong");
+        stepTitle.textContent = step.title;
+        const stepDescription = document.createElement("small");
+        stepDescription.textContent = `${step.activity}${isCurrent ? " · Đang học" : isDone ? " · Hoàn thành" : ""}`;
+        details.append(stepTitle, stepDescription);
+        item.append(dot, details);
+        roadmapList.append(item);
+      });
+      roadmapPanel.append(roadmapHeading, roadmapList);
+      const quizPanel = document.createElement("section");
+      quizPanel.className = "study-ui-card study-ui-question";
+      quizPanel.setAttribute("aria-label", "Câu hỏi trắc nghiệm");
+      const questionMeta = document.createElement("div");
+      questionMeta.className = "study-ui-question-meta";
+      const topicChip = document.createElement("span");
+      topicChip.className = "study-ui-chip";
+      topicChip.textContent = lesson.focusTopic;
+      const attemptLabel = document.createElement("span");
+      attemptLabel.className = "study-ui-attempts";
+      attemptLabel.textContent = "✦ Cùng suy nghĩ nhé";
+      questionMeta.append(topicChip, attemptLabel);
+      const visual = document.createElement("div");
+      visual.className = "study-ui-visual";
+      appendStudyIllustration(visual, lesson.focusTopic, roadmap.topicId);
+      const questionTitle = document.createElement("h3");
+      questionTitle.className = "study-ui-question-title";
+      questionTitle.textContent = lesson.quizQuestion;
+      const options = document.createElement("div");
+      options.className = "study-ui-options";
+      options.setAttribute("role", "group");
+      options.setAttribute("aria-label", "Chọn một đáp án");
+      const optionButtons = lesson.quizOptions.map((option, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "study-ui-option";
+        button.setAttribute("aria-pressed", "false");
+        const letter = document.createElement("span");
+        letter.className = "study-ui-option-letter";
+        letter.textContent = String.fromCharCode(65 + index);
+        const text = document.createElement("span");
+        text.textContent = option;
+        button.append(letter, text);
+        button.addEventListener("click", () => {
+          if (button.disabled) return;
+          selectedOptionIndex = index;
+          optionButtons.forEach((optionButton) => {
+            optionButton.classList.remove("selected", "incorrect");
+            optionButton.setAttribute("aria-pressed", String(optionButton === button));
+          });
+          button.classList.add("selected");
+          checkButton.disabled = false;
+        });
+        options.append(button);
+        return button;
+      });
+      const feedback = document.createElement("div");
+      feedback.className = "study-ui-feedback";
+      feedback.setAttribute("role", "status");
+      feedback.setAttribute("aria-live", "polite");
+      feedback.hidden = true;
+      const reasoningDetails = document.createElement("details");
+      reasoningDetails.className = "study-ui-reasoning";
+      const reasoningSummary = document.createElement("summary");
+      reasoningSummary.textContent = "Chia sẻ cách bạn suy luận (không bắt buộc)";
+      const reasoningContent = document.createElement("div");
+      reasoningContent.className = "study-ui-reasoning-content";
+      const answer = document.createElement("textarea");
+      answer.maxLength = 4_000;
+      answer.setAttribute("aria-label", "Cách bạn suy luận");
+      answer.placeholder = "Ghi hoặc nói ngắn gọn cách bạn chọn đáp án...";
+      const listenButton = document.createElement("button");
+      listenButton.type = "button";
+      listenButton.textContent = "🎙 Nói";
+      reasoningContent.append(answer, listenButton);
+      reasoningDetails.append(reasoningSummary, reasoningContent);
+      const theoryDetails = document.createElement("details");
+      theoryDetails.className = "study-ui-theory";
+      const theorySummary = document.createElement("summary");
+      theorySummary.textContent = "Mở phần ôn lý thuyết nhanh";
+      const theoryText = document.createElement("p");
+      theoryText.textContent = lesson.theory;
+      theoryDetails.append(theorySummary, theoryText);
+      quizPanel.append(questionMeta, visual, questionTitle, options, feedback, reasoningDetails, theoryDetails);
+
       const target = roadmap.quizResults.find((item) => item.topic === lesson.focusTopic && !item.correct);
       const known = roadmap.quizResults.find((item) => item.topic === lesson.focusTopic && item.correct);
       const opening = [
@@ -1085,52 +1973,83 @@
       } else if (known) {
         opening.push(`Bạn đã làm tốt câu “${known.question}”. Mình bỏ qua phần nhập môn nhé, giờ mình sẽ cùng bạn đào sâu và thử áp dụng kiến thức theo một cách mới.`);
       }
-      appendTutorMessage(chatLog, opening.join("\n\n"), { autoRead: true });
-      appendTutorMessage(chatLog, lesson.theory, { autoRead: true });
-      appendStudyIllustration(chatLog, lesson.focusTopic);
-      appendTutorMessage(chatLog, `Giờ mình đố bạn một câu nhé:\n\n${lesson.practiceQuestion}`);
+      presentTutorMessage(opening.join("\n\n"));
 
-      const composer = document.createElement("div");
-      composer.className = "tutor-composer";
-      const answer = document.createElement("textarea");
-      answer.className = "study-answer";
-      answer.maxLength = 4_000;
-      answer.setAttribute("aria-label", "Nhập câu trả lời cho Lụa");
-      answer.placeholder = "Trả lời câu hỏi Lụa vừa gửi...";
-      const submit = document.createElement("button");
-      submit.type = "button";
-      submit.className = "send";
-      submit.textContent = "Gửi";
-      composer.append(answer, submit);
-      const hintNote = document.createElement("p");
-      hintNote.className = "tutor-hint";
-      hintNote.textContent = "Enter để gửi · Lụa chỉ gợi ý, không đưa đáp án.";
-      dialogue.append(dialogueHead, chatLog, quickActions, composer, hintNote);
-      layout.append(roadmapPanel, avatarStage, dialogue);
+      const actions = document.createElement("div");
+      actions.className = "study-ui-actions";
+      const checkButton = document.createElement("button");
+      checkButton.type = "button";
+      checkButton.className = "study-ui-check";
+      checkButton.textContent = "Kiểm tra";
+      checkButton.disabled = true;
       const next = document.createElement("button");
       next.type = "button";
-      next.className = "secondary";
-      next.textContent = lesson.stepIndex + 1 === lesson.totalSteps ? "Hoàn thành lộ trình" : "Sang bước tiếp theo";
+      next.className = "study-ui-next";
+      next.textContent = lesson.stepIndex + 1 === lesson.totalSteps
+        ? roadmap.isDirectLesson ? "Hoàn thành · Chọn bài khác" : "Hoàn thành lộ trình"
+        : "Câu tiếp theo →";
       next.hidden = true;
-      const actions = document.createElement("div");
-      actions.className = "study-actions";
-      actions.append(next);
+      actions.append(checkButton, next);
+      layout.append(tutorPanel, roadmapPanel, quizPanel);
+
+
+      const showFeedback = (kind, lines) => {
+        feedback.className = `study-ui-feedback ${kind}`;
+        feedback.replaceChildren();
+        for (const [label, text] of lines) {
+          if (!text) continue;
+          const paragraph = document.createElement("p");
+          if (label) {
+            const strong = document.createElement("strong");
+            strong.textContent = `${label} `;
+            paragraph.append(strong);
+          }
+          paragraph.append(document.createTextNode(text));
+          feedback.append(paragraph);
+        }
+        feedback.hidden = false;
+      };
+
+      const finishQuestion = (kind, lines, message, emotion) => {
+        showFeedback(kind, lines);
+        presentTutorMessage(message, { emotion });
+        optionButtons.forEach((button) => { button.disabled = true; });
+        checkButton.hidden = true;
+        next.hidden = false;
+        hintButton.disabled = true;
+        answer.disabled = true;
+        listenButton.disabled = true;
+      };
+
       next.addEventListener("click", async () => {
+        if (roadmap.isDirectLesson && lesson.stepIndex + 1 >= lesson.totalSteps) {
+          stopTutorListening();
+          stopCommentary();
+          studyScreen.hidden = true;
+          quizScreen.hidden = true;
+          topicScreen.hidden = false;
+          return;
+        }
+        if (roadmap.steps[lesson.stepIndex]) roadmap.steps[lesson.stepIndex].completed = true;
         roadmap.learningStepIndex = lesson.stepIndex + 1;
         roadmap.learningCompleted = lesson.stepIndex + 1 >= lesson.totalSteps;
-        saveRoadmap(roadmap);
+        if (!roadmap.isDirectLesson) saveRoadmap(roadmap);
         if (roadmap.learningCompleted) {
+          const completionText = "Tuyệt vời! Bạn đã hoàn thành tất cả các bước. Mình rất vui vì bạn đã kiên trì tự suy luận và thử sức đến cùng!";
           const done = document.createElement("article");
-          done.className = "study-learning tutor-celebrate";
+          done.className = "study-learning study-quiz-ui study-ui-end";
           const doneFox = createFoxAvatar("happy");
           doneFox.classList.add("celebrate");
-          const doneChat = document.createElement("div");
-          doneChat.className = "tutor-log";
-          appendTutorMessage(doneChat, "Tuyệt vời! Bạn đã hoàn thành tất cả các bước. Mình rất vui vì bạn đã kiên trì tự suy luận và thử sức đến cùng!", { autoRead: true });
           const doneTitle = document.createElement("h2");
           doneTitle.textContent = "Lộ trình đã hoàn thành!";
           const doneText = document.createElement("p");
           doneText.textContent = "Tiến độ của bạn đã được lưu trên thiết bị này.";
+          const doneBubble = document.createElement("div");
+          doneBubble.className = "study-ui-bubble";
+          doneBubble.textContent = completionText;
+          const doneSpeechLog = document.createElement("section");
+          doneSpeechLog.hidden = true;
+          appendTutorMessage(doneSpeechLog, completionText, { autoRead: true });
           const review = document.createElement("button");
           review.type = "button";
           review.textContent = "Xem lại nhận xét";
@@ -1139,7 +2058,7 @@
             analysisResults.hidden = false;
             results.hidden = false;
           });
-          done.append(doneFox, doneTitle, doneText, doneChat, review);
+          done.append(doneFox, doneTitle, doneText, doneBubble, review, doneSpeechLog);
           studyScreen.replaceChildren(done);
           celebrateTutor(done, doneFox);
           status.textContent = "Đã hoàn thành tất cả các bước trong lộ trình.";
@@ -1148,16 +2067,16 @@
         await loadStudyLesson(lesson.stepIndex + 1);
       });
 
-      submit.addEventListener("click", async () => {
-        if (!answer.value.trim()) {
-          appendTutorMessage(chatLog, "Bạn thử nhắn cho mình một ý trước nhé. Không cần viết thật dài đâu!", { emotion: "sad", autoRead: true });
-          answer.focus();
+      checkButton.addEventListener("click", async () => {
+        if (selectedOptionIndex === null) {
+          status.textContent = "Hãy chọn một phương án trước khi kiểm tra nhé.";
+          quizPanel.scrollIntoView({ behavior: "smooth", block: "center" });
           return;
         }
         const learnerAnswer = answer.value.trim();
-        appendLearnerMessage(chatLog, learnerAnswer);
-        submit.disabled = true;
-        status.textContent = "AI đang đọc câu trả lời và chuẩn bị phản hồi...";
+        const submittedOptionIndex = selectedOptionIndex;
+        checkButton.disabled = true;
+        status.textContent = "Lụa đang xem lựa chọn và chuẩn bị gợi ý...";
         try {
           const response = await fetch("/api/study-roadmap/answer", {
             method: "POST",
@@ -1165,11 +2084,10 @@
             body: JSON.stringify({
               topicId: roadmap.topicId,
               phase: lesson.phase,
-              question: lesson.practiceQuestion,
-              answer: learnerAnswer,
-              referenceAnswer: roadmap.quizResults.find((item) =>
-                item.topic === lesson.focusTopic && !item.correct
-              )?.correctAnswer || "",
+              focusTopic: lesson.focusTopic,
+              question: lesson.quizQuestion,
+              selectedOptionIndex: submittedOptionIndex,
+              reasoning: learnerAnswer,
               hintLevel: studyHintLevel,
               attemptNumber: studyWrongAttempts + 1,
             }),
@@ -1177,52 +2095,78 @@
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || "AI chưa kiểm tra được câu trả lời.");
           const revealedSolution = !data.correct && data.solution;
-          const replyText = data.correct
-            ? `${data.feedback} Chính xác rồi! Bạn có thể sang bước tiếp theo.`
-            : revealedSolution
-              ? `Mình đã cùng bạn thử lại ${studyWrongAttempts + 1} lần. Giờ mình sẽ đưa lời giải mẫu để bạn đối chiếu.\n\nLời giải: ${data.solution.answer}\n\nGiải thích: ${data.solution.explanation}`
-              : `${data.feedback}\n\nGợi ý nhỏ: ${data.hint}\n\nThử nghĩ tiếp nhé — mình chưa bật mí đáp án đâu!`;
-          appendTutorMessage(chatLog, replyText, { emotion: data.correct ? "happy" : "sad", autoRead: true });
-          setFoxEmotion(fox, data.correct ? "happy" : "sad");
           if (data.correct || revealedSolution) {
-            next.hidden = false;
-            submit.hidden = true;
-            answer.disabled = true;
             if (data.correct) {
+              optionButtons[submittedOptionIndex].classList.remove("selected");
+              optionButtons[submittedOptionIndex].classList.add("correct");
+              const explanationLines = [
+                ["", data.feedback],
+                ["Điều cần nhớ:", data.focus],
+                ["Giải thích chi tiết:", data.explanation],
+                ["Ví dụ:", data.example],
+              ];
+              const spokenExplanation = explanationLines.map(([label, text]) => `${label} ${text}`.trim()).join("\n\n");
+              finishQuestion("correct", explanationLines, spokenExplanation, "happy");
+              stepProgress.children[lesson.stepIndex]?.classList.replace("current", "done");
+              attemptLabel.textContent = "✓ Chính xác";
               celebrateTutor(card, fox);
-              status.textContent = "Làm tốt lắm! Bạn đã hoàn thành câu hỏi của bước này.";
+              status.textContent = "Làm tốt lắm! Mình đã trình bày giải thích và ví dụ. Khi sẵn sàng, bạn chủ động sang bước tiếp theo nhé.";
             } else {
-              const illustration = appendStudyIllustration(chatLog, lesson.focusTopic);
-              illustration.classList.add("highlight");
-              illustration.scrollIntoView({ behavior: "smooth", block: "center" });
-              window.setTimeout(() => illustration.classList.remove("highlight"), 1_500);
+              optionButtons[submittedOptionIndex].classList.remove("selected");
+              optionButtons[submittedOptionIndex].classList.add("incorrect");
+              const solutionLines = [
+                ["Lời giải:", data.solution.answer],
+                ["Giải thích:", data.solution.explanation],
+                ["Ví dụ:", data.solution.example],
+              ];
+              const solutionMessage = `Mình đã cùng bạn thử lại ${studyWrongAttempts + 1} lần. Giờ mình đưa lời giải mẫu để bạn đối chiếu.\n\n${solutionLines.map(([label, text]) => `${label} ${text || ""}`).join("\n\n")}`;
+              finishQuestion("incorrect", solutionLines, solutionMessage, "sad");
+              attemptLabel.textContent = `Đã dùng ${studyWrongAttempts + 1}/3 lượt`;
               status.textContent = "Lụa đã mở lời giải mẫu kèm hình minh họa. Bạn có thể sang bước tiếp theo.";
             }
           } else {
             studyWrongAttempts += 1;
             studyHintLevel = Math.min(studyHintLevel + 1, 3);
+            selectedOptionIndex = null;
+            optionButtons[submittedOptionIndex].classList.remove("selected");
+            optionButtons[submittedOptionIndex].classList.add("incorrect");
+            optionButtons[submittedOptionIndex].setAttribute("aria-pressed", "false");
+            showFeedback("incorrect", [
+              ["", data.feedback],
+              ["Bạn đã chọn:", lesson.quizOptions[submittedOptionIndex]],
+              ["Vì sao lựa chọn này sai:", data.whyWrong],
+              ["Kiến thức cần ôn:", data.focus],
+              ["Gợi ý:", data.hint],
+            ]);
+            lastHint = data.hint;
+            attemptLabel.textContent = `Lượt thử ${studyWrongAttempts + 1}/3`;
+            presentTutorMessage(`${data.feedback}\n\nBạn chọn: ${lesson.quizOptions[submittedOptionIndex]}\n\nVì sao lựa chọn này sai: ${data.whyWrong}\n\nKiến thức cần ôn: ${data.focus}\n\nGợi ý để tự sửa: ${data.hint}\n\nMình chưa bật mí đáp án; bạn thử lại nhé.`, { emotion: "sad" });
             answer.value = "";
-            answer.focus();
+            checkButton.disabled = true;
+            quizPanel.scrollIntoView({ behavior: "smooth", block: "center" });
             status.textContent = `Chưa đúng hoàn toàn (${studyWrongAttempts}/3 lần thử); đọc gợi ý rồi thử lại nhé.`;
           }
         } catch (error) {
-          appendTutorMessage(chatLog, `${error.message} Câu trả lời vẫn được giữ lại, bạn hãy gửi lại sau nhé.`, { emotion: "sad", autoRead: true });
+          checkButton.disabled = selectedOptionIndex === null;
+          presentTutorMessage(`${error.message} Câu trả lời vẫn được giữ lại, bạn hãy thử gửi lại nhé.`, { emotion: "sad" });
           status.textContent = "Chưa kiểm tra được câu trả lời.";
         } finally {
-          submit.disabled = false;
+          if (!checkButton.hidden) {
+            checkButton.disabled = selectedOptionIndex === null;
+          }
         }
       });
 
       listenButton.addEventListener("click", () => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-          appendTutorMessage(chatLog, "Trình duyệt này chưa hỗ trợ nhập liệu bằng giọng nói. Bạn có thể nhập câu trả lời vào khung chat nhé.", { emotion: "sad" });
+          presentTutorMessage("Trình duyệt này chưa hỗ trợ nhập liệu bằng giọng nói. Bạn có thể ghi cách suy luận vào ô bên dưới câu hỏi nhé.", { emotion: "sad", autoRead: false });
           return;
         }
         if (activeSpeechRecognition) {
           stopTutorListening();
           listenButton.textContent = "🎙 Nói với Lụa";
-          identityStatus.textContent = "Gia sư AI 1–1 · Đang đồng hành";
+          tutorRole.textContent = "Gia sư AI đồng hành cùng bạn";
           return;
         }
         const recognition = new SpeechRecognition();
@@ -1231,71 +2175,52 @@
         recognition.interimResults = false;
         recognition.onstart = () => {
           listenButton.textContent = "⏹ Dừng nghe";
-          identityStatus.textContent = "Đang nghe bạn nói...";
+          tutorRole.textContent = "Đang nghe bạn nói...";
         };
         recognition.onresult = (event) => {
           answer.value = [...event.results].map((result) => result[0].transcript).join(" ").trim();
           answer.focus();
+          presentTutorMessage("Mình đã ghi lại cách bạn suy luận. Chọn đáp án rồi bấm Kiểm tra nhé!", { autoRead: false });
         };
         recognition.onerror = (event) => {
           const reason = event.error === "not-allowed"
             ? "Bạn chưa cấp quyền dùng micro."
             : `Micro gặp sự cố (${event.error}).`;
-          appendTutorMessage(chatLog, `${reason} Bạn có thể nhập câu trả lời bằng bàn phím.`, { emotion: "sad" });
+          presentTutorMessage(`${reason} Bạn có thể nhập cách suy luận bằng bàn phím.`, { emotion: "sad", autoRead: false });
         };
         recognition.onend = () => {
           if (activeSpeechRecognition === recognition) activeSpeechRecognition = null;
           listenButton.textContent = "🎙 Nói với Lụa";
-          identityStatus.textContent = "Gia sư AI 1–1 · Đang đồng hành";
+          tutorRole.textContent = "Gia sư AI đồng hành cùng bạn";
         };
         try {
           recognition.start();
         } catch (error) {
           activeSpeechRecognition = null;
-          appendTutorMessage(chatLog, `Không thể bật micro: ${error.message}`, { emotion: "sad" });
+          presentTutorMessage(`Không thể bật micro: ${error.message}`, { emotion: "sad", autoRead: false });
         }
       });
       replayButton.addEventListener("click", () => {
-        const reads = chatLog.querySelectorAll(".tutor-message.assistant .tutor-message-tools button");
-        const lastRead = reads[reads.length - 1];
-        if (lastRead) lastRead.click();
+        if (lastReadButton) lastReadButton.click();
+        else if (lastTutorMessage) speakTutorText(lastTutorMessage, replayButton);
       });
-      hintSuggestion.addEventListener("click", () => {
-        const guidance = lesson.phase === "foundation"
-          ? `Thử đọc lại đoạn lý thuyết về ${lesson.focusTopic}, rồi tự nói lại khái niệm bằng lời của bạn. Chưa cần xử lý cả câu hỏi — hãy tìm điều đề bài đang hỏi trước.`
-          : `Tách câu hỏi thành các dữ kiện đã biết và điều cần tìm. Hãy giải thích vì sao bạn chọn bước đầu tiên đó; mình sẽ dựa vào cách nghĩ của bạn để gợi ý tiếp.`;
-        appendTutorMessage(chatLog, guidance, { emotion: "happy", autoRead: true });
+      hintButton.addEventListener("click", () => {
+        const guidance = lastHint
+          ? `Gợi ý: ${lastHint}\n\nBạn hãy đối chiếu dữ kiện trong câu hỏi với phần lý thuyết rồi thử chọn lại nhé.`
+          : `Đọc kỹ từ khóa trong câu hỏi, sau đó mở phần ôn lý thuyết nhanh để tìm dữ kiện liên quan. Mình chưa bật mí đáp án đâu nhé!`;
+        presentTutorMessage(guidance);
       });
-      exampleSuggestion.addEventListener("click", () => {
-        const example = lesson.theory.match(/(?:Ví dụ dễ hình dung|Tình huống để hình dung):\s*([\s\S]*?)(?:\n\n|$)/)?.[1];
-        appendTutorMessage(
-          chatLog,
-          example
-            ? `Ví dụ nhé: ${example}\n\nGiờ bạn thử tìm điểm giống nhau giữa ví dụ này và câu hỏi đang làm nhé.`
-            : `Mình lấy câu hỏi bạn vừa làm tốt làm tình huống mẫu: “${roadmap.quizResults.find((item) => item.topic === lesson.focusTopic && item.correct)?.question || lesson.practiceQuestion}”. Hãy xác định quy tắc cần dùng và giải thích từng bước, nhưng đừng chỉ nêu kết quả.`,
-          { emotion: "happy", autoRead: true }
-        );
-      });
-      diagramSuggestion.addEventListener("click", () => {
-        const illustration = chatLog.querySelector(".tutor-illustration");
-        if (!illustration) {
-          appendTutorMessage(chatLog, "Bài này chưa có bản đồ minh họa riêng. Mình có thể cùng bạn vẽ sơ đồ từ các ý trong câu hỏi nhé.", { emotion: "happy" });
-          return;
-        }
-        illustration.scrollIntoView({ behavior: "smooth", block: "center" });
-        illustration.classList.add("highlight");
-        window.setTimeout(() => illustration.classList.remove("highlight"), 1_500);
-      });
-
-      answer.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" && !event.shiftKey) {
-          event.preventDefault();
-          submit.click();
+      voiceToggle.addEventListener("click", () => {
+        tutorAutoRead = !tutorAutoRead;
+        voiceToggle.textContent = tutorAutoRead ? "Tự đọc: bật" : "Tự đọc: tắt";
+        voiceToggle.setAttribute("aria-pressed", String(tutorAutoRead));
+        if (!tutorAutoRead) {
+          stopCommentary();
+          resetTutorReadButtons();
         }
       });
-      card.append(lessonHead, layout, actions);
+      card.append(layout, actions, speechLog);
       studyScreen.replaceChildren(card);
-      chatLog.scrollTop = chatLog.scrollHeight;
     }
 
     function renderSavedRoadmaps() {
@@ -1693,11 +2618,20 @@
       topics.forEach((topic) => {
         const card = document.createElement("article");
         card.className = "panel topic-card";
+        card.dataset.topicId = topic.id;
         const period = document.createElement("div");
         period.className = "topic-period";
         period.textContent = topic.period;
+        const heading = document.createElement("div");
+        heading.className = "topic-heading";
+        const symbols = { antiUsWar: "🏛️", geography: "🌏", cProgramming: "💻" };
+        const symbol = document.createElement("span");
+        symbol.className = "topic-symbol";
+        symbol.setAttribute("aria-hidden", "true");
+        symbol.textContent = symbols[topic.id] || "📘";
         const title = document.createElement("h2");
         title.textContent = topic.title;
+        heading.append(symbol, title);
         const description = document.createElement("p");
         description.className = "muted";
         description.textContent = topic.description;
@@ -1705,7 +2639,7 @@
         start.type = "button";
         start.textContent = "Chọn và tạo Quiz";
         start.addEventListener("click", () => startTopicQuiz(topic));
-        card.append(period, title, description, start);
+        card.append(period, heading, description, start);
         topicList.append(card);
       });
     }

@@ -50,6 +50,7 @@ test("maps a passing Groq review and sends the configured model", async () => {
     const requestBody = JSON.parse(requestOptions.body);
     assert.equal(requestBody.model, "llama-test");
     assert.equal(requestBody.reasoning_effort, "none");
+    assert.match(requestBody.messages[0].content, /json/);
     assert.match(requestBody.messages[0].content, /tiền đề và dữ kiện người dùng nêu/);
     assert.match(requestBody.messages[0].content, /Không được bịa ra lời nói\/lỗi của người dùng/);
     assert.deepEqual(result, { status: "verified", model: "llama-test", issues: [] });

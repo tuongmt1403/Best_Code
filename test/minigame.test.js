@@ -15,6 +15,19 @@ let server;
 let baseUrl;
 let now = 1_800_000_000_000;
 
+function validObstacleIllustration() {
+  return {
+    background: "#DCEBFA",
+    elements: Array.from({ length: 10 }, (_, index) => ({
+      type: "circle",
+      cx: 5 + index * 10,
+      cy: 50,
+      r: 4,
+      fill: "#336699",
+    })),
+  };
+}
+
 async function startServer() {
   const app = express();
   app.use(express.json());
@@ -279,7 +292,7 @@ test("picture mode creates topic-specific banks for C and history", async () => 
   }
 });
 
-test("obstacle mode reveals solved clues, then asks the central question", async () => {
+test("obstacle mode draws a private AI puzzle and uses untimed buzzer turns", async () => {
   temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "hoc-ma-choi-obstacle-"));
   const generationCalls = [];
   game = createMiniGame({
@@ -288,18 +301,25 @@ test("obstacle mode reveals solved clues, then asks the central question", async
     generateQuestions: async (request) => {
       generationCalls.push(request);
       return {
-        obstacle: { keyword: "SONGHONG", logic: "Các đáp án đều gắn với sông Hồng." },
-        questions: [0, 1, 2, 3, 4].map((index) => ({
-          prompt: index === 4 ? "Ô TRUNG TÂM" : `HÀNG NGANG ${index + 1}`,
-          question: index === 4
+        obstacle: {
+          keyword: "SONGHONG",
+          logic: "Các đáp án đều gắn với sông Hồng.",
+          illustration: validObstacleIllustration(),
+        },
+        questions: Array.from({ length: request.count + 1 }, (_, index) => {
+          const isCenter = index === request.count;
+          return {
+          prompt: isCenter ? "Ô TRUNG TÂM" : `HÀNG NGANG ${index + 1}`,
+          question: isCenter
             ? "Từ khóa bí ẩn liên kết các hàng ngang là gì?"
             : `${request.topic}: câu hỏi mới số ${index + 1}?`,
-          options: index === 4
+          options: isCenter
             ? ["SÔNG ĐÀ", "SONGHONG", "SÔNG MÃ", "SÔNG CHẢY"]
             : ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
-          answer: [0, 1, 0, 0, 1][index],
+          answer: isCenter ? 1 : index === 1 ? 1 : 0,
           explanation: "Đáp án phù hợp với chủ đề.",
-        })),
+          };
+        }),
         review: { status: "verified", warning: false },
       };
     },
@@ -319,8 +339,15 @@ test("obstacle mode reveals solved clues, then asks the central question", async
   assert.equal(room.obstacle.keywordLength, 8);
   assert.equal(room.obstacle.keyword, null);
   assert.equal(JSON.stringify(room).includes("SONGHONG"), false);
-  assert.deepEqual(room.obstacle.revealedRows, [false, false, false, false]);
-  assert.deepEqual(room.obstacle.revealedAnswers, [null, null, null, null]);
+  assert.match(room.obstacle.image, new RegExp(`/api/minigame/rooms/${room.code}/obstacle/image`));
+  assert.equal(room.obstacle.clueCount, 5);
+  assert.deepEqual(room.obstacle.revealedRows, Array(5).fill(false));
+  assert.deepEqual(room.obstacle.completedRows, Array(5).fill(false));
+  assert.deepEqual(room.obstacle.revealedAnswers, Array(5).fill(null));
+  const imageResponse = await api(room.obstacle.image, "player-a");
+  assert.equal(imageResponse.status, 200);
+  assert.match(imageResponse.headers.get("content-type"), /image\/svg\+xml/);
+  assert.match(await imageResponse.text(), /<svg/);
   assert.equal(generationCalls.length, 1);
   assert.equal(generationCalls[0].topic, "Địa lý Việt Nam");
   assert.equal(generationCalls[0].mode, "obstacle");
@@ -332,47 +359,118 @@ test("obstacle mode reveals solved clues, then asks the central question", async
   }
   const start = await api(`/api/minigame/rooms/${room.code}/start`, "player-a", "POST", {});
   assert.equal(start.status, 200);
+  const selectCenterTooSoon = await api(`/api/minigame/rooms/${room.code}/obstacle/select`, "player-a", "POST", { rowNumber: 6 });
+  assert.equal(selectCenterTooSoon.status, 409);
 
-  const answers = [0, 1, 0, 0, 1];
-  for (let index = 0; index < answers.length; index += 1) {
-    if (index > 0) {
-      now += 2_501;
-      const next = await api(`/api/minigame/rooms/${room.code}`, "player-a");
-      assert.equal(next.status, 200);
-      const nextState = await next.json();
-      assert.equal(nextState.currentQuestion.number, index + 1);
-      if (index === 4) {
-        assert.equal(nextState.obstacle.centralQuestion, true);
-        assert.equal(nextState.obstacle.keyword, null);
-      }
-    }
+  const selectSecondRow = await api(`/api/minigame/rooms/${room.code}/obstacle/select`, "player-a", "POST", { rowNumber: 2 });
+  assert.equal(selectSecondRow.status, 200);
+  const reading = await selectSecondRow.json();
+  assert.equal(reading.phase, "obstacleReading");
+  assert.equal(reading.currentQuestion.number, 2);
+  assert.equal(reading.obstacle.canBuzz, false);
+  assert.equal(JSON.stringify(reading).includes("SONGHONG"), false);
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/buzz`, "player-a", "POST", {})).status, 409);
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/speech-complete`, "player-a", "POST", {})).status, 200);
 
-    assert.equal((await api(`/api/minigame/rooms/${room.code}/answer`, "player-a", "POST", {
-      optionIndex: answers[index],
-    })).status, 200);
-    const resolve = await api(`/api/minigame/rooms/${room.code}/answer`, "player-b", "POST", {
-      optionIndex: (answers[index] + 1) % 4,
-    });
-    assert.equal(resolve.status, 200);
-    const result = await (await api(`/api/minigame/rooms/${room.code}`, "player-a")).json();
-    assert.equal(result.phase, "roundResult");
-    if (index < 4) {
-      assert.equal(result.obstacle.revealedRows[index], true);
-      assert.equal(result.obstacle.revealedAnswers[index], ["Đáp án A", "Đáp án B", "Đáp án A", "Đáp án A"][index]);
-      assert.ok(result.obstacle.revealedAnswers.slice(index + 1).every((answer) => answer === null));
-    }
-    else {
-      assert.equal(result.obstacle.keyword, "SONGHONG");
-      assert.match(result.obstacle.logic, /sông Hồng/);
-    }
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/obstacle/answer`, "player-a", "POST", { optionIndex: 1 })).status, 409);
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/buzz`, "player-a", "POST", {})).status, 200);
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/buzz`, "player-b", "POST", {})).status, 409);
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/obstacle/answer`, "player-a", "POST", { optionIndex: 0 })).status, 200);
+  let roomState = await (await api(`/api/minigame/rooms/${room.code}`, "player-a")).json();
+  assert.equal(roomState.phase, "playing");
+  assert.equal(roomState.obstacle.canBuzz, false);
+  assert.equal(roomState.obstacle.hasLostTurn, true);
+  now += 10 * 60 * 1000;
+  roomState = await (await api(`/api/minigame/rooms/${room.code}`, "player-b")).json();
+  assert.equal(roomState.phase, "playing");
+  assert.equal(roomState.obstacle.canBuzz, true);
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/buzz`, "player-b", "POST", {})).status, 200);
+  const correctSecondRow = await api(`/api/minigame/rooms/${room.code}/obstacle/answer`, "player-b", "POST", { optionIndex: 1 });
+  assert.equal(correctSecondRow.status, 200);
+  roomState = await correctSecondRow.json();
+  assert.equal(roomState.phase, "obstacleResult");
+  assert.equal(roomState.obstacle.revealedRows[1], true);
+  assert.equal(roomState.obstacle.revealedAnswers[1], "Đáp án B");
+  assert.equal(roomState.players.every((player) => player.score === 0), true);
+
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/obstacle/continue`, "player-a", "POST", {})).status, 200);
+  for (const rowNumber of [1, 3, 4, 5]) {
+    const select = await api(`/api/minigame/rooms/${room.code}/obstacle/select`, "player-a", "POST", { rowNumber });
+    assert.equal(select.status, 200);
+    assert.equal((await api(`/api/minigame/rooms/${room.code}/speech-complete`, "player-a", "POST", {})).status, 200);
+    assert.equal((await api(`/api/minigame/rooms/${room.code}/buzz`, "player-a", "POST", {})).status, 200);
+    const answerIndex = rowNumber === 2 ? 1 : 0;
+    const result = await api(`/api/minigame/rooms/${room.code}/obstacle/answer`, "player-a", "POST", { optionIndex: answerIndex });
+    assert.equal(result.status, 200);
+    roomState = await result.json();
+    assert.equal(roomState.phase, "obstacleResult");
+    assert.equal(roomState.obstacle.revealedRows[rowNumber - 1], true);
+    assert.equal((await api(`/api/minigame/rooms/${room.code}/obstacle/continue`, "player-b", "POST", {})).status, 200);
   }
-
-  now += 2_501;
-  const finished = await api(`/api/minigame/rooms/${room.code}`, "player-a");
-  assert.equal(finished.status, 200);
-  const finalState = await finished.json();
+  roomState = await (await api(`/api/minigame/rooms/${room.code}`, "player-a")).json();
+  assert.equal(roomState.obstacle.canSelectCenter, true);
+  const centerSelect = await api(`/api/minigame/rooms/${room.code}/obstacle/select`, "player-a", "POST", { rowNumber: 6 });
+  assert.equal(centerSelect.status, 200);
+  const centerState = await centerSelect.json();
+  assert.equal(centerState.currentQuestion.options, undefined);
+  assert.equal(JSON.stringify(centerState).includes("SONGHONG"), false);
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/speech-complete`, "player-a", "POST", {})).status, 200);
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/buzz`, "player-b", "POST", {})).status, 200);
+  const centerAnswer = await api(`/api/minigame/rooms/${room.code}/obstacle/answer`, "player-b", "POST", { answer: "song hong" });
+  assert.equal(centerAnswer.status, 200);
+  const finalState = await centerAnswer.json();
   assert.equal(finalState.phase, "finished");
-  assert.equal(finalState.finalResult.players.find((player) => player.username === "player-a").correctAnswers, 5);
+  assert.equal(finalState.obstacle.keyword, "SONGHONG");
+  assert.equal(finalState.obstacle.centerRevealed, true);
+  assert.match(finalState.obstacle.logic, /sông Hồng/);
+  assert.equal(finalState.finalResult.players.every((player) => player.score === 0), true);
+  const leaderboard = await (await api("/api/minigame/leaderboard", "player-a")).json();
+  assert.equal(leaderboard.entries.length, 0);
+});
+
+test("obstacle mode supports 10 or 15 clue rows plus a separate center question", async () => {
+  temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "hoc-ma-choi-obstacle-counts-"));
+  const generationCalls = [];
+  game = createMiniGame({
+    projectDir: temporaryDirectory,
+    generateQuestions: async (request) => {
+      generationCalls.push(request);
+      return {
+        obstacle: {
+          keyword: "SONGHONG",
+          logic: "Các đáp án đều gắn với sông Hồng.",
+          illustration: validObstacleIllustration(),
+        },
+        questions: Array.from({ length: request.count + 1 }, (_, index) => {
+          const isCenter = index === request.count;
+          return {
+            prompt: isCenter ? "Ô TRUNG TÂM" : `HÀNG NGANG ${index + 1}`,
+            question: isCenter ? `Từ khóa bí ẩn là gì trong bộ ${request.count}?` : `Bộ ${request.count}, câu hỏi số ${index + 1}?`,
+            options: isCenter ? ["SONGHONG", "A", "B", "C"] : ["A", "B", "C", "D"],
+            answer: 0,
+            explanation: "Đáp án phù hợp.",
+          };
+        }),
+        review: { status: "verified", warning: false },
+      };
+    },
+  });
+  await startServer();
+
+  for (const clueCount of [10, 15]) {
+    const response = await api("/api/minigame/rooms", `obstacle-${clueCount}`, "POST", {
+      mode: "obstacle",
+      topicId: "geography",
+      questionCount: clueCount,
+    });
+    assert.equal(response.status, 201);
+    const room = await response.json();
+    assert.equal(room.questionCount, clueCount);
+    assert.equal(room.obstacle.clueCount, clueCount);
+    assert.equal(room.obstacle.revealedRows.length, clueCount);
+    assert.equal(room.obstacle.completedRows.length, clueCount);
+    assert.equal(generationCalls[generationCalls.length - 1].count, clueCount);
+  }
 });
 
 test("obstacle mode rejects an invalid AI question set instead of making a fallback room", async () => {
@@ -395,15 +493,102 @@ test("obstacle mode rejects an invalid AI question set instead of making a fallb
   assert.match((await response.json()).error, /bộ câu hỏi mới bằng AI/);
 });
 
+test("obstacle mode closes a clue after every player misses and has no gameplay timer", async () => {
+  temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "hoc-ma-choi-obstacle-no-timer-"));
+  game = createMiniGame({
+    projectDir: temporaryDirectory,
+    clock: () => now,
+    generateQuestions: async () => ({
+      obstacle: {
+        keyword: "SONGHONG",
+        logic: "Các đáp án đều gắn với sông Hồng.",
+        illustration: validObstacleIllustration(),
+      },
+      questions: Array.from({ length: 6 }, (_, index) => ({
+        prompt: index === 5 ? "Ô TRUNG TÂM" : `HÀNG NGANG ${index + 1}`,
+        question: `Câu hỏi số ${index + 1}?`,
+        options: index === 5
+          ? ["SÔNG ĐÀ", "SONGHONG", "SÔNG MÃ", "SÔNG CHẢY"]
+          : ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+        answer: index === 5 ? 1 : 0,
+        explanation: "Đáp án phù hợp với chủ đề.",
+      })),
+    }),
+  });
+  await startServer();
+
+  const create = await api("/api/minigame/rooms", "player-a", "POST", {
+    mode: "obstacle",
+    topicId: "geography",
+    questionCount: 5,
+  });
+  const room = await create.json();
+  await api(`/api/minigame/rooms/${room.code}/join`, "player-b", "POST", {});
+  for (const player of ["player-a", "player-b"]) {
+    await api(`/api/minigame/rooms/${room.code}/rules/acknowledge`, player, "POST", {});
+  }
+  await api(`/api/minigame/rooms/${room.code}/start`, "player-a", "POST", {});
+  await api(`/api/minigame/rooms/${room.code}/obstacle/select`, "player-a", "POST", { rowNumber: 1 });
+  now += 60_001;
+  const speakingTimeout = await (await api(`/api/minigame/rooms/${room.code}`, "player-a")).json();
+  assert.equal(speakingTimeout.phase, "playing");
+  assert.equal(speakingTimeout.obstacle.canBuzz, true);
+
+  await api(`/api/minigame/rooms/${room.code}/buzz`, "player-a", "POST", {});
+  await api(`/api/minigame/rooms/${room.code}/obstacle/answer`, "player-a", "POST", { optionIndex: 1 });
+  await api(`/api/minigame/rooms/${room.code}/buzz`, "player-b", "POST", {});
+  const closed = await api(`/api/minigame/rooms/${room.code}/obstacle/answer`, "player-b", "POST", { optionIndex: 2 });
+  const result = await closed.json();
+  assert.equal(result.phase, "obstacleResult");
+  assert.equal(result.obstacle.completedRows[0], true);
+  assert.equal(result.obstacle.revealedRows[0], false);
+  assert.equal(result.obstacle.answerResult.correct, false);
+  assert.equal(result.obstacle.answerResult.correctAnswer, "Đáp án A");
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/obstacle/continue`, "player-a", "POST", {})).status, 200);
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/obstacle/select`, "player-a", "POST", { rowNumber: 1 })).status, 409);
+});
+
+test("obstacle mode rejects unsafe AI drawing values instead of embedding raw SVG", async () => {
+  temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "hoc-ma-choi-obstacle-svg-validation-"));
+  const illustration = validObstacleIllustration();
+  illustration.elements[0].fill = '#ffffff"/><script>alert(1)</script>';
+  game = createMiniGame({
+    projectDir: temporaryDirectory,
+    generateQuestions: async () => ({
+      obstacle: { keyword: "SONGHONG", logic: "Liên quan đến sông Hồng.", illustration },
+      questions: Array.from({ length: 6 }, (_, index) => ({
+        prompt: `Câu ${index + 1}`,
+        question: `Câu hỏi số ${index + 1}?`,
+        options: index === 5 ? ["SONGHONG", "A", "B", "C"] : ["A", "B", "C", "D"],
+        answer: 0,
+        explanation: "Đáp án.",
+      })),
+    }),
+  });
+  await startServer();
+
+  const response = await api("/api/minigame/rooms", "player-a", "POST", {
+    mode: "obstacle",
+    topicId: "geography",
+    questionCount: 5,
+  });
+  assert.equal(response.status, 503);
+  assert.match((await response.json()).error, /bộ câu hỏi mới bằng AI/);
+});
+
 test("obstacle mode rejects a central answer that does not match its hidden keyword", async () => {
   temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "hoc-ma-choi-obstacle-central-answer-"));
   game = createMiniGame({
     projectDir: temporaryDirectory,
     generateQuestions: async () => ({
-      obstacle: { keyword: "SONGHONG", logic: "Các đáp án đều gắn với sông Hồng." },
-      questions: [0, 1, 2, 3, 4].map((index) => ({
-        prompt: index === 4 ? "Ô TRUNG TÂM" : `HÀNG NGANG ${index + 1}`,
-        question: index === 4 ? "Từ khóa bí ẩn là gì?" : `Câu hỏi số ${index + 1}?`,
+      obstacle: {
+        keyword: "SONGHONG",
+        logic: "Các đáp án đều gắn với sông Hồng.",
+        illustration: validObstacleIllustration(),
+      },
+      questions: Array.from({ length: 6 }, (_, index) => ({
+        prompt: index === 5 ? "Ô TRUNG TÂM" : `HÀNG NGANG ${index + 1}`,
+        question: index === 5 ? "Từ khóa bí ẩn là gì?" : `Câu hỏi số ${index + 1}?`,
         options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
         answer: 0,
         explanation: "Đáp án phù hợp với chủ đề.",
@@ -419,6 +604,128 @@ test("obstacle mode rejects a central answer that does not match its hidden keyw
   });
   assert.equal(response.status, 503);
   assert.match((await response.json()).error, /Chưa tạo được bộ câu hỏi mới bằng AI/);
+});
+
+test("Olympia mode waits for spoken reading and countdown, then transfers the buzzer after a wrong answer", async () => {
+  temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "hoc-ma-choi-olympia-"));
+  const generationCalls = [];
+  game = createMiniGame({
+    projectDir: temporaryDirectory,
+    clock: () => now,
+    generateQuestions: async (request) => {
+      generationCalls.push(request);
+      return {
+        introQuestion: "Dòng sông nào bồi đắp nên đồng bằng rộng lớn ở miền Bắc?",
+        introExplanation: "Chủ đề về sông ngòi và địa hình.",
+        questions: Array.from({ length: request.count }, (_, index) => ({
+          prompt: `NHÁNH ${index + 1}`,
+          question: `Câu hỏi ngắn số ${index + 1}?`,
+          answer: "Sông Hồng",
+          acceptedAnswers: ["sông Hồng", "Song Hong"],
+          explanation: "Sông Hồng bồi đắp đồng bằng Bắc Bộ.",
+        })),
+        review: { status: "verified", warning: false },
+      };
+    },
+  });
+  await startServer();
+
+  const create = await api("/api/minigame/rooms", "player-a", "POST", {
+    mode: "olympia",
+    topicId: "geography",
+    questionCount: 5,
+  });
+  assert.equal(create.status, 201);
+  const room = await create.json();
+  assert.equal(room.mode, "olympia");
+  assert.equal(room.phase, "lobby");
+  assert.equal(room.questionCount, 5);
+  assert.equal(room.olympia.image, "/images/obstacle-mystery.svg");
+  assert.match(room.olympia.introQuestion, /Dòng sông nào/);
+  assert.equal(generationCalls[0].mode, "olympia");
+  assert.equal(generationCalls[0].count, 5);
+
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/join`, "player-b", "POST", {})).status, 200);
+  for (const player of ["player-a", "player-b"]) {
+    assert.equal((await api(`/api/minigame/rooms/${room.code}/rules/acknowledge`, player, "POST", {})).status, 200);
+  }
+  const start = await api(`/api/minigame/rooms/${room.code}/start`, "player-a", "POST", {});
+  assert.equal((await start.json()).phase, "introReading");
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/buzz`, "player-a", "POST", {})).status, 409);
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/speech-complete`, "player-b", "POST", {})).status, 403);
+
+  const intro = await api(`/api/minigame/rooms/${room.code}/speech-complete`, "player-a", "POST", {});
+  assert.equal((await intro.json()).phase, "intro");
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/buzz`, "player-a", "POST", {})).status, 409);
+  now += 25_001;
+  const reading = await (await api(`/api/minigame/rooms/${room.code}`, "player-a")).json();
+  assert.equal(reading.phase, "questionReading");
+  assert.equal(reading.currentQuestion.number, 1);
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/buzz`, "player-a", "POST", {})).status, 409);
+
+  const countdown = await api(`/api/minigame/rooms/${room.code}/speech-complete`, "player-a", "POST", {});
+  assert.equal((await countdown.json()).phase, "countdown");
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/buzz`, "player-a", "POST", {})).status, 409);
+  now += 3_001;
+  const ready = await (await api(`/api/minigame/rooms/${room.code}`, "player-a")).json();
+  assert.equal(ready.phase, "playing");
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/olympia-answer`, "player-a", "POST", { answer: "Sông Hồng" })).status, 409);
+
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/buzz`, "player-a", "POST", {})).status, 200);
+  const wrong = await api(`/api/minigame/rooms/${room.code}/olympia-answer`, "player-a", "POST", { answer: "Sông Mã" });
+  assert.equal(wrong.status, 200);
+  assert.equal((await wrong.json()).olympia.hasLostTurn, true);
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/buzz`, "player-a", "POST", {})).status, 409);
+  assert.equal((await api(`/api/minigame/rooms/${room.code}/buzz`, "player-b", "POST", {})).status, 200);
+
+  const correct = await api(`/api/minigame/rooms/${room.code}/olympia-answer`, "player-b", "POST", { answer: "Song Hong" });
+  assert.equal(correct.status, 200);
+  const result = await correct.json();
+  assert.equal(result.phase, "roundResult");
+  assert.equal(result.roundResult.correctAnswer, "Sông Hồng");
+  assert.equal(result.players.find((player) => player.username === "player-b").score, 100);
+});
+
+test("Olympia mode continues if the host voice reader disconnects", async () => {
+  temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "hoc-ma-choi-olympia-voice-timeout-"));
+  game = createMiniGame({
+    projectDir: temporaryDirectory,
+    clock: () => now,
+    generateQuestions: async (request) => ({
+      introQuestion: "Câu hỏi mở đầu bao quát chủ đề?",
+      questions: Array.from({ length: request.count }, (_, index) => ({
+        question: `Câu hỏi nhánh ${index + 1}?`,
+        answer: "Đáp án",
+        explanation: "Giải thích.",
+      })),
+    }),
+  });
+  await startServer();
+
+  const create = await api("/api/minigame/rooms", "player-a", "POST", {
+    mode: "olympia",
+    topicId: "history",
+    questionCount: 5,
+  });
+  const room = await create.json();
+  await api(`/api/minigame/rooms/${room.code}/join`, "player-b", "POST", {});
+  for (const player of ["player-a", "player-b"]) {
+    await api(`/api/minigame/rooms/${room.code}/rules/acknowledge`, player, "POST", {});
+  }
+  await api(`/api/minigame/rooms/${room.code}/start`, "player-a", "POST", {});
+
+  now += 60_001;
+  const intro = await (await api(`/api/minigame/rooms/${room.code}`, "player-a")).json();
+  assert.equal(intro.phase, "intro");
+  assert.ok(intro.olympia.introTimeLeftMs > 24_000);
+
+  now += 25_001;
+  const reading = await (await api(`/api/minigame/rooms/${room.code}`, "player-a")).json();
+  assert.equal(reading.phase, "questionReading");
+  now += 60_001;
+  const countdown = await (await api(`/api/minigame/rooms/${room.code}`, "player-a")).json();
+  assert.equal(countdown.phase, "countdown");
+  assert.ok(countdown.olympia.countdownTimeLeftMs > 2_000);
 });
 
 test("room setup validates topic and question count", async () => {

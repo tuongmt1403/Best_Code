@@ -2,7 +2,6 @@ import { fetchWithGroqKeyFallback } from "./groq-api.js";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b";
-const REVIEW_TIMEOUT_MS = 15_000;
 
 function isStringArray(value) {
   return Array.isArray(value)
@@ -10,7 +9,7 @@ function isStringArray(value) {
     && value.every((item) => typeof item === "string" && item.trim().length > 0);
 }
 
-async function groqChat({ apiKey, apiKeys, model, messages, maxTokens = 500, timeoutMs = 12_000 }) {
+async function groqChat({ apiKey, apiKeys, model, messages, maxTokens = 500, timeoutMs = 12_000, signal }) {
   const keys = apiKeys?.length ? apiKeys : apiKey ? [apiKey] : [];
   if (!keys.length) {
     throw new Error("GROQ_API_KEY is not configured.");
@@ -26,7 +25,6 @@ async function groqChat({ apiKey, apiKeys, model, messages, maxTokens = 500, tim
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    signal: AbortSignal.timeout(REVIEW_TIMEOUT_MS),
     body: JSON.stringify({
       model: model || DEFAULT_GROQ_MODEL,
       temperature: 0,
@@ -36,11 +34,13 @@ async function groqChat({ apiKey, apiKeys, model, messages, maxTokens = 500, tim
       messages,
     }),
     },
+    signal,
   });
 
   const data = await response.json().catch(() => null);
   if (!response.ok) {
-    const error = new Error(`Groq request failed with status ${response.status}`);
+    const detail = typeof data?.error?.message === "string" ? `: ${data.error.message.slice(0, 300)}` : "";
+    const error = new Error(`Groq request failed with status ${response.status}${detail}`);
     error.status = response.status;
     throw error;
   }
@@ -72,7 +72,18 @@ export async function generateWithGroq({ apiKey, apiKeys, model, system, prompt,
   return result;
 }
 
-export async function reviewWithGroq({ apiKey, apiKeys, model, task, question, answer, context }) {
+export async function reviewWithGroq({
+  apiKey,
+  apiKeys,
+  model,
+  task,
+  question,
+  answer,
+  context,
+  maxTokens = 500,
+  timeoutMs = 12_000,
+  signal,
+}) {
   if (!apiKey && !apiKeys?.length) {
     return {
       status: "not_configured",
@@ -85,6 +96,9 @@ export async function reviewWithGroq({ apiKey, apiKeys, model, task, question, a
     apiKey,
     apiKeys,
     model,
+    maxTokens,
+    timeoutMs,
+    signal,
     messages: [
       {
         role: "system",
@@ -96,7 +110,7 @@ export async function reviewWithGroq({ apiKey, apiKeys, model, task, question, a
           "Không được bịa ra lời nói/lỗi của người dùng hoặc gán cho họ một khẳng định không có trong câu hỏi; nếu câu trả lời làm vậy, hãy nêu đó là vấn đề.",
           "Không coi suy đoán là sự thật; nếu thiếu căn cứ để kết luận đúng sai, dùng verdict uncertain.",
           "Chỉ dùng verdict pass khi không thấy vấn đề đáng kể; dùng concern khi có vấn đề cụ thể.",
-          "Trả về JSON duy nhất với đúng các trường: verdict (pass|concern|uncertain), issues (mảng tối đa 5 chuỗi ngắn bằng tiếng Việt).",
+          "Trả về một đối tượng json duy nhất với đúng các trường: verdict (pass|concern|uncertain), issues (mảng tối đa 5 chuỗi ngắn bằng tiếng Việt).",
         ].join(" "),
       },
       {

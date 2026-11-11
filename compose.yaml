@@ -1,0 +1,17 @@
+services:
+  app:
+    image: ${DOCKER_IMAGE:-ai-companion:latest}
+    build: .
+    env_file:
+      - .env
+    environment:
+      PORT: 3000
+      PYTHON_EXECUTABLE: /opt/venv/bin/python
+    ports:
+      - "127.0.0.1:${PORT:-3000}:3000"
+    volumes:
+      - app-data:/app/.data
+    restart: unless-stopped
+
+volumes:
+  app-data:

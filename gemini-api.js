@@ -35,6 +35,7 @@ export async function fetchWithGeminiKeyFallback({
   url,
   init = {},
   timeoutMs,
+  signal,
   fetchImpl = globalThis.fetch,
 }) {
   if (!Array.isArray(apiKeys) || apiKeys.length === 0) {
@@ -49,8 +50,10 @@ export async function fetchWithGeminiKeyFallback({
 
     try {
       const attemptInit = timeoutMs
-        ? { ...init, headers, signal: AbortSignal.timeout(timeoutMs) }
-        : { ...init, headers };
+        ? { ...init, headers, signal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)])
+          : AbortSignal.timeout(timeoutMs) }
+        : { ...init, headers, ...(signal ? { signal } : {}) };
       const response = await fetchImpl(url, attemptInit);
       if (response.ok || !(await shouldRetryWithNextKey(response)) || index === apiKeys.length - 1) {
         return { response, keyNumber: index + 1, attempts: index + 1 };
@@ -58,6 +61,7 @@ export async function fetchWithGeminiKeyFallback({
       lastResponse = response;
     } catch (error) {
       lastError = error;
+      if (signal?.aborted) throw error;
       if (index === apiKeys.length - 1) {
         throw error;
       }

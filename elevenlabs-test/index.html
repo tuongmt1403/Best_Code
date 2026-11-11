@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ElevenLabs Voice Lab · Học Mà Chơi</title>
+  <link rel="stylesheet" href="/dangKy_dangNhap/auth.css">
+  <link rel="stylesheet" href="/elevenlabs-test/styles.css">
+  <link rel="stylesheet" href="/bright-theme.css">
+  <link rel="stylesheet" href="/app-theme.css">
+  <script src="/app-shell.js" defer></script>
+  <script src="/dangKy_dangNhap/session.js" defer></script>
+  <script src="/elevenlabs-test/client.js" defer></script>
+</head>
+<body>
+  <main class="lab-shell">
+    <header class="lab-header">
+      <a class="back-link" href="/">← Trang chính</a>
+      <div class="brand"><span aria-hidden="true">🔊</span><div><strong>ElevenLabs Voice Lab</strong><small>Sản phẩm thử giọng độc lập</small></div></div>
+    </header>
+
+    <section class="lab-grid">
+      <article class="control-card">
+        <div class="card-heading"><span class="eyebrow">VOICE TEST</span><h1>Kiểm tra giọng đọc</h1></div>
+        <label for="voice-select">Giọng đọc</label>
+        <select id="voice-select"><option>Đang tải danh sách giọng...</option></select>
+
+        <label for="model-select">Mô hình</label>
+        <select id="model-select">
+          <option value="eleven_flash_v2_5" selected>Eleven Flash v2.5 — Mặc định</option>
+          <option value="eleven_turbo_v2_5">Eleven Turbo v2.5</option>
+          <option value="eleven_multilingual_v2">Eleven Multilingual v2</option>
+        </select>
+
+        <label for="test-text">Nội dung cần đọc</label>
+        <textarea id="test-text" maxlength="5000" rows="7">Xin chào! Đây là khu vực thử giọng ElevenLabs cho sản phẩm Học Mà Chơi.</textarea>
+        <div class="text-meta"><span id="char-count">78 / 5000 ký tự</span><span id="api-status" class="status-badge">Đang kiểm tra API...</span></div>
+
+        <button id="generate-button" class="generate-button" type="button">▶️ Tạo giọng ElevenLabs</button>
+        <p id="lab-status" class="lab-status" role="status" aria-live="polite"></p>
+      </article>
+
+      <article class="player-card">
+        <div class="visualizer" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <h2>Nghe thử kết quả</h2>
+        <audio id="voice-player" controls></audio>
+        <div class="sample-row">
+          <button type="button" class="sample-button" data-text="Hôm nay chúng ta hãy bắt đầu với một bài học thú vị.">Mẫu học tập</button>
+          <button type="button" class="sample-button" data-text="[excited] Chúc mừng bạn đã hoàn thành câu trả lời đúng!">Mẫu vui mừng</button>
+          <button type="button" class="sample-button" data-text="Hãy suy nghĩ kỹ trước khi chọn đáp án nhé.">Mẫu hướng dẫn</button>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

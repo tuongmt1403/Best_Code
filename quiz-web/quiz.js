@@ -25,9 +25,23 @@ const studyAnswerSchema = {
   properties: {
     correct: { type: "boolean" },
     feedback: { type: "string" },
+    whyWrong: { type: "string" },
+    focus: { type: "string" },
+    hint: { type: "string" },
+    explanation: { type: "string" },
+    example: { type: "string" },
+  },
+  required: ["correct", "feedback", "whyWrong", "focus", "hint", "explanation", "example"],
+};
+const studyWrongAnswerSchema = {
+  type: "object",
+  properties: {
+    feedback: { type: "string" },
+    whyWrong: { type: "string" },
+    focus: { type: "string" },
     hint: { type: "string" },
   },
-  required: ["correct", "feedback", "hint"],
+  required: ["feedback", "whyWrong", "focus", "hint"],
 };
 const studySolutionSchema = {
   type: "object",
@@ -70,6 +84,8 @@ const quizTopics = {
 
 Sau Hiệp định Genève năm 1954, Việt Nam tạm thời chia thành hai vùng tập kết quân sự ở hai phía vĩ tuyến 17; đây không được quy định là biên giới quốc gia vĩnh viễn. Hiệp định dự kiến tổng tuyển cử để thống nhất Việt Nam, nhưng cuộc tổng tuyển cử đó không diễn ra như dự kiến. Tình hình chính trị và quân sự ở hai miền ngày càng đối đầu.
 
+Trước Hiệp định Genève, Chiến dịch Điện Biên Phủ diễn ra từ ngày 13/3 đến ngày 7/5/1954 trong kháng chiến chống Pháp. Pháp xây dựng tập đoàn cứ điểm ở lòng chảo Điện Biên Phủ để giữ vị trí chiến lược ở Tây Bắc và hy vọng buộc lực lượng Việt Minh giao chiến theo cách có lợi cho họ. Phía Việt Minh mở chiến dịch, tổ chức lực lượng bao vây, vận chuyển lương thực và vũ khí qua địa hình núi rừng, đưa pháo vào trận địa và tiến công từng cụm cứ điểm. Giao tranh thường được khái quát thành ba đợt: mở màn với các cứ điểm phía bắc, chiến đấu kéo dài quanh các cao điểm phía đông, rồi tổng công kích từ ngày 1/5 đến ngày 7/5. Ngày 7/5/1954, sở chỉ huy tập đoàn cứ điểm bị đánh chiếm và quân Pháp tại đây thất bại. Chiến thắng tạo sức ép quyết định trong bối cảnh đàm phán, góp phần dẫn tới Hiệp định Genève tháng 7/1954; không nên hiểu rằng một trận đánh tự nó là toàn bộ nguyên nhân của hiệp định.
+
 Cuối thập niên 1950 và đầu thập niên 1960, phong trào Đồng Khởi bùng lên ở miền Nam, tiêu biểu tại Bến Tre năm 1960. Hoa Kỳ tăng cường vai trò và sự hiện diện quân sự tại miền Nam. Từ năm 1965, quân chiến đấu Hoa Kỳ đổ bộ vào Đà Nẵng; chiến tranh mở rộng với các chiến dịch không quân và lực lượng mặt đất của Hoa Kỳ.
 
 Đầu năm 1968, cuộc Tổng tiến công và nổi dậy Tết Mậu Thân diễn ra tại nhiều đô thị và địa bàn ở miền Nam. Cuộc tiến công không đạt mọi mục tiêu quân sự dự kiến, gây tổn thất lớn cho nhiều bên và tạo tác động chính trị, truyền thông sâu rộng; nó ảnh hưởng đến tranh luận tại Hoa Kỳ và tiến trình đàm phán.
@@ -79,6 +95,23 @@ Hiệp định Paris về chấm dứt chiến tranh, lập lại hòa bình ở
 Mùa Xuân năm 1975, các chiến dịch quân sự diễn ra liên tiếp, gồm chiến dịch Tây Nguyên, chiến dịch Huế–Đà Nẵng và chiến dịch Hồ Chí Minh. Ngày 30/4/1975, lực lượng tiến công tiến vào Sài Gòn và chính quyền Việt Nam Cộng hòa tuyên bố đầu hàng. Đây là mốc kết thúc chiến tranh tại miền Nam; việc thống nhất nhà nước được thực hiện năm 1976.
 
 Khi học chủ đề, cần phân biệt Hiệp định Genève (1954) với Hiệp định Paris (1973), phân biệt việc quân đội Hoa Kỳ rút năm 1973 với việc chiến tranh kết thúc năm 1975, và trình bày sự kiện, kết quả quân sự, tác động chính trị như các khía cạnh liên quan nhưng không đồng nhất.`,
+  },
+  geography: {
+    id: "geography",
+    title: "Địa lý Việt Nam",
+    period: "Tự nhiên và dân cư",
+    description: "Tìm hiểu địa lý tự nhiên, khí hậu và đặc điểm dân cư Việt Nam.",
+    material: `Chủ đề: Địa lý Việt Nam — địa lý tự nhiên, khí hậu và dân cư.
+
+Việt Nam nằm ở rìa phía đông bán đảo Đông Dương, thuộc khu vực Đông Nam Á. Phần đất liền kéo dài theo chiều Bắc–Nam, phía đông và phía nam giáp Biển Đông, phía bắc giáp Trung Quốc, phía tây giáp Lào và Campuchia. Lãnh thổ gồm vùng đất, vùng biển và vùng trời; đường bờ biển dài tạo điều kiện phát triển giao thông, thủy sản và du lịch.
+
+Địa hình Việt Nam đa dạng, trong đó đồi núi chiếm phần lớn diện tích nhưng chủ yếu là đồi núi thấp. Đồng bằng tập trung ở hai châu thổ lớn là đồng bằng sông Hồng và đồng bằng sông Cửu Long, ngoài ra còn có các đồng bằng ven biển miền Trung. Địa hình ảnh hưởng đến phân bố dân cư, giao thông, sản xuất nông nghiệp và nguy cơ thiên tai.
+
+Khí hậu Việt Nam mang tính chất nhiệt đới ẩm gió mùa, nhưng có sự khác biệt theo vĩ độ, độ cao và ảnh hưởng của biển. Miền Bắc có mùa đông lạnh hơn miền Nam; lượng mưa, nhiệt độ và thời điểm mùa mưa khác nhau giữa các vùng. Bão, lũ, hạn hán và sạt lở là một số thiên tai cần được xem xét theo đặc điểm từng khu vực.
+
+Dân cư Việt Nam phân bố không đồng đều. Các đồng bằng, đô thị và vùng kinh tế phát triển thường tập trung đông dân hơn nhiều khu vực miền núi. Dân số đông tạo nguồn lao động và thị trường lớn, đồng thời đặt ra yêu cầu về việc làm, hạ tầng, giáo dục, y tế và sử dụng tài nguyên bền vững. Việt Nam có nhiều dân tộc với bản sắc văn hóa đa dạng.
+
+Khi phân tích một vấn đề địa lý, cần xác định vị trí và phạm vi, nêu đặc điểm nổi bật, tìm mối liên hệ giữa các yếu tố tự nhiên và con người, rồi giải thích hệ quả theo từng vùng thay vì khái quát mọi nơi giống nhau.`,
   },
   cProgramming: {
     id: "cProgramming",
@@ -114,6 +147,12 @@ Một quy trình biên dịch cơ bản gồm viết mã nguồn, biên dịch, 
 function getQuizTopic(topicId) {
   return typeof topicId === "string" ? quizTopics[topicId] : undefined;
 }
+
+const studyFocusTopics = {
+  antiUsWar: ["Phong trào Đồng Khởi", "Hiệp định Paris", "Hiệp định Genève", "Chiến dịch Điện Biên Phủ"],
+  geography: ["Địa lý tự nhiên", "Địa lý dân cư", "Khí hậu"],
+  cProgramming: ["Biến & Kiểu dữ liệu", "Cấu trúc điều khiển", "Hàm", "Con trỏ"],
+};
 
 const analysisSchema = {
   type: "object",
@@ -402,23 +441,141 @@ function createStudyLesson({ topic, material, results, stage }) {
   if (stage.phase === "foundation") {
     return {
       title: `Củng cố nền tảng: ${topic}`,
-      theory: `Ý chính mình cần nhớ là:\n\n${evidence}\n\nVí dụ dễ hình dung: ${getStudyAnalogy(topic)}\n\nBạn hãy giải thích lại quy tắc bằng lời của mình; quan trọng là hiểu vì sao, không học thuộc.`,
-      practiceQuestion: `Không nhìn lại câu trả lời cũ: hãy giải thích nguyên tắc cần dùng cho câu “${incorrectResult.question}” bằng lời của bạn, rồi tự nêu một ví dụ khác để minh họa.`,
+      theory: `Mình cùng trò chuyện và ôn từng ý nhé. Bạn hãy trả lời câu hỏi bằng lời của mình; nếu còn nhầm, mình sẽ giải thích chỗ cần xem lại và gợi ý để bạn tự suy luận tiếp.\n\nÝ chính cần nhớ:\n\n${evidence}\n\n${getStudyAnalogy(topic)}`,
+      practiceQuestion: incorrectResult
+        ? `Không nhìn lại câu trả lời cũ: hãy giải thích nguyên tắc cần dùng cho câu “${incorrectResult.question}” bằng lời của bạn, rồi tự nêu một ví dụ khác để minh họa.`
+        : `Hãy trình bày ${topic} bằng lời của bạn, nêu một đặc điểm hoặc quy tắc quan trọng và tự đưa ra một ví dụ để minh họa.`,
     };
   }
 
   if (stage.phase === "practice") {
     return {
       title: `Luyện tập vận dụng: ${topic}`,
-      theory: `Trước khi bắt đầu, hãy nhớ ý này: ${evidence}\n\nTình huống để hình dung: ${getStudyAnalogy(topic)}\n\nLần này mình sẽ cùng bạn áp dụng quy tắc vào một ví dụ mới.`,
-      practiceQuestion: `Hãy tự tạo một tình huống hoặc ví dụ mới về “${topic}” có liên quan đến câu “${incorrectResult.question}”, giải quyết tình huống đó theo từng bước và giải thích vì sao cách làm của bạn đúng.`,
+      theory: `Mình sẽ cùng bạn vận dụng kiến thức vào tình huống mới. Hãy giải thích cách suy nghĩ của bạn từng bước; mình sẽ phản hồi cụ thể vào lập luận đó.\n\nÝ cần vận dụng: ${evidence}\n\nTình huống để hình dung: ${getStudyAnalogy(topic)}`,
+      practiceQuestion: incorrectResult
+        ? `Hãy tự tạo một tình huống hoặc ví dụ mới về “${topic}” có liên quan đến câu “${incorrectResult.question}”, giải quyết tình huống đó theo từng bước và giải thích vì sao cách làm của bạn đúng.`
+        : `Hãy áp dụng kiến thức về “${topic}” vào một tình huống hoặc ví dụ mới. Trình bày từng bước và giải thích vì sao cách làm của bạn hợp lý.`,
     };
   }
 
   return {
     title: `Thử thách nâng cao: ${topic}`,
-    theory: `Bạn đã làm tốt câu “${correctResult.question}”, vì vậy mình bỏ qua phần nhập môn nhé. Hãy xem nguyên tắc bạn đã nắm như công cụ để xử lý tình huống mới:\n\n${evidence}\n\nMục tiêu là kết nối kiến thức và giải thích được vì sao cách làm hiệu quả.`,
-    practiceQuestion: `Ở mức nâng cao, hãy giải thích câu “${correctResult.question}” bằng cách liên hệ với một khái niệm khác trong chủ đề “${topic}”. Nêu một trường hợp biên hoặc điều kiện có thể làm thay đổi cách áp dụng, rồi dùng tài liệu để bảo vệ lập luận của bạn.`,
+    theory: `${correctResult ? `Bạn đã làm tốt câu “${correctResult.question}”, vì vậy mình sẽ bỏ qua phần nhập môn và tăng độ thử thách nhé.` : "Mình sẽ cùng bạn kết nối kiến thức và xử lý một tình huống mới."} Hãy xem nguyên tắc bạn đã nắm như công cụ để suy luận:\n\n${evidence}\n\nMục tiêu là giải thích được vì sao cách áp dụng hiệu quả.`,
+    practiceQuestion: correctResult
+      ? `Ở mức nâng cao, hãy giải thích câu “${correctResult.question}” bằng cách liên hệ với một khái niệm khác trong chủ đề “${topic}”. Nêu một trường hợp biên hoặc điều kiện có thể làm thay đổi cách áp dụng, rồi dùng tài liệu để bảo vệ lập luận của bạn.`
+      : `Ở mức nâng cao, hãy liên hệ “${topic}” với một khái niệm liên quan. Nêu một trường hợp đặc biệt có thể làm thay đổi cách giải thích và bảo vệ lập luận bằng các dữ kiện đã học.`,
+  };
+}
+
+function getStudyQuiz(topicId, topic, phase) {
+  const topicText = topic.toLocaleLowerCase("vi");
+  let questions;
+  if (topicId === "antiUsWar" && /điện biên phủ/.test(topicText)) {
+    questions = [
+      {
+        question: "Chiến dịch Điện Biên Phủ năm 1954 thuộc cuộc kháng chiến nào?",
+        options: ["Kháng chiến chống Pháp", "Kháng chiến chống Mỹ", "Phong trào Cần Vương", "Khởi nghĩa Lam Sơn"],
+        answerIndex: 0,
+      },
+      {
+        question: "Mục tiêu quân sự chính của phía Pháp khi xây dựng tập đoàn cứ điểm Điện Biên Phủ là gì?",
+        options: [
+          "Giữ vị trí chiến lược ở Tây Bắc và buộc đối phương giao chiến theo cách có lợi cho Pháp",
+          "Mở đường biển từ Hà Nội vào Sài Gòn",
+          "Bảo vệ cuộc tổng tuyển cử thống nhất Việt Nam",
+          "Rút toàn bộ lực lượng khỏi Đông Dương ngay trong năm 1953",
+        ],
+        answerIndex: 0,
+      },
+      {
+        question: "Điều gì diễn ra vào ngày 7/5/1954 tại Điện Biên Phủ?",
+        options: [
+          "Sở chỉ huy tập đoàn cứ điểm bị đánh chiếm, chiến dịch kết thúc với thất bại của quân Pháp",
+          "Hiệp định Genève được ký kết",
+          "Quân đội Hoa Kỳ đổ bộ vào Đà Nẵng",
+          "Tổng tuyển cử thống nhất Việt Nam được tổ chức",
+        ],
+        answerIndex: 0,
+      },
+    ];
+  } else if (topicId === "antiUsWar" && /đồng khởi/.test(topicText)) {
+    questions = [
+      { question: "Phong trào Đồng Khởi bùng lên tiêu biểu ở đâu và vào năm nào?", options: ["Bến Tre, năm 1960", "Điện Biên, năm 1954", "Hà Nội, năm 1946", "Sài Gòn, năm 1975"], answerIndex: 0 },
+      { question: "Phong trào Đồng Khởi diễn ra chủ yếu ở miền nào?", options: ["Miền Nam", "Miền Bắc", "Tây Bắc", "Toàn Đông Dương cùng lúc"], answerIndex: 0 },
+      { question: "Khi học về Đồng Khởi, mốc nào cần gắn với sự kiện tiêu biểu ở Bến Tre?", options: ["Năm 1960", "Năm 1954", "Năm 1968", "Năm 1973"], answerIndex: 0 },
+    ];
+  } else if (topicId === "antiUsWar") {
+    questions = [
+      { question: "Hiệp định Paris về Việt Nam được ký vào ngày nào?", options: ["27/1/1973", "7/5/1954", "30/4/1975", "2/9/1945"], answerIndex: 0 },
+      { question: "Điều gì đúng về hệ quả của Hiệp định Paris?", options: ["Quân đội Hoa Kỳ rút khỏi Việt Nam, nhưng xung đột chưa chấm dứt ngay", "Chiến tranh kết thúc ngay trong ngày ký", "Việt Nam thống nhất nhà nước ngay năm 1973", "Hiệp định được ký sau ngày 30/4/1975"], answerIndex: 0 },
+      { question: "Mốc nào đánh dấu chiến tranh kết thúc tại miền Nam Việt Nam?", options: ["30/4/1975", "27/1/1973", "7/5/1954", "1960"], answerIndex: 0 },
+    ];
+  } else if (topicId === "geography" && /khí hậu/.test(topicText)) {
+    questions = [
+      { question: "Đặc điểm khí hậu chung của Việt Nam là gì?", options: ["Nhiệt đới ẩm gió mùa", "Ôn đới lục địa quanh năm", "Hoang mạc khô nóng", "Hàn đới băng tuyết"], answerIndex: 0 },
+      { question: "Yếu tố nào góp phần làm khí hậu Việt Nam khác nhau giữa các vùng?", options: ["Vĩ độ, độ cao và ảnh hưởng của biển", "Chỉ có kinh độ", "Chỉ có hoạt động đô thị", "Khoảng cách tới xích đạo là như nhau"], answerIndex: 0 },
+      { question: "Cách nào phù hợp khi so sánh khí hậu Bắc và Nam Việt Nam?", options: ["Xét khác biệt mùa và ảnh hưởng vị trí địa lý", "Cho rằng mọi nơi có mùa đông giống nhau", "Chỉ dựa vào một ngày thời tiết", "Bỏ qua độ cao địa hình"], answerIndex: 0 },
+    ];
+  } else if (topicId === "geography" && /dân cư/.test(topicText)) {
+    questions = [
+      { question: "Dân cư Việt Nam phân bố như thế nào?", options: ["Không đồng đều giữa các vùng", "Chia đều tuyệt đối trên lãnh thổ", "Chỉ sống ở miền núi", "Chỉ tập trung dọc biên giới"], answerIndex: 0 },
+      { question: "Khu vực nào thường tập trung đông dân hơn?", options: ["Đồng bằng và đô thị", "Đỉnh núi cao", "Rừng sâu ít đường giao thông", "Mọi khu vực đều như nhau"], answerIndex: 0 },
+      { question: "Dân số đông vừa tạo nguồn lao động, vừa đặt ra yêu cầu gì?", options: ["Phát triển việc làm và hạ tầng phù hợp", "Ngừng cung cấp dịch vụ y tế", "Không cần quy hoạch đô thị", "Giảm nhu cầu giáo dục về không"], answerIndex: 0 },
+    ];
+  } else if (topicId === "geography") {
+    questions = [
+      { question: "Địa hình Việt Nam có đặc điểm nổi bật nào?", options: ["Đồi núi chiếm phần lớn diện tích, chủ yếu là đồi núi thấp", "Toàn bộ lãnh thổ là đồng bằng", "Không có đồng bằng ven biển", "Chỉ có núi cao phủ băng"], answerIndex: 0 },
+      { question: "Hai đồng bằng châu thổ lớn của Việt Nam là gì?", options: ["Đồng bằng sông Hồng và đồng bằng sông Cửu Long", "Đồng bằng Tây Nguyên và Đông Bắc", "Đồng bằng Hoàng Liên Sơn và Trường Sơn", "Đồng bằng sông Đà và sông Mã"], answerIndex: 0 },
+      { question: "Khi phân tích một vấn đề địa lý, cách làm nào phù hợp?", options: ["Xác định vị trí, đặc điểm và mối liên hệ giữa các yếu tố", "Nêu kết luận mà không xem xét vị trí", "Khái quát mọi vùng giống hệt nhau", "Chỉ kể tên địa danh"], answerIndex: 0 },
+    ];
+  } else if (topicId === "cProgramming" && /con trỏ|pointer/.test(topicText)) {
+    questions = [
+      { question: "Con trỏ trong C lưu trữ điều gì?", options: ["Địa chỉ của một đối tượng", "Tên của một hàm bất kỳ", "Luôn là một chuỗi ký tự", "Kích thước của ổ cứng"], answerIndex: 0 },
+      { question: "Toán tử nào dùng để truy cập giá trị thông qua con trỏ?", options: ["*", "&", "%", "#"], answerIndex: 0 },
+      { question: "Khi nào được phép giải tham chiếu một con trỏ?", options: ["Khi nó trỏ tới vùng nhớ hợp lệ", "Ngay cả khi chưa khởi tạo", "Sau khi vùng nhớ đã được giải phóng", "Khi giá trị con trỏ là bất kỳ"], answerIndex: 0 },
+    ];
+  } else if (topicId === "cProgramming" && /hàm/.test(topicText)) {
+    questions = [
+      { question: "Hàm trong C giúp ích chính yếu điều gì?", options: ["Chia chương trình thành các phần có nhiệm vụ rõ ràng", "Tự động kiểm tra mọi lỗi logic", "Thay thế hoàn toàn kiểu dữ liệu", "Cấp phát bộ nhớ mà không cần khai báo"], answerIndex: 0 },
+      { question: "C truyền đối số vào hàm theo cách nào?", options: ["Theo giá trị", "Luôn theo tham chiếu", "Theo tên biến toàn cục", "Không truyền được đối số"], answerIndex: 0 },
+      { question: "Muốn hàm thay đổi dữ liệu của bên gọi, thường làm gì?", options: ["Truyền địa chỉ thông qua con trỏ", "Chỉ đổi tên tham số", "Dùng printf", "Bỏ kiểu trả về"], answerIndex: 0 },
+    ];
+  } else if (topicId === "cProgramming" && /cấu trúc điều khiển|vòng lặp|rẽ nhánh/.test(topicText)) {
+    questions = [
+      { question: "Cấu trúc nào dùng để lựa chọn nhánh theo điều kiện?", options: ["if / else", "include", "sizeof", "typedef"], answerIndex: 0 },
+      { question: "Vòng lặp do-while có đặc điểm nào?", options: ["Thân vòng lặp chạy ít nhất một lần", "Không bao giờ kiểm tra điều kiện", "Luôn chạy đúng hai lần", "Chỉ dùng được với mảng"], answerIndex: 0 },
+      { question: "Cần làm gì để vòng lặp while không chạy vô hạn ngoài ý muốn?", options: ["Đảm bảo điều kiện dừng có thể đạt được", "Xóa mọi cập nhật biến", "Đặt điều kiện luôn đúng", "Thay while bằng #include"], answerIndex: 0 },
+    ];
+  } else if (topicId === "cProgramming" && /mảng|chuỗi/.test(topicText)) {
+    questions = [
+      { question: "Chỉ số của phần tử đầu tiên trong mảng C là bao nhiêu?", options: ["0", "1", "-1", "Tùy giá trị phần tử"], answerIndex: 0 },
+      { question: "C có tự kiểm tra biên mảng khi truy cập không?", options: ["Không, chương trình phải tự bảo đảm chỉ số hợp lệ", "Có, luôn tự sửa mọi chỉ số sai", "Có, nhưng chỉ với mảng char", "Chỉ kiểm tra khi dùng printf"], answerIndex: 0 },
+      { question: "Chuỗi kiểu C kết thúc bằng ký tự nào?", options: ["Ký tự null '\\0'", "Dấu cách", "Dấu phẩy", "Ký tự xuống dòng bắt buộc"], answerIndex: 0 },
+    ];
+  } else {
+    questions = [
+      { question: `Ý nào mô tả đúng nhất về ${topic}?`, options: ["Dựa vào khái niệm và dữ kiện trong tài liệu để giải thích", "Đoán theo từ ngữ nghe quen", "Bỏ qua điều kiện của câu hỏi", "Chọn kết luận không liên quan"], answerIndex: 0 },
+      { question: `Khi vận dụng kiến thức về ${topic}, nên làm gì trước?`, options: ["Xác định dữ kiện và yêu cầu cần giải quyết", "Kết luận trước khi đọc đề", "Bỏ qua tài liệu", "Chỉ chọn đáp án dài nhất"], answerIndex: 0 },
+      { question: `Cách nào giúp kiểm tra lập luận về ${topic}?`, options: ["Đối chiếu từng bước với dữ kiện và nguyên tắc", "Chỉ dựa vào cảm giác", "Bỏ qua trường hợp đặc biệt", "Lặp lại kết luận mà không giải thích"], answerIndex: 0 },
+    ];
+  }
+  const phaseIndex = Math.max(0, ["foundation", "practice", "advanced"].indexOf(phase));
+  const selected = questions[phaseIndex] || questions[0];
+  const correctOption = selected.options[selected.answerIndex];
+  const otherOptions = selected.options.filter((_option, index) => index !== selected.answerIndex);
+  const correctIndex = (phaseIndex + (topicId === "antiUsWar" ? 1 : topicId === "geography" ? 2 : 3)) % selected.options.length;
+  const options = [...otherOptions];
+  options.splice(correctIndex, 0, correctOption);
+  return {
+    ...selected,
+    options,
+    answerIndex: correctIndex,
+    explanation: topicId === "antiUsWar" && /điện biên phủ/.test(topicText)
+      ? `Điện Biên Phủ là chiến dịch lớn trong kháng chiến chống Pháp, diễn ra từ 13/3 đến 7/5/1954. Pháp xây dựng tập đoàn cứ điểm ở lòng chảo để giữ Tây Bắc và buộc Việt Minh giao chiến theo cách họ kỳ vọng có lợi. Phía Việt Minh tổ chức bao vây, bảo đảm vận chuyển hậu cần qua địa hình núi rừng, đưa pháo vào trận địa và tiến công theo từng đợt. Giao tranh mở màn ở các cứ điểm phía bắc, tiếp diễn quanh các cao điểm phía đông, rồi bước vào tổng công kích từ 1/5 đến 7/5. Ngày 7/5, sở chỉ huy tập đoàn cứ điểm bị đánh chiếm. Thất bại của Pháp tại đây góp phần quyết định vào bối cảnh dẫn tới đàm phán và Hiệp định Genève tháng 7/1954.`
+      : `Đáp án được xác định bằng cách đối chiếu câu hỏi với tài liệu về ${topic}. Hãy chú ý dữ kiện then chốt, điều kiện và mối liên hệ giữa các ý; đó là cơ sở để chọn phương án thay vì đoán.`,
+    example: topicId === "antiUsWar" && /điện biên phủ/.test(topicText)
+      ? "Ví dụ khi kể lại chiến dịch, hãy phân biệt ba lớp thông tin: mục tiêu phía Pháp (giữ tập đoàn cứ điểm và chủ động chọn nơi giao chiến), cách đánh của phía Việt Minh (bao vây, bảo đảm hậu cần, tiến công từng đợt), và kết quả ngày 7/5/1954 (sở chỉ huy bị đánh chiếm). Sau đó mới liên hệ kết quả này với sức ép đàm phán dẫn tới Hiệp định Genève tháng 7/1954."
+      : `Ví dụ: khi gặp một câu hỏi mới về ${topic}, gạch dưới từ khóa, tìm dữ kiện liên quan trong tài liệu, loại phương án trái với dữ kiện rồi giải thích vì sao lựa chọn còn lại phù hợp.`,
   };
 }
 
@@ -426,7 +583,11 @@ function isValidStudyAnswer(answer) {
   return answer
     && typeof answer.correct === "boolean"
     && typeof answer.feedback === "string" && answer.feedback.trim() && answer.feedback.length <= 1_000
-    && typeof answer.hint === "string" && answer.hint.trim() && answer.hint.length <= 1_000;
+    && typeof answer.whyWrong === "string" && answer.whyWrong.length <= 1_000
+    && typeof answer.focus === "string" && answer.focus.length <= 500
+    && typeof answer.hint === "string" && answer.hint.trim() && answer.hint.length <= 1_000
+    && typeof answer.explanation === "string" && answer.explanation.length <= 2_000
+    && typeof answer.example === "string" && answer.example.length <= 1_000;
 }
 
 function isValidStudySolution(solution) {
@@ -526,10 +687,15 @@ export function createQuizRouter({
   });
 
   router.post("/api/study-roadmap/lesson", async (req, res) => {
-    const { topicId, quizResults, stepIndex } = req.body || {};
+    const { topicId, quizResults, stepIndex, focusTopic } = req.body || {};
     const selectedTopic = getQuizTopic(topicId);
     if (!selectedTopic) return res.status(400).json({ error: "Chủ đề lộ trình không hợp lệ." });
-    if (!Array.isArray(quizResults) || quizResults.length < 1 || quizResults.length > 20
+    const isDirectLesson = typeof focusTopic === "string"
+      && studyFocusTopics[topicId]?.includes(focusTopic);
+    if (focusTopic !== undefined && !isDirectLesson) {
+      return res.status(400).json({ error: "Bài học đã chọn không hợp lệ." });
+    }
+    if (!Array.isArray(quizResults) || (!isDirectLesson && quizResults.length < 1) || quizResults.length > 20
       || quizResults.some((item) =>
         !item
         || typeof item.correct !== "boolean"
@@ -539,7 +705,9 @@ export function createQuizRouter({
       return res.status(400).json({ error: "Dữ liệu kết quả bài Quiz không hợp lệ để tạo lộ trình." });
     }
 
-    const stages = getStudyStages(quizResults);
+    const stages = isDirectLesson
+      ? ["foundation", "practice", "advanced"].map((phase) => ({ topic: focusTopic, phase }))
+      : getStudyStages(quizResults);
     if (!Number.isInteger(stepIndex) || stepIndex < 0 || stepIndex >= stages.length) {
       return res.status(400).json({ error: "Bước lộ trình không hợp lệ hoặc đã hoàn thành." });
     }
@@ -550,6 +718,16 @@ export function createQuizRouter({
       results: quizResults,
       stage,
     });
+    if (isDirectLesson) {
+      const subjectTitle = {
+        antiUsWar: "Lịch sử",
+        geography: "Địa lý",
+        cProgramming: "Lập trình C",
+      }[topicId];
+      lesson.title = topicId === "cProgramming"
+        ? `${subjectTitle}: Tìm hiểu về ${focusTopic}`
+        : `${subjectTitle}: ${focusTopic}`;
+    }
     return res.json({
       ...lesson,
       stepIndex,
@@ -561,12 +739,31 @@ export function createQuizRouter({
   });
 
   router.post("/api/study-roadmap/answer", async (req, res) => {
-    const { topicId, phase, question, answer, referenceAnswer = "", hintLevel, attemptNumber } = req.body || {};
+    const {
+      topicId,
+      focusTopic,
+      phase,
+      question,
+      answer,
+      reasoning = "",
+      selectedOptionIndex,
+      referenceAnswer = "",
+      hintLevel,
+      attemptNumber,
+    } = req.body || {};
     const selectedTopic = getQuizTopic(topicId);
     if (!selectedTopic) return res.status(400).json({ error: "Chủ đề lộ trình không hợp lệ." });
+    const isMultipleChoice = Number.isInteger(selectedOptionIndex);
+    const isValidFocusTopic = typeof focusTopic === "string" && studyFocusTopics[topicId]?.includes(focusTopic);
+    const studyQuiz = isMultipleChoice && isValidFocusTopic
+      ? getStudyQuiz(topicId, focusTopic, phase)
+      : undefined;
     if (!["foundation", "practice", "advanced"].includes(phase)
-      || typeof question !== "string" || !question.trim() || question.length > 4_000
-      || typeof answer !== "string" || !answer.trim() || answer.length > 4_000
+      || (isMultipleChoice
+        ? !studyQuiz || question !== studyQuiz.question || selectedOptionIndex < 0 || selectedOptionIndex >= studyQuiz.options.length
+        : typeof question !== "string" || !question.trim() || question.length > 4_000
+          || typeof answer !== "string" || !answer.trim() || answer.length > 4_000)
+      || typeof reasoning !== "string" || reasoning.length > 4_000
       || typeof referenceAnswer !== "string" || referenceAnswer.length > 2_000
       || !Number.isInteger(hintLevel) || hintLevel < 0 || hintLevel > 3
       || !Number.isInteger(attemptNumber) || attemptNumber < 1 || attemptNumber > 3) {
@@ -574,17 +771,81 @@ export function createQuizRouter({
     }
 
     try {
+      if (isMultipleChoice && studyQuiz) {
+        if (selectedOptionIndex === studyQuiz.answerIndex) {
+          return res.json({
+            correct: true,
+            feedback: "Chính xác! Bạn đã xác định đúng ý trọng tâm.",
+            focus: "Hãy nối mục tiêu, diễn biến và kết quả để nhớ chắc kiến thức.",
+            explanation: studyQuiz.explanation,
+            example: studyQuiz.example,
+            generator: "Lụa AI · giải thích theo tài liệu",
+          });
+        }
+
+        if (attemptNumber === 3) {
+          return res.json({
+            correct: false,
+            feedback: "Bạn đã thử ba lần. Mình đưa lời giải mẫu để bạn đối chiếu cách suy luận nhé.",
+            hint: "Sau khi xem lời giải, hãy tự nói lại vì sao phương án đúng phù hợp với dữ kiện.",
+            solution: {
+              answer: studyQuiz.options[studyQuiz.answerIndex],
+              explanation: studyQuiz.explanation,
+              example: studyQuiz.example,
+            },
+            generator: "Lụa AI · lời giải theo tài liệu",
+          });
+        }
+
+        const selectedAnswer = studyQuiz.options[selectedOptionIndex];
+        const correctAnswer = studyQuiz.options[studyQuiz.answerIndex];
+        const generated = await generateStudyJson({
+          system: "Bạn là gia sư kiên nhẫn. Người học vừa chọn SAI. Bắt buộc chỉ rõ vì sao chính lựa chọn của người học sai: họ đang nhầm sự kiện, mốc thời gian, khái niệm hay quy tắc nào; không được trả lời chung chung kiểu 'hãy đọc kỹ đề'. Dùng tài liệu và đáp án tham chiếu để chẩn đoán chính xác, nhưng tuyệt đối không nêu hoặc chép đáp án đúng, không nói chữ cái đáp án đúng và không tiết lộ kết luận để người học còn cơ hội tự sửa. Trả JSON tiếng Việt gồm feedback (động viên ngắn), whyWrong (chẩn đoán cụ thể dựa trên lựa chọn sai), focus (kiến thức cần ôn), hint (một gợi ý giúp tự sửa, chưa lộ đáp án).",
+          prompt: `Lần thử ${attemptNumber}/3 trong chặng "${phase}". Hãy đối chiếu tài liệu và đáp án tham chiếu để xác định chính xác lỗi trong lựa chọn sai. Không tiết lộ đáp án tham chiếu trong bất kỳ trường nào.\n\n<TAI_LIEU>\n${selectedTopic.material}\n</TAI_LIEU>\n\nCâu hỏi: ${studyQuiz.question}\nLựa chọn sai của người học: ${selectedAnswer}\nĐáp án tham chiếu chỉ để bạn chẩn đoán lỗi, KHÔNG ĐƯỢC NÊU LẠI: ${correctAnswer}\nCách suy luận người học tự ghi/nói (nếu có): ${reasoning.trim() || "(không có)"}\n\nwhyWrong phải nêu cụ thể lựa chọn sai đang nhầm điều gì và vì sao không khớp câu hỏi, dựa trên tài liệu. Không đưa ra đáp án đúng dưới dạng diễn đạt lại.`,
+          schema: studyWrongAnswerSchema,
+          isValid: (value) => value
+            && typeof value.feedback === "string" && value.feedback.trim() && value.feedback.length <= 1_000
+            && typeof value.whyWrong === "string" && value.whyWrong.trim() && value.whyWrong.length <= 1_000
+            && typeof value.focus === "string" && value.focus.trim() && value.focus.length <= 300
+            && typeof value.hint === "string" && value.hint.trim() && value.hint.length <= 1_000,
+          numPredict: 900,
+        });
+        const leaksCorrectOption = [generated.content.feedback, generated.content.whyWrong, generated.content.focus, generated.content.hint]
+          .some((text) => containsExpectedAnswer(text, studyQuiz.options[studyQuiz.answerIndex]));
+        if (leaksCorrectOption) {
+          console.error("Interactive study quiz feedback included the correct option; replacing it with a non-revealing hint.");
+        }
+        return res.json({
+          correct: false,
+          feedback: leaksCorrectOption
+            ? "Mình thấy bạn đang nhầm dữ kiện của câu hỏi với một ý khác trong bài."
+            : generated.content.feedback,
+          whyWrong: leaksCorrectOption
+            ? `Lựa chọn "${selectedAnswer}" không khớp với yêu cầu của câu hỏi; hãy xác định câu đang hỏi về mốc thời gian, nguyên nhân hay kết quả.`
+            : generated.content.whyWrong,
+          focus: leaksCorrectOption
+            ? "Phân biệt mốc thời gian, diễn biến và kết quả của sự kiện."
+            : generated.content.focus,
+          hint: leaksCorrectOption
+            ? "Gạch chân từ khóa trong câu hỏi, tìm dữ kiện tương ứng trong phần lý thuyết rồi thử lại."
+            : generated.content.hint,
+          generator: generated.generator,
+        });
+      }
+
       const generated = await generateStudyJson({
-        system: "Bạn là gia sư chấm câu trả lời dựa trên tài liệu tham khảo. Đánh giá nội dung người học, không đòi hỏi cách diễn đạt y hệt. Nếu sai hoặc chưa đủ, không bao giờ nêu đáp án hoàn chỉnh, mã nguồn hoàn chỉnh hay kết quả cuối cùng. Không được chép lại, nhắc lại hoặc đưa một phần của đáp án tham chiếu vào feedback hay hint. Chỉ nói rõ phần cần xem lại và đưa một gợi ý dẫn dắt để người học tự sửa. Nếu đúng, xác nhận ngắn gọn và giải thích nguyên tắc. Trả đúng JSON: {\"correct\":true,\"feedback\":\"...\",\"hint\":\"...\"}.",
-        prompt: `Đánh giá câu trả lời của người học trong chặng "${phase}". Mức gợi ý hiện tại là ${hintLevel} trên 3. Nếu chưa đúng, gợi ý mức 0 là hướng chú ý; mức 1 là nhắc khái niệm; mức 2 là gợi ý các bước suy luận nhưng không giải hộ; mức 3 là gợi ý cuối cùng vẫn không nêu đáp án. Không lặp lại nguyên văn đáp án đúng.
+        system: "Bạn là gia sư Lụa, trò chuyện tự nhiên và đánh giá câu trả lời dựa trên tài liệu. Đánh giá nội dung, không đòi hỏi cách diễn đạt y hệt. Khi câu trả lời sai hoặc thiếu, chỉ rõ cụ thể ý nào sai/thiếu, giải thích vì sao dựa trên tài liệu, nêu kiến thức cần tập trung và gợi ý để học sinh tự suy luận tiếp; tuyệt đối chưa tiết lộ đáp án mẫu. Khi đúng, xác nhận và đưa giải thích chi tiết cùng ví dụ cụ thể. Trả đúng JSON tiếng Việt gồm correct, feedback, whyWrong, focus, hint, explanation, example.",
+        prompt: `Đánh giá câu trả lời tự luận của học sinh trong chặng "${phase}". Mức gợi ý hiện tại là ${hintLevel} trên 3. Nếu chưa đúng, không lặp lại/diễn đạt lại đáp án tham chiếu và không tiết lộ kết luận. whyWrong phải chỉ rõ chính xác phần sai hoặc còn thiếu trong câu trả lời, không nhận xét chung chung. focus nêu kiến thức cần ôn. hint hướng dẫn cách suy luận tiếp. Nếu đúng, explanation trình bày đầy đủ kiến thức cần học và example đưa ví dụ cụ thể gắn với câu hỏi.
 
 <TAI_LIEU>
 ${selectedTopic.material}
 </TAI_LIEU>
 
 Câu hỏi: ${question.trim()}
-Câu trả lời tham chiếu chỉ để chấm, tuyệt đối không nhắc lại khi người học trả lời sai: ${referenceAnswer || "(không có)"}
-Câu trả lời của người học: ${answer.trim()}`,
+Đáp án tham chiếu (chỉ dùng để chấm, tuyệt đối không tiết lộ khi sai): ${referenceAnswer || "(không có)"}
+Câu trả lời của học sinh: ${answer.trim()}
+
+Chỉ trả JSON đúng schema: {"correct":true,"feedback":"...","whyWrong":"...","focus":"...","hint":"...","explanation":"...","example":"..."}.`,
         schema: studyAnswerSchema,
         isValid: isValidStudyAnswer,
         numPredict: 700,
@@ -592,12 +853,18 @@ Câu trả lời của người học: ${answer.trim()}`,
       let result = generated.content;
       if (!result.correct && referenceAnswer
         && (containsExpectedAnswer(result.feedback, referenceAnswer)
+          || containsExpectedAnswer(result.whyWrong, referenceAnswer)
+          || containsExpectedAnswer(result.focus, referenceAnswer)
           || containsExpectedAnswer(result.hint, referenceAnswer))) {
-        console.error("Interactive study tutor output included the quiz reference answer; replacing it with a non-revealing hint.");
+        console.error("Interactive study tutor output included the reference answer; replacing it with non-revealing feedback.");
         result = {
           correct: false,
           feedback: "Chưa đúng hoàn toàn, nhưng mình thấy bạn đang cố gắng suy luận. Mình sẽ không bật mí đáp án.",
+          whyWrong: "Câu trả lời còn nhầm hoặc thiếu một ý quan trọng; hãy đối chiếu lại từng ý trong câu hỏi với phần lý thuyết.",
+          focus: focusTopic || "Xác định lại khái niệm trọng tâm trong câu hỏi.",
           hint: "Quay lại phần lý thuyết phía trên, tìm quy tắc liên quan rồi áp dụng từng bước bằng lời của bạn.",
+          explanation: "",
+          example: "",
         };
       }
       if (!result.correct && attemptNumber === 3) {
@@ -624,7 +891,11 @@ Chọn loại sơ đồ phù hợp nhất với chính câu hỏi. Ví dụ: n�
           generator: `${generated.generator}; lời giải từ ${solution.generator}`,
         });
       }
-      return res.json({ ...result, generator: generated.generator });
+      return res.json({
+        ...result,
+        focus: result.focus || focusTopic || "Nắm chắc ý chính và liên hệ với câu hỏi.",
+        generator: generated.generator,
+      });
     } catch (error) {
       if (error.code || error.status) return ollamaErrorResponse(res, error, ollama.model);
       console.error("Interactive study answer review failed:", error.message);

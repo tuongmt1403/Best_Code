@@ -131,7 +131,15 @@ form.addEventListener("submit", async (event) => {
           remember: rememberInput.checked,
         }),
     });
-    const data = await response.json();
+    const responseText = await response.text();
+    let data;
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch {
+      throw new Error(
+        `Máy chủ trả về trang không đúng định dạng (HTTP ${response.status}). Hãy tải lại trang và thử lại.`,
+      );
+    }
     if (!response.ok) throw new Error(data.error || "Không thể hoàn tất yêu cầu.");
     showMessage(mode === "register" ? "Tạo tài khoản thành công. Đang vào trang chính..." : "Đăng nhập thành công. Đang chuyển trang...", "success");
     window.location.assign(data.redirect || "/");
