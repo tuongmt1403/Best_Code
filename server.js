@@ -10,9 +10,8 @@ import { createAvatarProfile } from "./avatar-profile.js";
 import { createMiniGame } from "./mini-game/game.js";
 import { generateMiniGameQuizWithOllama } from "./mini-game/ollama.js";
 import { createQuizRouter } from "./quiz-web/quiz.js";
-import { reviewWithClaude, reviewWithGroq } from "./ai-review.js";
+import { reviewWithClaude } from "./ai-review.js";
 import { fetchWithGeminiKeyFallback, getGeminiApiKeys } from "./gemini-api.js";
-import { fetchWithGroqKeyFallback, getGroqApiKeys } from "./groq-api.js";
 import { fetchWithClaudeKeyFallback, getClaudeApiKeys } from "./claude-api.js";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
@@ -236,8 +235,6 @@ app.get("/api/history/status", (_req, res) => {
 
 const geminiApiKeys = getGeminiApiKeys();
 const claudeApiKeys_server = getClaudeApiKeys();
-const groqApiKeys = getGroqApiKeys();
-const groqModel = process.env.GROQ_MODEL || "qwen/qwen3.8-27b";
 const claudeModel_server = process.env.CLAUDE_MODEL || process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
 const geminiModel = process.env.GEMINI_MODEL || "gemini-flash-lite-latest";
 const geminiModels = [...new Set([
@@ -253,9 +250,6 @@ if (geminiApiKeys.length === 0) {
 }
 if (claudeApiKeys_server.length > 0) {
   console.log(`Đã nạp ${claudeApiKeys_server.length} Claude API key.`);
-}
-if (groqApiKeys.length > 0) {
-  console.log(`Đã nạp ${groqApiKeys.length} Groq API key.`);
 }
 
 if (elevenLabsApiKeys.length > 0) {
@@ -409,7 +403,7 @@ async function generateMiniGameQuestions({
   }
 
   if (review.status !== "verified") {
-    console.warn("Mini-game Groq review returned a warning:", review.issues);
+    console.warn("Mini-game Claude review returned a warning:", review.issues);
   }
   return {
     questions: generated.questions,
@@ -424,7 +418,7 @@ app.use(createQuizRouter({
   baseUrl: process.env.OLLAMA_BASE_URL,
   model: process.env.OLLAMA_MODEL,
   geminiApiKeys,
-  groqApiKeys,
+  claudeApiKeys: claudeApiKeys_server,
 }));
 const historyFile = path.join(projectDir, "history-data.json");
 let historyData = [];
@@ -1040,41 +1034,6 @@ app.post("/api/speak", async (req, res) => {
   processHandle.stdin.end(JSON.stringify({ text: text.trim() }));
 });
 
-async function transcribeWithGroq(audio, mimeType) {
-  if (groqApiKeys.length === 0) throw new Error("GROQ_API_KEY chưa được cấu hình.");
-  const extensions = {
-    "audio/webm": "webm",
-    "audio/ogg": "ogg",
-    "audio/mpeg": "mp3",
-    "audio/mp4": "mp4",
-    "audio/wav": "wav",
-  };
-  const audioBlob = new Blob([Buffer.from(audio, "base64")], { type: mimeType });
-  const formData = new FormData();
-  formData.append("file", audioBlob, `voice.${extensions[mimeType]}`);
-  formData.append("model", process.env.GROQ_STT_MODEL || "whisper-large-v3-turbo");
-  formData.append("language", "vi");
-  formData.append("response_format", "json");
-  const { response } = await fetchWithGroqKeyFallback({
-    apiKeys: groqApiKeys,
-    timeoutMs: 12_000,
-    url: "https://api.groq.com/openai/v1/audio/transcriptions",
-    init: {
-      method: "POST",
-      body: formData,
-      signal: AbortSignal.timeout(90_000),
-    },
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    const detail = typeof data?.error?.message === "string" ? `: ${data.error.message.slice(0, 300)}` : "";
-    throw new Error(`Groq speech recognition failed with status ${response.status}${detail}`);
-  }
-  const text = data?.text?.trim();
-  if (!text) throw new Error("Groq speech recognition returned no text.");
-  return text;
-}
-
 app.post("/api/transcribe", async (req, res) => {
   const { audio, mimeType } = req.body || {};
   if (typeof audio !== "string" || !audio || typeof mimeType !== "string") {
@@ -1124,24 +1083,12 @@ app.post("/api/transcribe", async (req, res) => {
     }
   }
 
-  try {
-    const text = await transcribeWithGroq(audio, safeMimeType);
-    return res.json({
-      text,
-      provider: "Groq Whisper",
-      model: process.env.GROQ_STT_MODEL || "whisper-large-v3-turbo",
-    });
-  } catch (error) {
-    console.error("Groq transcription fallback failed:", error.message);
-    const hasGemini = geminiApiKeys.length > 0;
-    const hasGroq = groqApiKeys.length > 0;
-    if (!hasGemini && !hasGroq) {
-      return res.status(503).json({ error: "Chưa cấu hình Gemini hoặc Groq để nhận dạng giọng nói." });
-    }
-    return res.status(502).json({
-      error: "Gemini không xử lý được audio và Groq Whisper dự phòng hiện không khả dụng. Hãy thử lại hoặc kiểm tra khóa GROQ_API_KEY.",
-    });
+  if (geminiApiKeys.length === 0) {
+    return res.status(503).json({ error: "Chưa cấu hình Gemini API key để nhận dạng giọng nói." });
   }
+  return res.status(502).json({
+    error: "Gemini hiện không xử lý được audio. Hãy thử lại hoặc kiểm tra khóa GEMINI_API_KEY.",
+  });
 });
 
 app.use((error, _req, res, next) => {

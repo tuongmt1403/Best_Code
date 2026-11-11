@@ -847,8 +847,8 @@ async function send(userText, attachments = pendingAttachments) {
     keepStatus = !(await performReply(data.reply, data.suggestions));
     if (verificationStatus === "verified") {
       statusEl.textContent = data.verification.fallback
-        ? `Gemini đang lỗi (${data.verification.reason}); câu trả lời dự phòng Groq/Qwen (${data.verification.model}) đã được rà soát, không thấy vấn đề rõ ràng. Đây không phải bảo đảm tuyệt đối.`
-        : `Đã rà soát thêm bằng Groq/Qwen (${data.verification.model}); không thấy vấn đề rõ ràng. Đây không phải bảo đảm tuyệt đối.`;
+        ? `Gemini đang lỗi (${data.verification.reason}); câu trả lời dự phòng Claude (${data.verification.model}) đã được rà soát, không thấy vấn đề rõ ràng. Đây không phải bảo đảm tuyệt đối.`
+        : `Đã rà soát thêm bằng Claude (${data.verification.model}); không thấy vấn đề rõ ràng. Đây không phải bảo đảm tuyệt đối.`;
       keepStatus = true;
     } else if (verificationStatus === "source_based") {
       statusEl.textContent = "Câu trả lời được trích từ dữ liệu lịch sử của ứng dụng.";
@@ -862,15 +862,15 @@ async function send(userText, attachments = pendingAttachments) {
     } else {
       const issues = data.verification?.issues || [];
       const fallbackNote = data.verification?.fallback
-        ? `Câu trả lời do Groq/Qwen dự phòng tạo vì Gemini lỗi (${data.verification.reason}). `
+        ? `Câu trả lời do Claude dự phòng tạo vì Gemini lỗi (${data.verification.reason}). `
         : "";
       const reviewNote = verificationStatus === "concern"
-        ? `Groq/Qwen lưu ý: ${issues.join("; ") || "cần kiểm tra lại nội dung."}`
+        ? `Claude lưu ý: ${issues.join("; ") || "cần kiểm tra lại nội dung."}`
         : verificationStatus === "uncertain"
-          ? `Groq/Qwen chưa đủ căn cứ xác minh${issues.length ? `: ${issues.join("; ")}` : "."}`
+          ? `Claude chưa đủ căn cứ xác minh${issues.length ? `: ${issues.join("; ")}` : "."}`
           : verificationStatus === "unavailable"
-            ? `Groq/Qwen hiện không thể rà soát câu trả lời${issues.length ? `: ${issues.join("; ")}` : "."}`
-            : "Chưa bật rà soát Groq/Qwen. Hãy cấu hình GROQ_API_KEY trên máy chủ.";
+            ? `Claude hiện không thể rà soát câu trả lời${issues.length ? `: ${issues.join("; ")}` : "."}`
+            : "Chưa bật rà soát Claude. Hãy cấu hình CLAUDE_API_KEY trên máy chủ.";
       statusEl.textContent = `${fallbackNote}${reviewNote} Đây là bước kiểm tra bổ sung, không bảo đảm tuyệt đối.`;
       keepStatus = true;
     }
@@ -1054,9 +1054,6 @@ micBtn.onclick = async () => {
         }
         statusEl.textContent = "Lụa đang suy nghĩ";
         await send(data.text.trim());
-        if (data.provider === "Groq Whisper") {
-          statusEl.textContent = `Đã nhận dạng bằng Groq Whisper (${data.model}). ${statusEl.textContent}`;
-        }
       } catch (e) {
         statusEl.textContent = e.name === "TimeoutError"
           ? "Xử lý giọng nói quá lâu. Hãy ghi âm ngắn hơn rồi thử lại."

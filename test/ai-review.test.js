@@ -1,23 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { generateWithGroq, reviewWithGroq } from "../ai-review.js";
+import { generateWithClaude, reviewWithClaude } from "../ai-review.js";
 
-test("reports that Groq is not configured without making a request", async () => {
+test("reports that Claude is not configured without making a request", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => {
     throw new Error("fetch should not be called");
   };
   try {
-    assert.deepEqual(await reviewWithGroq({
+    assert.deepEqual(await reviewWithClaude({
       apiKey: undefined,
-      model: "llama-test",
+      model: "claude-test",
       task: "check",
       question: "question",
       answer: "answer",
       context: "",
     }), {
       status: "not_configured",
-      model: "llama-test",
+      model: "claude-test",
       issues: [],
     });
   } finally {
@@ -25,7 +25,7 @@ test("reports that Groq is not configured without making a request", async () =>
   }
 });
 
-test("maps a passing Groq review and sends the configured model", async () => {
+test("maps a passing Claude review and sends the configured model", async () => {
   const originalFetch = globalThis.fetch;
   let requestUrl;
   let requestOptions;
@@ -33,27 +33,26 @@ test("maps a passing Groq review and sends the configured model", async () => {
     requestUrl = url;
     requestOptions = options;
     return Response.json({
-      choices: [{ message: { content: JSON.stringify({ verdict: "pass", issues: [] }) } }],
+      content: [{ type: "text", text: JSON.stringify({ verdict: "pass", issues: [] }) }],
     });
   };
   try {
-    const result = await reviewWithGroq({
+    const result = await reviewWithClaude({
       apiKey: "test-key",
-      model: "llama-test",
+      model: "claude-test",
       task: "check",
       question: "question",
       answer: "answer",
       context: "source",
     });
-    assert.equal(requestUrl, "https://api.groq.com/openai/v1/chat/completions");
-    assert.equal(requestOptions.headers.get("Authorization"), "Bearer test-key");
+    assert.equal(requestUrl, "https://api.anthropic.com/v1/messages");
+    assert.equal(requestOptions.headers.get("x-api-key"), "test-key");
     const requestBody = JSON.parse(requestOptions.body);
-    assert.equal(requestBody.model, "llama-test");
-    assert.equal(requestBody.reasoning_effort, "none");
-    assert.match(requestBody.messages[0].content, /json/);
-    assert.match(requestBody.messages[0].content, /tiền đề và dữ kiện người dùng nêu/);
-    assert.match(requestBody.messages[0].content, /Không được bịa ra lời nói\/lỗi của người dùng/);
-    assert.deepEqual(result, { status: "verified", model: "llama-test", issues: [] });
+    assert.equal(requestBody.model, "claude-test");
+    assert.match(requestBody.system, /json/);
+    assert.match(requestBody.system, /tiền đề và dữ kiện người dùng nêu/);
+    assert.match(requestBody.system, /Không được bịa ra lời nói\/lỗi của người dùng/);
+    assert.deepEqual(result, { status: "verified", model: "claude-test", issues: [] });
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -62,23 +61,22 @@ test("maps a passing Groq review and sends the configured model", async () => {
 test("preserves concerns and limits the issue text", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => Response.json({
-    choices: [{
-      message: {
-        content: JSON.stringify({ verdict: "concern", issues: ["  Thiếu căn cứ.  "] }),
-      },
+    content: [{
+      type: "text",
+      text: JSON.stringify({ verdict: "concern", issues: ["  Thiếu căn cứ.  "] }),
     }],
   });
   try {
-    assert.deepEqual(await reviewWithGroq({
+    assert.deepEqual(await reviewWithClaude({
       apiKey: "test-key",
-      model: "llama-test",
+      model: "claude-test",
       task: "check",
       question: "question",
       answer: "answer",
       context: "source",
     }), {
       status: "concern",
-      model: "llama-test",
+      model: "claude-test",
       issues: ["Thiếu căn cứ."],
     });
   } finally {
@@ -89,12 +87,12 @@ test("preserves concerns and limits the issue text", async () => {
 test("rejects malformed reviewer output", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => Response.json({
-    choices: [{ message: { content: JSON.stringify({ verdict: "pass", issues: [""] }) } }],
+    content: [{ type: "text", text: JSON.stringify({ verdict: "pass", issues: [""] }) }],
   });
   try {
-    await assert.rejects(reviewWithGroq({
+    await assert.rejects(reviewWithClaude({
       apiKey: "test-key",
-      model: "llama-test",
+      model: "claude-test",
       task: "check",
       question: "question",
       answer: "answer",
@@ -105,20 +103,19 @@ test("rejects malformed reviewer output", async () => {
   }
 });
 
-test("generates structured content through the configured Groq model", async () => {
+test("generates structured content through the configured Claude model", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (_url, options) => {
     const body = JSON.parse(options.body);
-    assert.equal(body.model, "qwen-test");
-    assert.equal(body.response_format.type, "json_object");
+    assert.equal(body.model, "claude-test");
     return Response.json({
-      choices: [{ message: { content: JSON.stringify({ quiz: [{ question: "Q?" }] }) } }],
+      content: [{ type: "text", text: JSON.stringify({ quiz: [{ question: "Q?" }] }) }],
     });
   };
   try {
-    assert.deepEqual(await generateWithGroq({
+    assert.deepEqual(await generateWithClaude({
       apiKey: "test-key",
-      model: "qwen-test",
+      model: "claude-test",
       system: "Generate JSON",
       prompt: "Create a quiz",
     }), {

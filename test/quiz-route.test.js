@@ -40,7 +40,7 @@ test("returns a grounded quiz analysis and learning plan without waiting for ext
   app.use(express.json());
   app.use(createQuizRouter({
     geminiApiKeys: ["test-gemini-key"],
-    groqApiKeys: ["test-groq-key"],
+    claudeApiKeys: ["test-claude-key"],
   }));
   const server = app.listen(0);
 
@@ -104,7 +104,7 @@ test("returns a grounded quiz analysis and learning plan without waiting for ext
 test("opens direct lessons for menu topics without claiming quiz results", async () => {
   const app = express();
   app.use(express.json());
-  app.use(createQuizRouter({ groqApiKeys: [] }));
+  app.use(createQuizRouter({ claudeApiKeys: [] }));
   const server = app.listen(0);
 
   try {
@@ -272,7 +272,7 @@ test("opens direct lessons for menu topics without claiming quiz results", async
 test("provides a detailed, source-qualified Dien Bien Phu lesson and fresh remediation prompts", async () => {
   const app = express();
   app.use(express.json());
-  app.use(createQuizRouter({ groqApiKeys: [] }));
+  app.use(createQuizRouter({ claudeApiKeys: [] }));
   const server = app.listen(0);
 
   try {
@@ -317,21 +317,21 @@ test("answers clarification from the current lesson and routes out-of-scope ques
   const prompts = [];
   globalThis.fetch = async (url, options = {}) => {
     if (String(url).startsWith("http://127.0.0.1:")) return originalFetch(url, options);
-    if (String(url).startsWith("https://api.groq.com/")) {
+    if (String(url).startsWith("https://api.anthropic.com/")) {
       const requestBody = JSON.parse(options.body);
-      prompts.push(requestBody.messages[1].content);
+      prompts.push(requestBody.messages[0].content);
       const clarification = prompts.length === 1
         ? { inScope: true, answer: "Khí hậu Việt Nam mang tính nhiệt đới ẩm gió mùa." }
         : { inScope: false, answer: "Câu hỏi này vượt ra ngoài nội dung khí hậu đang học." };
       return Response.json({
-        choices: [{ message: { content: JSON.stringify(clarification) } }],
+        content: [{ type: "text", text: JSON.stringify(clarification) }],
       });
     }
     throw new Error(`Unexpected external request: ${String(url)}`);
   };
   const app = express();
   app.use(express.json());
-  app.use(createQuizRouter({ groqApiKeys: ["test-groq-key"] }));
+  app.use(createQuizRouter({ claudeApiKeys: ["test-claude-key"] }));
   const server = app.listen(0);
 
   try {
@@ -392,7 +392,7 @@ test("reviews open-ended chat answers with specific feedback and a detailed expl
 
   const app = express();
   app.use(express.json());
-  app.use(createQuizRouter({ groqApiKeys: [] }));
+  app.use(createQuizRouter({ claudeApiKeys: [] }));
   const server = app.listen(0);
 
   try {
@@ -502,7 +502,7 @@ test("builds foundation, practice, and advanced roadmap steps from quiz performa
 
   const app = express();
   app.use(express.json());
-  app.use(createQuizRouter({ groqApiKeys: [] }));
+  app.use(createQuizRouter({ claudeApiKeys: [] }));
   const server = app.listen(0);
   const quizResults = [
     {
@@ -605,14 +605,14 @@ test("builds foundation, practice, and advanced roadmap steps from quiz performa
   }
 });
 
-test("generates a C programming quiz with Ollama when Groq is rate-limited and QuizAPI denies creation", async () => {
+test("generates a C programming quiz with Ollama when Claude is rate-limited and QuizAPI denies creation", async () => {
   const originalFetch = globalThis.fetch;
-  const previousGroqKey = process.env.GROQ_API_KEY;
+  const previousClaudeKey = process.env.CLAUDE_API_KEY;
   const previousQuizApiKey = process.env.QUIZAPI_IO_KEY;
-  const previousGroqModel = process.env.GROQ_MODEL;
-  process.env.GROQ_API_KEY = "test-groq-key";
+  const previousClaudeModel = process.env.CLAUDE_MODEL;
+  process.env.CLAUDE_API_KEY = "test-claude-key";
   process.env.QUIZAPI_IO_KEY = "test-quizapi-key";
-  process.env.GROQ_MODEL = "qwen-test";
+  process.env.CLAUDE_MODEL = "claude-test";
 
   const generatedQuiz = [{
     question: "Chỉ số đầu tiên của một mảng trong C là bao nhiêu?",
@@ -628,7 +628,7 @@ test("generates a C programming quiz with Ollama when Groq is rate-limited and Q
       return originalFetch(url, options);
     }
     externalRequests.push({ url: String(url), method: options.method });
-    if (String(url).startsWith("https://api.groq.com/")) {
+    if (String(url).startsWith("https://api.anthropic.com/")) {
       return Response.json({ error: { message: "rate limited" } }, { status: 429 });
     }
     if (String(url).startsWith("http://localhost:11434/api/tags")) {
@@ -693,12 +693,12 @@ test("generates a C programming quiz with Ollama when Groq is rate-limited and Q
   } finally {
     await new Promise((resolve) => server.close(resolve));
     globalThis.fetch = originalFetch;
-    if (previousGroqKey === undefined) delete process.env.GROQ_API_KEY;
-    else process.env.GROQ_API_KEY = previousGroqKey;
+    if (previousClaudeKey === undefined) delete process.env.CLAUDE_API_KEY;
+    else process.env.CLAUDE_API_KEY = previousClaudeKey;
     if (previousQuizApiKey === undefined) delete process.env.QUIZAPI_IO_KEY;
     else process.env.QUIZAPI_IO_KEY = previousQuizApiKey;
-    if (previousGroqModel === undefined) delete process.env.GROQ_MODEL;
-    else process.env.GROQ_MODEL = previousGroqModel;
+    if (previousClaudeModel === undefined) delete process.env.CLAUDE_MODEL;
+    else process.env.CLAUDE_MODEL = previousClaudeModel;
   }
 });
 
@@ -737,7 +737,7 @@ test("retries duplicate Ollama options and removes generated letter labels befor
 
   const app = express();
   app.use(express.json());
-  app.use(createQuizRouter({ baseUrl: "http://ollama.test", groqApiKeys: [], geminiApiKeys: [] }));
+  app.use(createQuizRouter({ baseUrl: "http://ollama.test", claudeApiKeys: [], geminiApiKeys: [] }));
   const server = app.listen(0);
 
   try {
@@ -781,7 +781,7 @@ test("serves shuffled prewritten quizzes for 5, 10, or 50 questions without wait
 
   const app = express();
   app.use(express.json());
-  app.use(createQuizRouter({ groqApiKeys: [], geminiApiKeys: [] }));
+  app.use(createQuizRouter({ claudeApiKeys: [], geminiApiKeys: [] }));
   const server = app.listen(0);
 
   try {

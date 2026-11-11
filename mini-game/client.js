@@ -390,8 +390,8 @@ function renderLobby(snapshot) {
     : `${snapshot.topic} · ${snapshot.questionCount} câu hỏi · tối đa 6 người`);
   const reviewWarning = snapshot.questionReview?.warning
     ? node("p", "game-hint", snapshot.questionReview.status === "unavailable"
-      ? "Groq chưa rà soát được bộ câu hỏi. Hãy kiểm tra nội dung trong lúc chơi."
-      : "Groq có cảnh báo về bộ câu hỏi; kết quả rà soát có thể chưa chính xác. Hãy kiểm tra nội dung khi chơi.")
+      ? "Claude chưa rà soát được bộ câu hỏi. Hãy kiểm tra nội dung trong lúc chơi."
+      : "Claude có cảnh báo về bộ câu hỏi; kết quả rà soát có thể chưa chính xác. Hãy kiểm tra nội dung khi chơi.")
     : null;
   const playersHeading = node("h3", "answer-label", `Người chơi (${snapshot.players.length}/6)`);
   const players = renderPlayerList(snapshot.players);

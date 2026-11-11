@@ -3110,19 +3110,19 @@
         note.textContent = "Kết luận và lộ trình được tạo trực tiếp từ kết quả đúng/sai và lời giải của bài, không phải chờ dịch vụ AI bên ngoài.";
         note.classList.add("correct");
       } else if (verification?.status === "verified") {
-        note.textContent = `Groq/Qwen (${verification.model}) đã rà soát thêm; không thấy vấn đề rõ ràng. Đây không phải bảo đảm tuyệt đối.`;
+        note.textContent = `Claude (${verification.model}) đã rà soát thêm; không thấy vấn đề rõ ràng. Đây không phải bảo đảm tuyệt đối.`;
         note.classList.add("correct");
       } else if (verification?.status === "concern") {
-        note.textContent = `Groq/Qwen lưu ý: ${issues.join("; ") || "cần kiểm tra lại nội dung."}`;
+        note.textContent = `Claude lưu ý: ${issues.join("; ") || "cần kiểm tra lại nội dung."}`;
         note.classList.add("incorrect");
       } else if (verification?.status === "uncertain") {
-        note.textContent = `Groq/Qwen chưa đủ căn cứ xác minh${issues.length ? `: ${issues.join("; ")}` : "."}`;
+        note.textContent = `Claude chưa đủ căn cứ xác minh${issues.length ? `: ${issues.join("; ")}` : "."}`;
         note.classList.add("warning");
       } else if (verification?.status === "unavailable") {
-        note.textContent = "Groq/Qwen hiện không thể rà soát. Nội dung dưới đây chưa được kiểm tra độc lập.";
+        note.textContent = "Claude hiện không thể rà soát. Nội dung dưới đây chưa được kiểm tra độc lập.";
         note.classList.add("warning");
       } else {
-        note.textContent = "Chưa bật rà soát Groq/Qwen. Hãy cấu hình GROQ_API_KEY trên máy chủ.";
+        note.textContent = "Chưa bật rà soát Claude. Hãy cấu hình CLAUDE_API_KEY trên máy chủ.";
         note.classList.add("warning");
       }
       return note;
@@ -3377,8 +3377,8 @@
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Không kiểm tra được cấu hình Quiz.");
         quizProviderStatus.className = "provider-status ready";
-        const documentProvider = data.groqConfigured
-          ? "Quiz từ tài liệu riêng có thể dùng Groq/Qwen"
+        const documentProvider = data.claudeConfigured
+          ? "Quiz từ tài liệu riêng có thể dùng Claude"
           : data.ollamaAvailable
             ? `Quiz từ tài liệu riêng dùng Ollama (${data.ollamaModel})`
             : "";
