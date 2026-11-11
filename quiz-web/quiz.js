@@ -1,7 +1,7 @@
 import express from "express";
 import { generateWithClaude } from "../ai-review.js";
 import { createQuizOnQuizApi, QuizApiError } from "../quiz-api.js";
-import { getGeminiApiKeys } from "../gemini-api.js";
+import { fetchWithGeminiKeyFallback, getGeminiApiKeys } from "../gemini-api.js";
 import { getClaudeApiKeys } from "../claude-api.js";
 import { questionBanks } from "../mini-game/game.js";
 
@@ -1417,10 +1417,41 @@ export function createQuizRouter({
   const ollama = createOllamaClient(baseUrl, model);
   const resolvedClaudeKeys = claudeApiKeys ?? groqApiKeys ?? getClaudeApiKeys();
   const claudeModel = process.env.CLAUDE_MODEL || process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
+  const geminiModel = process.env.GEMINI_MODEL || "gemini-flash-lite-latest";
   const quizApiKey = process.env.QUIZAPI_IO_KEY?.includes("paste-your-quizapi")
     ? undefined
     : process.env.QUIZAPI_IO_KEY;
   let quizApiCreationForbidden = false;
+
+  async function generateWithGemini({ system, prompt, maxTokens = 1_500 }) {
+    const { response } = await fetchWithGeminiKeyFallback({
+      apiKeys: geminiApiKeys,
+      timeoutMs: 15_000,
+      url: `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`,
+      init: {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: system ? { parts: [{ text: system }] } : undefined,
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: maxTokens,
+            responseMimeType: "application/json",
+          },
+        }),
+      },
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      const error = new Error(`Gemini request failed with status ${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
+    const text = data?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
+    if (!text) throw new Error("Gemini returned no content.");
+    return JSON.parse(text);
+  }
 
   async function generateStudyJson({ system, prompt, schema, isValid, numPredict }) {
     if (resolvedClaudeKeys.length) {
@@ -1436,6 +1467,20 @@ export function createQuizRouter({
         throw new Error("Claude returned study content that did not match the required schema.");
       } catch (error) {
         console.error("Claude interactive study request failed:", error.message);
+      }
+    }
+
+    if (geminiApiKeys.length) {
+      try {
+        const generated = await generateWithGemini({
+          system,
+          prompt,
+          maxTokens: numPredict,
+        });
+        if (isValid(generated)) return { content: generated, generator: `Gemini (${geminiModel})` };
+        throw new Error("Gemini returned study content that did not match the required schema.");
+      } catch (error) {
+        console.error("Gemini interactive study request failed:", error.message);
       }
     }
 
@@ -1834,6 +1879,24 @@ Chọn loại sơ đồ phù hợp nhất với chính câu hỏi. Ví dụ: n�
       }
     } else {
       generationWarning = "CLAUDE_API_KEY chưa được cấu hình.";
+    }
+
+    if (!quiz && !selectedTopic && geminiApiKeys.length > 0) {
+      try {
+        const generated = await generateWithGemini({
+          system: "Bạn là Quiz AI, chuyên tạo câu hỏi trắc nghiệm giáo dục bằng tiếng Việt. Chỉ kiểm tra dữ kiện được nêu rõ trong tài liệu; không bịa kiến thức. Mỗi câu có đúng 4 phương án khác nhau và chỉ một đáp án đúng; đáp án khớp chính xác một phương án, lời giải thích căn cứ tài liệu. Chỉ trả JSON object, không markdown.",
+          prompt: `Tạo CHÍNH XÁC ${count} câu hỏi trắc nghiệm tiếng Việt chỉ dựa trên tài liệu. Trả về JSON dạng {"quiz":[{"question":"...","topic":"...","options":["A","B","C","D"],"answer":"A","explanation":"..."}]}. Không lặp câu hỏi.\n\n<TAI_LIEU ${selectedTopic ? `CHU_DE="${selectedTopic.title}"` : ""}>\n${sourceText.trim()}\n</TAI_LIEU>`,
+          maxTokens: Math.min(4_096, 400 + count * 350),
+        });
+        const candidateQuiz = Array.isArray(generated) ? generated : generated?.quiz;
+        const validationErrors = getQuizValidationErrors(candidateQuiz, count);
+        if (!validationErrors.length) {
+          quiz = candidateQuiz;
+          generator = `Gemini (${geminiModel})`;
+        }
+      } catch (error) {
+        console.error("Gemini quiz generation failed:", error.message);
+      }
     }
 
     if (!quiz && !selectedTopic) {
