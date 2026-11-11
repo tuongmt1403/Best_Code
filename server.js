@@ -26,7 +26,10 @@ const elevenLabsApiKeys = Array.from(new Set([
   process.env.ELEVENLABS_API_KEY_3,
   process.env.ELEVENLABS_API_KEY_4,
   process.env.ELEVENLABS_API_KEY_5,
-].map((key) => String(key || "").trim()).filter(Boolean)));
+  process.env.ELEVENLABS_API_KEY_6,
+  process.env.ELEVENLABS_API_KEY_7,
+  process.env.ELEVENLABS_API_KEY_8,
+].map((key) => String(key || "").trim()).filter((key) => key && !/paste-your-.*elevenlabs|your[-_ ]?api[-_ ]?key|replace[-_ ]?me/i.test(key))));
 let elevenLabsKeyCursor = 0;
 const elevenLabsAudioCache = new Map();
 const elevenLabsAudioPending = new Map();

@@ -11,9 +11,10 @@ test("loads the primary Gemini key and all distinct backup keys", () => {
     GEMINI_API_KEY_5: "backup-5",
     GEMINI_API_KEY_6: "backup-6",
     GEMINI_API_KEY_7: "backup-7",
+    GEMINI_API_KEY_8: "backup-8",
   });
 
-  assert.deepEqual(keys, ["primary", "backup-2", "backup-3", "backup-4", "backup-5", "backup-6", "backup-7"]);
+  assert.deepEqual(keys, ["primary", "backup-2", "backup-3", "backup-4", "backup-5", "backup-6", "backup-7", "backup-8"]);
 });
 
 test("uses the next Gemini key after a quota response", async () => {
