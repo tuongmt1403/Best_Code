@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Quiz AI - Trợ lý tạo đề riêng</title>
   <link rel="stylesheet" href="/dangKy_dangNhap/auth.css">
-  <script src="/app-shell.js" defer></script>
+  <script src="/app-shell.js?v=avatar-picker-v4" defer></script>
+  <script src="/avatar-picker.js?v=avatar-picker-v4" defer></script>
   <script src="/dangKy_dangNhap/session.js" defer></script>
   <style>
     :root { --bg:#f5f6fc; --ink:#20243b; --accent:#635bda; --accent-dark:#5149c5; --muted:#70758a;
@@ -170,7 +171,7 @@
     .roadmap-actions button { padding:8px 12px; font-size:14px; }
     .roadmap-actions .secondary { color:var(--ink); background:#e9eaff; }
     .study-learning { --tutor-bg:#f7f8fc; --tutor-panel:#fff; --tutor-raised:#f4f2ff; --tutor-line:#ebeaf4;
-      --tutor-text:#292d48; --tutor-muted:#7b8099; --tutor-accent:#635bda; position:relative; overflow:hidden;
+      --tutor-text:#292d48; --tutor-muted:#555b70; --tutor-accent:#635bda; position:relative; overflow:hidden;
       margin-top:18px; padding:clamp(16px,2.4vw,28px); border:1px solid #ececf5; border-radius:22px;
       color:var(--tutor-text); background:linear-gradient(145deg,#fbfbff,#f7f8fc);
       box-shadow:0 18px 46px #272c4b14; }
@@ -199,7 +200,7 @@
     .tutor-roadmap-panel > p { margin:0 6px 12px; color:var(--tutor-muted); font-size:.72rem; line-height:1.45; }
     .tutor-roadmap-list { display:flex; flex-direction:column; gap:3px; margin:0; padding:0; list-style:none; }
     .tutor-roadmap-item { position:relative; display:flex; align-items:flex-start; gap:9px; padding:8px 6px;
-      border-radius:9px; color:var(--tutor-muted); font-size:.75rem; line-height:1.35; }
+      border-radius:9px; color:#4b5065; font-size:.8rem; line-height:1.4; }
     .tutor-roadmap-item.current { color:#5149c5; background:#f0efff; }
     .tutor-roadmap-item.done { color:#277b61; }
     .tutor-roadmap-dot { display:grid; flex:none; width:15px; height:15px; place-items:center; margin-top:1px;
@@ -208,20 +209,9 @@
     .tutor-roadmap-item.done .tutor-roadmap-dot { border-color:#5dd0aa; background:#5dd0aa; }
     .tutor-roadmap-item strong,.tutor-roadmap-item small { display:block; }
     .tutor-roadmap-item strong { color:inherit; font-size:.75rem; }
-    .tutor-roadmap-item small { margin-top:2px; color:var(--tutor-muted); font-size:.65rem; }
-    .tutor-layout.roadmap-collapsed { grid-template-columns:48px minmax(320px,1.15fr) minmax(380px,1.35fr); gap:14px; }
-    .roadmap-collapsed .tutor-roadmap-panel { position:relative; z-index:2; width:48px; min-width:48px;
-      overflow:hidden; padding:10px 4px; border-radius:16px; opacity:1; transform:none;
-      transition:none; }
-    .roadmap-collapsed .tutor-roadmap-panel h3,
-    .roadmap-collapsed .tutor-roadmap-panel > p,
-    .roadmap-collapsed .tutor-roadmap-list { display:none !important; }
-    .roadmap-collapsed .tutor-roadmap-panel::before { content:attr(data-rail-step); display:flex; align-items:center; justify-content:center;
-      width:38px; min-height:48px; margin:0 auto 8px; border-radius:11px; color:#5149c5; background:#efedff;
-      font-size:.68rem; font-weight:900; writing-mode:vertical-rl; }
-    .roadmap-collapsed .tutor-roadmap-panel::after { content:attr(data-rail-progress); display:flex; align-items:center; justify-content:center;
-      width:5px; height:58%; min-height:70px; margin:8px auto 0; border-radius:99px;
-      background:linear-gradient(to bottom,#55c2d0 var(--rail-progress,35%),#244653 var(--rail-progress,35%)); color:transparent; }
+    .tutor-roadmap-item small { margin-top:3px; color:#555b70; font-size:.72rem; line-height:1.4; }
+    .tutor-layout.roadmap-collapsed { grid-template-columns:minmax(160px,.48fr) minmax(250px,.82fr) minmax(320px,1.5fr); gap:14px; }
+    .roadmap-collapsed .tutor-roadmap-panel { min-width:0; overflow:auto; padding:13px 10px; }
     .roadmap-collapsed .tutor-avatar-stage { padding:clamp(18px,2vw,34px); }
     .roadmap-collapsed .tutor-avatar-stage .fox-avatar { width:clamp(280px,34vw,520px); height:clamp(270px,33vw,500px); max-width:94%; }
     .tutor-avatar-stage { display:flex; align-items:center; justify-content:center; flex-direction:column; min-width:0;
@@ -257,12 +247,50 @@
       color:var(--tutor-text); background:#f7f7fc; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
     .tutor-message.user .tutor-bubble { border-color:#635bda; border-radius:13px 13px 4px 13px; color:#fff; background:linear-gradient(105deg,#746cf0,#635bda); }
     .tutor-message.sad .tutor-bubble { border-color:#f0d7d7; background:#fff4f4; }
+    .study-lesson-note { flex:none; width:min(100%,900px); margin:4px auto; padding:clamp(16px,2vw,24px);
+      border:1px solid #dfe3ef; border-radius:18px; color:#263047; background:#fff; box-shadow:0 6px 20px #272c4b0d; }
+    .study-lesson-note h3 { margin:0 0 14px; color:#252b42; font-size:1.1rem; }
+    .study-lesson-section + .study-lesson-section { margin-top:14px; padding-top:13px; border-top:1px solid #e6e8f0; }
+    .study-lesson-section h4 { margin:0 0 5px; color:#4941ae; font-size:.96rem; }
+    .study-lesson-section p { margin:0; color:#30384e; font-size:.94rem; line-height:1.7; white-space:pre-wrap; }
+    .study-code-example { margin-top:12px; overflow:hidden; border:1px solid #29334d; border-radius:12px; background:#111827; }
+    .study-code-label { display:block; padding:8px 12px; color:#c7d2fe; background:#202a3e; font-size:.78rem; font-weight:800; }
+    .study-code-example pre { max-width:100%; margin:0; overflow:auto; padding:14px; color:#e5e7eb; font:500 .84rem/1.65 ui-monospace,SFMono-Regular,Consolas,monospace; tab-size:4; }
+    .study-code-notes { margin:10px 0 0; padding-left:22px; color:#30384e; font-size:.9rem; line-height:1.65; }
+    .study-code-notes li + li { margin-top:5px; }
+    .study-code-output { margin:10px 0 0 !important; padding:9px 11px; border-left:3px solid #51a77c; border-radius:4px 9px 9px 4px; background:#eef8f1; }
+    .study-code-output strong { display:block; margin-bottom:4px; color:#286847; font-size:.8rem; }
+    .study-code-output code { color:#234534; font:500 .86rem/1.55 ui-monospace,SFMono-Regular,Consolas,monospace; white-space:pre-wrap; }
+    .study-lesson-source { margin:14px 0 0; color:#4c5369; font-size:.8rem; line-height:1.5; }
+    .study-comprehension { flex:none; width:min(100%,900px); margin:6px auto; padding:14px 16px; border:1px solid #dfe3ef;
+      border-radius:16px; color:#252b42; background:#f6f7fc; }
+    .study-comprehension p { margin:0 0 10px; font-weight:800; }
+    .study-comprehension-actions { display:flex; flex-wrap:wrap; gap:8px; }
+    .study-clarification { margin-top:12px; }
+    .study-clarification[hidden] { display:none; }
+    .study-clarification textarea { width:100%; min-height:62px; padding:10px; border:1px solid #cfd4e2; border-radius:12px;
+      color:#252b42; font:inherit; line-height:1.5; resize:vertical; }
+    .study-clarification button { margin-top:8px; }
+    .study-assessment { flex:none; width:min(100%,900px); margin:8px auto; padding:16px; border:1px solid #dfe3ef;
+      border-radius:16px; color:#252b42; background:#fff; }
+    .study-assessment[hidden] { display:none !important; }
+    .study-assessment h3 { margin:0 0 8px; color:#252b42; font-size:1.05rem; }
+    .study-assessment-progress { margin:0 0 12px; color:#4b5065; font-weight:750; }
+    .study-assessment-question { margin:0 0 12px; color:#252b42; font-size:1rem; line-height:1.5; }
+    .study-assessment-options { display:grid; gap:8px; }
+    .study-assessment-options button { width:100%; min-height:44px; border-radius:12px; text-align:left; }
+    .study-assessment-options button[aria-pressed="true"] { border-color:#635bda; background:#eeebff; }
+    .study-assessment-feedback { margin-top:10px; color:#354056; line-height:1.55; white-space:pre-wrap; }
+    .study-assessment-feedback:empty { display:none; }
+    .study-assessment-actions { display:flex; justify-content:flex-end; margin-top:12px; }
+    .study-assessment-actions button { min-width:150px; }
     .tutor-bubble p { margin:0; }
     .tutor-bubble p + p { margin-top:9px; }
     .tutor-message-tools { display:flex; justify-content:flex-end; margin-top:5px; }
     .study-learning .tutor-message-tools button { min-height:27px; padding:3px 8px; color:#5149c5; background:#f1efff; font-size:.75rem; }
     .tutor-illustration { margin:0 auto; padding:10px; max-width:100%; border:1px solid var(--tutor-line); border-radius:13px; background:#f8fbfc; }
     .tutor-illustration svg { display:block; width:100%; height:auto; }
+    .tutor-illustration .study-history-photo { display:block; width:min(100%,560px); max-height:320px; margin:4px auto 8px; border-radius:10px; object-fit:contain; }
     .tutor-illustration figcaption { margin-top:6px; color:#526d75; text-align:center; font-size:.8rem; line-height:1.4; }
     .tutor-illustration.solution-diagram { width:min(100%,680px); }
     .tutor-illustration.solution-diagram svg { min-height:150px; }
@@ -346,7 +374,7 @@
       .study-learning .tutor-lesson-head { gap:8px; }
       .study-learning .tutor-lesson-head .back-button { padding:7px 10px; font-size:.75rem; }
       .study-learning .tutor-progress { width:min(150px,20%); }
-      .study-learning .tutor-layout.roadmap-collapsed { grid-template-columns:48px minmax(250px,.95fr) minmax(320px,1.35fr); gap:10px; }
+      .study-learning .tutor-layout.roadmap-collapsed { grid-template-columns:minmax(150px,.55fr) minmax(0,.8fr) minmax(0,1.4fr); gap:8px; }
       .study-learning .roadmap-collapsed .tutor-avatar-stage .fox-avatar { width:clamp(260px,33vw,420px); height:clamp(250px,32vw,410px); max-width:94%; }
       .quiz-hero { grid-template-columns:minmax(0,1.3fr) minmax(170px,.7fr); }
       .quiz-art-orbit { width:150px; height:150px; }
@@ -366,18 +394,22 @@
       .study-learning .tutor-avatar-controls button { min-height:34px; padding:5px 10px; font-size:.8rem; }
       .study-learning .tutor-dialogue { min-height:0; }
       .study-learning .tutor-log { max-height:none; }
-      .study-learning .tutor-layout.roadmap-collapsed { grid-template-columns:48px minmax(0,1fr); grid-template-rows:minmax(160px,30%) minmax(0,1fr); gap:8px; }
-      .study-learning .roadmap-collapsed .tutor-roadmap-panel { grid-column:1; grid-row:1 / 3; width:48px; max-height:none; }
-      .study-learning .roadmap-collapsed .tutor-avatar-stage { grid-column:2; grid-row:1; }
-      .study-learning .roadmap-collapsed .tutor-dialogue { grid-column:2; grid-row:2; }
+      .study-learning .tutor-layout.roadmap-collapsed { grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(135px,25%) minmax(0,1fr); gap:8px; }
+      .study-learning .roadmap-collapsed .tutor-roadmap-panel { grid-column:1; grid-row:1; width:auto; min-width:0; max-height:105px; }
+      .study-learning .roadmap-collapsed .tutor-avatar-stage { grid-column:1; grid-row:2; }
+      .study-learning .roadmap-collapsed .tutor-dialogue { grid-column:1; grid-row:3; }
     }
     @media (max-width:620px) {
       #study-screen > .study-learning { padding:10px; }
       .quiz-hero { grid-template-columns:1fr; gap:0; }
-      .tutor-lesson-head { align-items:flex-start; flex-direction:column; gap:10px; }
-      .tutor-lesson-head .back-button { align-self:flex-start; }
-      .study-learning .tutor-lesson-head { gap:5px; margin-bottom:8px; }
-      .tutor-progress { width:100%; }
+      .tutor-lesson-head { display:grid; align-items:stretch; grid-template-columns:38px 40px minmax(0,1fr);
+        grid-template-areas:"back toggle picker" "title title title" "progress progress progress"; gap:8px; }
+      .study-learning .tutor-lesson-head { gap:7px; margin-bottom:8px; }
+      .study-learning .tutor-lesson-head > .back-button { grid-area:back; align-self:center; }
+      .study-learning .tutor-lesson-head > .tutor-roadmap-toggle { grid-area:toggle; align-self:center; }
+      .study-learning .tutor-lesson-head > .tutor-lesson-title { grid-area:title; width:100%; min-width:0; margin:4px 0; }
+      .study-learning .tutor-lesson-head > .tutor-progress { grid-area:progress; width:100%; }
+      .study-learning .tutor-lesson-head > .tutor-subject-picker { grid-area:picker; justify-self:end; }
       .study-learning .tutor-layout { grid-template-rows:auto minmax(135px,25%) minmax(0,1fr); gap:8px; }
       .study-learning .tutor-avatar-stage .fox-avatar { width:clamp(115px,20vh,165px); height:clamp(110px,19vh,155px); }
       .study-learning .tutor-identity strong { font-size:1rem; }
@@ -395,7 +427,6 @@
       .study-learning .tutor-lesson-head .back-button { font-size:0; }
       .study-learning .tutor-lesson-head .back-button::after { content:"←"; font-size:1rem; }
       .study-learning .tutor-lesson-head .back-button { width:38px; padding:5px; }
-      .study-learning .tutor-progress { width:70px; }
     }
     @media (prefers-reduced-motion:reduce) {
       button,.option,.topic-card,.roadmap-step,.tutor-log,.tutor-layout,.tutor-roadmap-panel { transition:none; scroll-behavior:auto; }
@@ -525,7 +556,8 @@
     }
   </style>
   <link rel="stylesheet" href="/bright-theme.css">
-  <link rel="stylesheet" href="/app-theme.css">
+  <link rel="stylesheet" href="/app-theme.css?v=avatar-picker-v4">
+  <link rel="stylesheet" href="/avatar-picker.css?v=avatar-picker-v4">
 </head>
 <body>
   <header>
@@ -558,7 +590,7 @@
           </div>
         </div>
       </section>
-      <p id="quiz-provider-status" class="provider-status" role="status" aria-live="polite">Đang kiểm tra cấu hình Groq và QuizAPI.io...</p>
+      <p id="quiz-provider-status" class="provider-status" role="status" aria-live="polite">Quiz theo chủ đề dùng ngân hàng câu hỏi đã biên soạn để mở bài nhanh.</p>
       <section id="saved-roadmaps" class="panel" hidden aria-labelledby="saved-roadmaps-heading">
         <h2 id="saved-roadmaps-heading">Lộ trình học đã lưu</h2>
         <p class="muted">Tiến độ được lưu riêng trên trình duyệt và thiết bị này.</p>
@@ -569,15 +601,15 @@
           <span class="settings-icon" aria-hidden="true">☷</span>
           <div>
             <label for="question-count">Độ dài bài Quiz</label>
-            <p class="settings-note">Tùy chỉnh số câu hỏi cho lượt học này (1–20 câu).</p>
+            <p class="settings-note">Tùy chỉnh số câu hỏi cho lượt học này (1–50 câu). Quiz theo chủ đề mở gần như tức thì.</p>
           </div>
         </div>
-        <input id="question-count" type="number" min="1" max="20" value="5" required>
+        <input id="question-count" type="number" min="1" max="50" value="5" required>
       </section>
       <div class="quiz-section-head">
         <div>
           <h2>Chọn chủ đề để bắt đầu</h2>
-          <p>Mỗi lượt Quiz tạo câu hỏi mới, phù hợp với môn bạn chọn.</p>
+          <p>Mỗi lượt Quiz xáo trộn câu hỏi đã biên soạn sẵn theo chủ đề, không phải chờ AI tạo lại.</p>
         </div>
       </div>
       <div id="topic-list" class="apps" aria-label="Danh sách chủ đề"></div>
@@ -610,7 +642,7 @@
       {
         title: "Lịch sử",
         topicId: "antiUsWar",
-        topics: ["Phong trào Đồng Khởi", "Hiệp định Paris", "Chiến dịch Điện Biên Phủ"],
+        topics: ["Phong trào Đồng Khởi", "Hiệp định Genève", "Chiến dịch Điện Biên Phủ", "Tết Mậu Thân", "Hiệp định Paris", "Kết thúc chiến tranh"],
       },
       {
         title: "Địa lý",
@@ -621,7 +653,7 @@
         title: "Ngôn ngữ lập trình C",
         topicId: "cProgramming",
         titlePrefix: "Lập trình C",
-        topics: ["Biến & Kiểu dữ liệu", "Cấu trúc điều khiển", "Hàm", "Con trỏ"],
+        topics: ["Cấu trúc chương trình C", "Thư viện chuẩn", "Biến & Kiểu dữ liệu", "Cấu trúc điều khiển", "Hàm", "Mảng & Chuỗi", "Con trỏ", "Struct", "Bộ nhớ động", "Tệp"],
       },
     ];
     const ROADMAP_STORAGE_KEY = "lua-study-roadmaps";
@@ -874,7 +906,7 @@
       await loadStudyLesson(stepIndex);
     }
 
-    async function loadStudyLesson(stepIndex) {
+    async function loadStudyLesson(stepIndex, remediationIndex = 0, missedQuestionPhases = []) {
       if (!activeRoadmap) return;
       stopTutorListening();
       studyScreen.replaceChildren();
@@ -889,6 +921,8 @@
             topicId: activeRoadmap.topicId,
             quizResults: activeRoadmap.quizResults,
             stepIndex,
+            remediationIndex,
+            missedQuestionPhases,
             ...(activeRoadmap.isDirectLesson ? { focusTopic: activeRoadmap.focusTopic } : {}),
           }),
         });
@@ -896,10 +930,20 @@
         if (!response.ok) throw new Error(data.error || "Không tải được bài học.");
         if (typeof data.practiceQuestion !== "string" || !data.practiceQuestion.trim()
           || typeof data.theory !== "string" || !data.theory.trim()
+          || !Array.isArray(data.assessmentQuestions) || data.assessmentQuestions.length !== 3
+          || data.assessmentQuestions.some((item) =>
+            !item
+            || !["foundation", "practice", "advanced"].includes(item.phase)
+            || typeof item.question !== "string" || !item.question.trim()
+            || !Array.isArray(item.options) || item.options.length < 2 || item.options.length > 4
+            || item.options.some((option) => typeof option !== "string" || !option.trim())
+          )
           || !Array.isArray(activeRoadmap.steps) || activeRoadmap.steps.length === 0) {
           throw new Error("Máy chủ chưa trả về đủ nội dung bài học. Hãy khởi động lại ứng dụng rồi tải lại trang.");
         }
         activeRoadmap.learningTotalSteps = data.totalSteps;
+        data.remediationIndex = remediationIndex;
+        data.missedQuestionPhases = missedQuestionPhases;
         if (!activeRoadmap.isDirectLesson) saveRoadmap(activeRoadmap);
         studyHintLevel = 0;
         studyWrongAttempts = 0;
@@ -1078,7 +1122,7 @@
       log.scrollTop = log.scrollHeight;
     }
 
-    function appendStudyIllustration(log, topic, topicId) {
+    function appendStudyIllustration(log, topic, topicId, phase = "") {
       const figure = document.createElement("figure");
       figure.className = "tutor-illustration";
       figure.dataset.subject = topicId;
@@ -1138,6 +1182,47 @@
         <text x="496" y="181" text-anchor="middle" fill="#4a765d" font-family="system-ui" font-size="12">GIÁ TRỊ ĐƯỢC TRỎ TỚI</text>
         <circle cx="338" cy="202" r="23" fill="#fff" stroke="#c9cde0" stroke-width="2"/><text x="338" y="209" text-anchor="middle" fill="#655bd5" font-family="system-ui" font-size="22" font-weight="800">*</text>
         <text x="320" y="262" text-anchor="middle" fill="#68718a" font-family="system-ui" font-size="12">p lưu địa chỉ · *p truy cập giá trị tại địa chỉ đó</text>`;
+      const cStruct = `
+        <defs><marker id="struct-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#655bd5"/></marker></defs>
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="#f1f3fb"/>
+        <rect x="42" y="49" width="220" height="198" rx="18" fill="#e9e6ff" stroke="#756bdb" stroke-width="3"/>
+        <rect x="56" y="38" width="192" height="36" rx="10" fill="#5149a8"/>
+        <text x="152" y="62" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="15" font-weight="800">KIỂU Student</text>
+        <g font-family="ui-monospace,monospace" font-size="13" font-weight="700">
+          <rect x="62" y="91" width="180" height="38" rx="8" fill="#fff"/><text x="76" y="115" fill="#5149c5">char name[32]</text>
+          <rect x="62" y="139" width="180" height="38" rx="8" fill="#fff"/><text x="76" y="163" fill="#2f7775">int age</text>
+          <rect x="62" y="187" width="180" height="38" rx="8" fill="#fff"/><text x="76" y="211" fill="#ad6b27">float score</text>
+        </g>
+        <path d="M270 148h82" fill="none" stroke="#655bd5" stroke-width="5" marker-end="url(#struct-arrow)"/>
+        <rect x="366" y="60" width="226" height="177" rx="18" fill="#e6f4ea" stroke="#4b9b70" stroke-width="3"/>
+        <rect x="381" y="48" width="196" height="37" rx="10" fill="#3b7657"/><text x="479" y="73" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="15" font-weight="800">student · một hồ sơ</text>
+        <g font-family="ui-monospace,monospace" font-size="13" font-weight="700">
+          <text x="394" y="119" fill="#5149c5">name = "An"</text>
+          <text x="394" y="158" fill="#2f7775">age = 18</text>
+          <text x="394" y="197" fill="#ad6b27">score = 8.5</text>
+        </g>
+        <text x="320" y="267" text-anchor="middle" fill="#68718a" font-family="system-ui" font-size="12">Struct định nghĩa kiểu · biến student là một đối tượng cụ thể của kiểu đó</text>`;
+      const cProgramStructure = `
+        <defs><marker id="program-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#655bd5"/></marker></defs>
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="#f1f3fb"/>
+        <g font-family="system-ui" text-anchor="middle">
+          <rect x="38" y="101" width="132" height="92" rx="17" fill="#e9e6ff" stroke="#756bdb" stroke-width="3"/>
+          <text x="104" y="139" fill="#5149c5" font-size="14" font-weight="800">#include</text>
+          <text x="104" y="164" fill="#5149c5" font-size="12">thư viện</text>
+          <path d="M174 147h35" stroke="#655bd5" stroke-width="4" marker-end="url(#program-arrow)"/>
+          <rect x="218" y="82" width="126" height="130" rx="17" fill="#fff0d3" stroke="#d59b44" stroke-width="3"/>
+          <text x="281" y="127" fill="#9a6420" font-size="15" font-weight="800">main()</text>
+          <text x="281" y="153" fill="#785b32" font-size="12">điểm bắt đầu</text>
+          <text x="281" y="179" fill="#785b32" font-size="12">lệnh chạy lần lượt</text>
+          <path d="M348 147h35" stroke="#655bd5" stroke-width="4" marker-end="url(#program-arrow)"/>
+          <rect x="392" y="101" width="132" height="92" rx="17" fill="#e4f4f4" stroke="#58a7a5" stroke-width="3"/>
+          <text x="458" y="139" fill="#2f7775" font-size="14" font-weight="800">printf</text>
+          <text x="458" y="164" fill="#426d70" font-size="12">hiển thị kết quả</text>
+          <path d="M528 147h31" stroke="#655bd5" stroke-width="4" marker-end="url(#program-arrow)"/>
+          <circle cx="581" cy="147" r="20" fill="#e6f4ea" stroke="#4b9b70" stroke-width="3"/>
+          <path d="m571 147 7 7 13-15" fill="none" stroke="#438861" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <text x="320" y="255" text-anchor="middle" fill="#68718a" font-family="system-ui" font-size="12">Khai báo thư viện → vào main → thực thi lệnh → trả mã kết thúc</text>`;
       const cVariables = `
         <rect x="18" y="18" width="604" height="264" rx="22" fill="#f1f3fb"/>
         <rect x="44" y="43" width="552" height="39" rx="11" fill="#394766"/>
@@ -1188,6 +1273,78 @@
         <path d="M505 100v35H378v-27" fill="none" stroke="#54a477" stroke-width="3" marker-end="url(#flow-arrow)"/>
         <text x="448" y="128" fill="#347852" font-family="system-ui" font-size="12">LẶP</text>
         <text x="320" y="259" text-anchor="middle" fill="#68617e" font-family="system-ui" font-size="12">Rẽ nhánh và lặp lại theo điều kiện</text>`;
+      const cStandardLibrary = `
+        <defs><marker id="library-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#665bd2"/></marker></defs>
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="#f4f3fc"/>
+        <g font-family="system-ui" text-anchor="middle">
+          <rect x="38" y="57" width="164" height="54" rx="13" fill="#e9e6ff" stroke="#756bdb" stroke-width="2"/>
+          <text x="120" y="80" fill="#5149c5" font-size="14" font-weight="800">HEADER CHUẨN</text>
+          <text x="120" y="99" fill="#5149c5" font-size="12">stdio.h · string.h</text>
+          <path d="M204 84h42" stroke="#665bd2" stroke-width="4" marker-end="url(#library-arrow)"/>
+          <rect x="253" y="57" width="142" height="54" rx="13" fill="#fff0d3" stroke="#d59b44" stroke-width="2"/>
+          <text x="324" y="80" fill="#795a29" font-size="14" font-weight="800">KHAI BÁO HÀM</text>
+          <text x="324" y="99" fill="#795a29" font-size="12">printf · strlen</text>
+          <path d="M397 84h42" stroke="#665bd2" stroke-width="4" marker-end="url(#library-arrow)"/>
+          <rect x="446" y="57" width="152" height="54" rx="13" fill="#e4f4f4" stroke="#58a7a5" stroke-width="2"/>
+          <text x="522" y="80" fill="#2f7775" font-size="14" font-weight="800">GỌI HÀM</text>
+          <text x="522" y="99" fill="#426d70" font-size="12">kiểm tra kiểu</text>
+          <path d="M522 115v50H420" fill="none" stroke="#665bd2" stroke-width="4" marker-end="url(#library-arrow)"/>
+          <rect x="246" y="145" width="174" height="54" rx="13" fill="#e6f4ea" stroke="#54a477" stroke-width="2"/>
+          <text x="333" y="168" fill="#347852" font-size="14" font-weight="800">LIÊN KẾT</text>
+          <text x="333" y="187" fill="#347852" font-size="12">phần cài đặt thư viện</text>
+          <path d="M242 172H160" stroke="#665bd2" stroke-width="4" marker-end="url(#library-arrow)"/>
+          <rect x="38" y="145" width="116" height="54" rx="13" fill="#fff" stroke="#b8bfd3" stroke-width="2"/>
+          <text x="96" y="168" fill="#454b75" font-size="13" font-weight="800">CHƯƠNG TRÌNH</text>
+          <text x="96" y="187" fill="#68718a" font-size="11">tạo file chạy</text>
+        </g>
+        <text x="320" y="249" text-anchor="middle" fill="#68617e" font-family="system-ui" font-size="12">Header khai báo giao diện · thư viện cung cấp phần cài đặt khi liên kết</text>`;
+      const cArray = `
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="#f1f3fb"/>
+        <text x="320" y="57" text-anchor="middle" fill="#394766" font-family="system-ui" font-size="16" font-weight="800">MẢNG scores · CÁC PHẦN TỬ CÙNG KIỂU int</text>
+        <g font-family="ui-monospace,monospace" text-anchor="middle">
+          <rect x="71" y="91" width="138" height="86" rx="14" fill="#e9e6ff" stroke="#756bdb" stroke-width="3"/><text x="140" y="126" fill="#5149c5" font-size="13">scores[0]</text><text x="140" y="157" fill="#353c57" font-size="22" font-weight="800">7</text>
+          <rect x="251" y="91" width="138" height="86" rx="14" fill="#e4f4f4" stroke="#58a7a5" stroke-width="3"/><text x="320" y="126" fill="#2f7775" font-size="13">scores[1]</text><text x="320" y="157" fill="#353c57" font-size="22" font-weight="800">8</text>
+          <rect x="431" y="91" width="138" height="86" rx="14" fill="#fff0dd" stroke="#dc9b54" stroke-width="3"/><text x="500" y="126" fill="#a16b2f" font-size="13">scores[2]</text><text x="500" y="157" fill="#353c57" font-size="22" font-weight="800">10</text>
+        </g>
+        <path d="M140 190v28M320 190v28M500 190v28" stroke="#756bdb" stroke-width="2"/>
+        <text x="320" y="246" text-anchor="middle" fill="#68718a" font-family="system-ui" font-size="12">Chỉ số bắt đầu từ 0 · số phần tử là 3 · chỉ số hợp lệ: 0 đến 2</text>`;
+      const cDynamicMemory = `
+        <defs><marker id="memory-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#665bd2"/></marker></defs>
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="#f1f3fb"/>
+        <g font-family="system-ui" text-anchor="middle">
+          <rect x="40" y="85" width="146" height="88" rx="16" fill="#e9e6ff" stroke="#756bdb" stroke-width="3"/>
+          <text x="113" y="116" fill="#5149c5" font-size="14" font-weight="800">malloc</text><text x="113" y="143" fill="#5149c5" font-size="12">xin vùng nhớ</text>
+          <path d="M190 129h62" stroke="#665bda" stroke-width="4" marker-end="url(#memory-arrow)"/>
+          <rect x="260" y="70" width="174" height="118" rx="16" fill="#e4f4f4" stroke="#58a7a5" stroke-width="3"/>
+          <text x="347" y="99" fill="#2f7775" font-size="14" font-weight="800">HEAP</text>
+          <rect x="281" y="115" width="40" height="42" rx="6" fill="#fff"/><rect x="327" y="115" width="40" height="42" rx="6" fill="#fff"/><rect x="373" y="115" width="40" height="42" rx="6" fill="#fff"/>
+          <path d="M347 191v34" stroke="#665bd2" stroke-width="4" marker-end="url(#memory-arrow)"/>
+          <rect x="267" y="231" width="160" height="34" rx="10" fill="#fce8e7" stroke="#d4766d" stroke-width="2"/><text x="347" y="253" fill="#9b4b44" font-size="13" font-weight="800">free(ptr)</text>
+          <path d="M438 129h50" stroke="#665bd2" stroke-width="4" marker-end="url(#memory-arrow)"/>
+          <rect x="496" y="85" width="106" height="88" rx="16" fill="#fff0d3" stroke="#d59b44" stroke-width="3"/>
+          <text x="549" y="116" fill="#795a29" font-size="14" font-weight="800">ptr</text><text x="549" y="143" fill="#795a29" font-size="12">địa chỉ</text>
+        </g>
+        <text x="320" y="57" text-anchor="middle" fill="#394766" font-family="system-ui" font-size="15" font-weight="800">CẤP PHÁT → KIỂM TRA NULL → SỬ DỤNG → GIẢI PHÓNG</text>`;
+      const cFile = `
+        <defs><marker id="file-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#665bd2"/></marker></defs>
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="#f1f3fb"/>
+        <g font-family="system-ui" text-anchor="middle">
+          <rect x="42" y="92" width="120" height="90" rx="16" fill="#e9e6ff" stroke="#756bdb" stroke-width="3"/>
+          <text x="102" y="126" fill="#5149c5" font-size="15" font-weight="800">fopen</text><text x="102" y="151" fill="#5149c5" font-size="12">kiểm tra NULL</text>
+          <path d="M166 137h45" stroke="#665bd2" stroke-width="4" marker-end="url(#file-arrow)"/>
+          <rect x="220" y="92" width="120" height="90" rx="16" fill="#e4f4f4" stroke="#58a7a5" stroke-width="3"/>
+          <text x="280" y="126" fill="#2f7775" font-size="15" font-weight="800">FILE *</text><text x="280" y="151" fill="#426d70" font-size="12">luồng dữ liệu</text>
+          <path d="M344 137h45" stroke="#665bd2" stroke-width="4" marker-end="url(#file-arrow)"/>
+          <rect x="398" y="92" width="108" height="90" rx="16" fill="#fff0d3" stroke="#d59b44" stroke-width="3"/>
+          <text x="452" y="126" fill="#795a29" font-size="15" font-weight="800">fgets /</text><text x="452" y="151" fill="#795a29" font-size="12">fprintf</text>
+          <path d="M510 137h39" stroke="#665bd2" stroke-width="4" marker-end="url(#file-arrow)"/>
+          <path d="M562 88h38l18 18v76h-56z" fill="#e6f4ea" stroke="#54a477" stroke-width="3"/>
+          <path d="M600 88v20h18" fill="none" stroke="#54a477" stroke-width="3"/>
+          <text x="590" y="143" fill="#347852" font-size="12" font-weight="800">TỆP</text>
+          <path d="M280 187v36h220v-36" fill="none" stroke="#756bdb" stroke-width="3" stroke-dasharray="6 5" marker-end="url(#file-arrow)"/>
+          <text x="390" y="244" fill="#5149c5" font-size="13" font-weight="800">fclose khi hoàn tất</text>
+        </g>
+        <text x="320" y="57" text-anchor="middle" fill="#394766" font-family="system-ui" font-size="15" font-weight="800">LUỒNG TỆP · MỞ → ĐỌC/GHI → ĐÓNG</text>`;
       const englishTimeline = `
         <defs><marker id="english-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#665bd2"/></marker></defs>
         <rect x="18" y="18" width="604" height="264" rx="22" fill="#f3f7ff"/>
@@ -1206,9 +1363,113 @@
 
       let markup;
       let caption;
-      if (topicId === "antiUsWar") {
-        markup = historyMap;
-        caption = "Lịch sử · sơ đồ chiến trường khái quát. Mũi tên chỉ quan hệ/luồng minh họa, không biểu thị hướng hành quân cụ thể.";
+      let historyImage;
+      const renderHistoryTimeline = (heading, panels, figureCaption) => {
+        const activePhase = ["foundation", "practice", "advanced"].indexOf(phase);
+        markup = `
+          <rect x="18" y="18" width="604" height="264" rx="22" fill="#f3f0e5"/>
+          <text x="320" y="48" text-anchor="middle" fill="#514332" font-family="system-ui" font-size="15" font-weight="800">${heading}</text>
+          ${panels.map((panel, index) => {
+            const x = 30 + index * 194;
+            const selected = index === activePhase;
+            return `<g>
+              <rect x="${x}" y="66" width="180" height="174" rx="16" fill="${selected ? "#fff0d6" : "#fff"}" stroke="${selected ? "#bd4c3a" : "#c8c3b4"}" stroke-width="${selected ? "3" : "1.5"}"/>
+              <text x="${x + 90}" y="94" text-anchor="middle" fill="#514332" font-family="system-ui" font-size="12" font-weight="700">${panel.date}</text>
+              <circle cx="${x + 90}" cy="132" r="20" fill="${selected ? "#f8d7a1" : "#ece9df"}" stroke="#997a54" stroke-width="2"/>
+              <text x="${x + 90}" y="138" text-anchor="middle" fill="#704f3c" font-family="system-ui" font-size="13" font-weight="800">${index + 1}</text>
+              <text x="${x + 90}" y="178" text-anchor="middle" fill="#342e25" font-family="system-ui" font-size="13" font-weight="800">${panel.title}</text>
+              <text x="${x + 90}" y="201" text-anchor="middle" fill="#495063" font-family="system-ui" font-size="11">${panel.detail}</text>
+              <text x="${x + 90}" y="224" text-anchor="middle" fill="#64675e" font-family="system-ui" font-size="10">Mốc lịch sử · sơ đồ khái quát</text>
+            </g>`;
+          }).join("")}
+          <path d="M75 254h490" stroke="#9e8d70" stroke-width="2" stroke-dasharray="5 6"/>`;
+        caption = figureCaption;
+      };
+      if (topicId === "antiUsWar" && /điện biên phủ/i.test(topic)) {
+        const activePhase = ["foundation", "practice", "advanced"].indexOf(phase);
+        const panels = [
+          { date: "13–14/3/1954", title: "Mở màn", detail: "Pháo đánh cứ điểm vòng ngoài", icon: "💥" },
+          { date: "3–4/1954", title: "Vây lấn", detail: "Đào hào, áp sát, cắt tiếp tế", icon: "↗" },
+          { date: "1–7/5/1954", title: "Tổng công kích", detail: "Tiến công sở chỉ huy", icon: "→" },
+        ];
+        markup = `
+          <rect x="18" y="24" width="604" height="250" rx="20" fill="#f3f0e5"/>
+          ${panels.map((panel, index) => {
+            const x = 30 + index * 194;
+            const selected = index === activePhase;
+            return `<g>
+              <rect x="${x}" y="42" width="180" height="210" rx="16" fill="${selected ? "#fff0d6" : "#fff"}" stroke="${selected ? "#bd4c3a" : "#c8c3b4"}" stroke-width="${selected ? "3" : "1.5"}"/>
+              <text x="${x + 90}" y="70" text-anchor="middle" fill="#514332" font-family="system-ui" font-size="12" font-weight="700">${panel.date}</text>
+              <circle cx="${x + 90}" cy="119" r="29" fill="${selected ? "#f8d7a1" : "#ece9df"}" stroke="#997a54" stroke-width="2"/>
+              <text x="${x + 90}" y="129" text-anchor="middle" font-family="system-ui" font-size="27">${panel.icon}</text>
+              <text x="${x + 90}" y="174" text-anchor="middle" fill="#342e25" font-family="system-ui" font-size="14" font-weight="800">${panel.title}</text>
+              <text x="${x + 90}" y="198" text-anchor="middle" fill="#495063" font-family="system-ui" font-size="11">${panel.detail}</text>
+              <text x="${x + 90}" y="224" text-anchor="middle" fill="#64675e" font-family="system-ui" font-size="10">Sơ đồ khái niệm · không theo tỷ lệ</text>
+            </g>`;
+          }).join("")}
+        `;
+        historyImage = {
+          src: "/images/study-history-dien-bien-phu.jpg",
+          alt: "Bộ đội Việt Minh cắm cờ trên sở chỉ huy Pháp tại Điện Biên Phủ năm 1954.",
+          credit: "Hệ thống Bảo tàng Lịch sử Quân sự Việt Nam · phạm vi công cộng",
+          source: "https://commons.wikimedia.org/wiki/File:Victory_in_Battle_of_Dien_Bien_Phu.jpg",
+        };
+        caption = "Diễn biến Điện Biên Phủ theo ba chặng khái quát. Hình là sơ đồ học tập gốc, không mô tả tọa độ hay hướng tiến quân chính xác.";
+      } else if (topicId === "antiUsWar" && /gen[eèê]ve/i.test(topic)) {
+        renderHistoryTimeline("HIỆP ĐỊNH GENÈVE · 1954", [
+          { date: "7/5/1954", title: "Điện Biên Phủ", detail: "Chiến dịch kết thúc" },
+          { date: "7/1954", title: "Ký hiệp định", detail: "Đình chiến, tập kết tạm thời" },
+          { date: "Dự kiến 1956", title: "Tổng tuyển cử", detail: "Không diễn ra như dự kiến" },
+        ], "Lịch sử · Genève 1954: mốc đình chiến, giới tuyến quân sự tạm thời và dự kiến tổng tuyển cử; không phải biên giới vĩnh viễn.");
+      } else if (topicId === "antiUsWar" && /đồng khởi|bến tre/i.test(topic)) {
+        renderHistoryTimeline("PHONG TRÀO ĐỒNG KHỞI · MIỀN NAM", [
+          { date: "Cuối thập niên 1950", title: "Phong trào phát triển", detail: "Đấu tranh lan rộng" },
+          { date: "1960 · Bến Tre", title: "Nổi dậy tiêu biểu", detail: "Quần chúng tham gia" },
+          { date: "Sau năm 1960", title: "Mở rộng địa bàn", detail: "Đấu tranh chính trị, vũ trang" },
+        ], "Lịch sử · Đồng Khởi là phong trào rộng ở miền Nam, Bến Tre năm 1960 là địa bàn tiêu biểu; sơ đồ không mô tả một trận đánh riêng lẻ.");
+      } else if (topicId === "antiUsWar" && /tết 1968|mậu thân|tổng tiến công.*tết/i.test(topic)) {
+        renderHistoryTimeline("TỔNG TIẾN CÔNG VÀ NỔI DẬY TẾT MẬU THÂN", [
+          { date: "Đầu năm 1968", title: "Mở đợt tiến công", detail: "Nhiều địa bàn miền Nam" },
+          { date: "Dịp Tết", title: "Nhiều đô thị", detail: "Diễn biến trên phạm vi rộng" },
+          { date: "Sau sự kiện", title: "Tác động chính trị", detail: "Ảnh hưởng tranh luận, đàm phán" },
+        ], "Lịch sử · sơ đồ phạm vi và tác động của Tết Mậu Thân 1968; không phải bản đồ hướng tiến công.");
+        historyImage = {
+          src: "/images/study-history-tet.jpg",
+          alt: "Một con phố vắng tại Sài Gòn trong chiến sự dịp Tết, ngày 1 tháng 2 năm 1968.",
+          credit: "SP5 James Newlin · NARA 111-CCV-529-CC45843 · phạm vi công cộng",
+          source: "https://commons.wikimedia.org/wiki/File:A_deserted_street_in_Saigon_during_the_Tet_fighting.jpg",
+        };
+      } else if (topicId === "antiUsWar" && /hiệp định paris|paris/i.test(topic)) {
+        renderHistoryTimeline("HIỆP ĐỊNH PARIS · 1973", [
+          { date: "27/1/1973", title: "Ký hiệp định", detail: "Thỏa thuận về Việt Nam" },
+          { date: "Theo tiến trình", title: "Quân Hoa Kỳ rút", detail: "Thực hiện điều khoản" },
+          { date: "Sau năm 1973", title: "Xung đột tiếp diễn", detail: "Chiến tranh chưa kết thúc" },
+        ], "Lịch sử · Hiệp định Paris 1973, việc quân đội Hoa Kỳ rút và xung đột tiếp diễn; không nhầm với mốc kết thúc chiến tranh năm 1975.");
+        historyImage = {
+          src: "/images/study-history-paris.jpg",
+          alt: "Ngoại trưởng Hoa Kỳ William P. Rogers ký Hiệp định Paris ngày 27 tháng 1 năm 1973.",
+          credit: "Robert LeRoy Knudsen · phạm vi công cộng",
+          source: "https://commons.wikimedia.org/wiki/File:Vietnam_peace_agreement_signing,_27580141,_new.jpg",
+        };
+      } else if (topicId === "antiUsWar" && /kết thúc chiến tranh|chiến dịch hồ chí minh|mùa xuân 1975|tây nguyên|huế.{0,10}đà nẵng|30\s*\/?\s*4|30 tháng 4|thống nhất.*1976/i.test(topic)) {
+        renderHistoryTimeline("CHIẾN DỊCH MÙA XUÂN 1975", [
+          { date: "10/3/1975", title: "Tây Nguyên", detail: "Buôn Ma Thuột" },
+          { date: "Tháng 3/1975", title: "Huế–Đà Nẵng", detail: "Cục diện chuyển biến nhanh" },
+          { date: "26–30/4/1975", title: "Hồ Chí Minh", detail: "30/4 · chiến tranh kết thúc" },
+        ], "Lịch sử · các chiến dịch nối tiếp trong mùa Xuân 1975; 30/4 là mốc chiến tranh kết thúc tại miền Nam, khác mốc Paris 1973.");
+        historyImage = {
+          src: "/images/study-history-1975-location.jpg",
+          alt: "Dinh Độc Lập hiện nay tại Thành phố Hồ Chí Minh; đây là ảnh địa điểm hiện nay, không phải ảnh sự kiện ngày 30 tháng 4 năm 1975.",
+          credit: "David Stanley · CC BY 4.0",
+          source: "https://commons.wikimedia.org/wiki/File:Independence_Palace.jpg",
+          note: "Ảnh địa điểm hiện nay, không phải ảnh tư liệu sự kiện năm 1975.",
+        };
+      } else if (topicId === "antiUsWar") {
+        renderHistoryTimeline("DÒNG THỜI GIAN CHIẾN TRANH VIỆT NAM", [
+          { date: "1954", title: "Genève", detail: "Đình chiến, tập kết tạm thời" },
+          { date: "1968–1973", title: "Mậu Thân · Paris", detail: "Đàm phán, rút quân Hoa Kỳ" },
+          { date: "1975–1976", title: "Kết thúc · thống nhất", detail: "Hai mốc khác nhau" },
+        ], "Lịch sử · dòng thời gian khái quát các mốc chính; mỗi sự kiện có sơ đồ riêng khi được chọn.");
       } else if (topicId === "geography") {
         const normalizedTopic = topic.toLocaleLowerCase("vi");
         if (/khí hậu/.test(normalizedTopic)) {
@@ -1232,9 +1493,18 @@
           markup = geographyMap;
           caption = "Địa lý · mô hình địa hình, sông, đồng bằng và các yếu tố khí hậu; hình không theo tỷ lệ bản đồ.";
         }
+      } else if (topicId === "cProgramming" && /thư viện chuẩn|standard librar/i.test(topic)) {
+        markup = cStandardLibrary;
+        caption = "Lập trình C · header khai báo giao diện hàm; thư viện cung cấp phần cài đặt khi liên kết.";
+      } else if (topicId === "cProgramming" && /cấu trúc chương trình/.test(topic.toLocaleLowerCase("vi"))) {
+        markup = cProgramStructure;
+        caption = "Lập trình C · luồng thực thi từ khai báo thư viện đến main, xuất kết quả và kết thúc.";
       } else if (topicId === "cProgramming" && /con trỏ|pointer/i.test(topic)) {
         markup = cPointer;
         caption = "Lập trình C · con trỏ lưu địa chỉ ô nhớ; giải tham chiếu để truy cập giá trị.";
+      } else if (topicId === "cProgramming" && /struct|cấu trúc dữ liệu/i.test(topic.toLocaleLowerCase("vi"))) {
+        markup = cStruct;
+        caption = "Lập trình C · kiểu Student gom các trường có liên quan; biến student là một hồ sơ cụ thể.";
       } else if (topicId === "cProgramming" && /biến|kiểu dữ liệu/.test(topic.toLocaleLowerCase("vi"))) {
         markup = cVariables;
         caption = "Lập trình C · các kiểu dữ liệu mẫu và giá trị tương ứng; kích thước thực tế phụ thuộc môi trường.";
@@ -1244,9 +1514,21 @@
       } else if (topicId === "cProgramming" && /cấu trúc điều khiển|vòng lặp|rẽ nhánh/.test(topic.toLocaleLowerCase("vi"))) {
         markup = cControl;
         caption = "Lập trình C · nhánh điều kiện và đường lặp trong luồng điều khiển.";
+      } else if (topicId === "cProgramming" && /mảng|chuỗi/.test(topic.toLocaleLowerCase("vi"))) {
+        markup = cArray;
+        caption = "Lập trình C · mảng scores có ba phần tử, chỉ số từ 0 đến 2; C không tự kiểm tra biên.";
+      } else if (topicId === "cProgramming" && /bộ nhớ động|malloc|calloc/.test(topic.toLocaleLowerCase("vi"))) {
+        markup = cDynamicMemory;
+        caption = "Lập trình C · kiểm tra cấp phát thất bại, dùng vùng nhớ hợp lệ rồi giải phóng bằng free.";
+      } else if (topicId === "cProgramming" && /tệp|file/.test(topic.toLocaleLowerCase("vi"))) {
+        markup = cFile;
+        caption = "Lập trình C · luồng thao tác tệp từ fopen qua đọc/ghi đến fclose.";
       } else if (topicId === "english" || /tiếng anh|english/.test(topic.toLocaleLowerCase("vi"))) {
         markup = englishTimeline;
         caption = "Tiếng Anh · trục thời gian minh họa ba mốc để liên hệ trạng từ thời gian với dạng động từ.";
+      } else if (topicId === "cProgramming") {
+        markup = cProgramStructure;
+        caption = `Lập trình C · sơ đồ luồng chương trình cho chủ đề ${topic}; xem phần bài học để biết khái niệm cụ thể.`;
       } else {
         markup = `<rect x="18" y="18" width="604" height="264" rx="22" fill="#f5f4ff"/>
           <path d="M170 150h82M388 150h82" stroke="#756bdb" stroke-width="5"/>
@@ -1266,6 +1548,22 @@
       svg.innerHTML = markup;
       const captionElement = document.createElement("figcaption");
       captionElement.textContent = caption;
+      if (historyImage) {
+        const image = document.createElement("img");
+        image.className = "study-history-photo";
+        image.src = historyImage.src;
+        image.alt = historyImage.alt;
+        image.loading = "lazy";
+        image.decoding = "async";
+        const source = document.createElement("a");
+        source.href = historyImage.source;
+        source.target = "_blank";
+        source.rel = "noopener noreferrer";
+        source.textContent = historyImage.credit;
+        captionElement.append(document.createTextNode(" Nguồn ảnh: "), source);
+        if (historyImage.note) captionElement.append(document.createTextNode(`. ${historyImage.note}`));
+        figure.append(image);
+      }
       figure.append(svg, captionElement);
       log.append(figure);
       return figure;
@@ -1460,7 +1758,9 @@
       const roadmapToggle = document.createElement("button");
       roadmapToggle.type = "button";
       roadmapToggle.className = "tutor-roadmap-toggle";
-      roadmapToggle.textContent = "☰ Lộ trình";
+      roadmapToggle.textContent = "☰";
+      roadmapToggle.setAttribute("aria-label", "Thu gọn lộ trình học");
+      roadmapToggle.setAttribute("aria-expanded", "true");
       const title = document.createElement("h2");
       title.className = "tutor-lesson-title";
       title.textContent = lesson.title;
@@ -1571,7 +1871,9 @@
       composer.append(answer, sendButton);
       const hint = document.createElement("p");
       hint.className = "tutor-hint";
-      hint.textContent = "Trả lời bằng lời của bạn. Nếu chưa đúng, Lụa sẽ chỉ rõ phần cần xem lại và gợi ý để bạn tự sửa.";
+      hint.textContent = "Cần trả lời đúng để đạt 100% (vượt ngưỡng 90%). Nếu chưa đạt sau ba lượt, Lụa sẽ ôn đúng phần còn nhầm bằng câu hỏi mới.";
+      composer.hidden = true;
+      hint.hidden = true;
       dialogue.append(dialogueHead, log, quickActions, composer, hint);
       layout.append(roadmapPanel, tutorPanel, dialogue);
       card.append(head, layout);
@@ -1583,12 +1885,256 @@
       let checking = false;
       let canAdvance = false;
       let nextButton = null;
+      let remediationButton = null;
       const say = (text, emotion = "happy", autoRead = true) => {
         lastTutorText = text;
         const message = appendTutorMessage(log, text, { emotion, autoRead });
         lastReadButton = message.querySelector(".tutor-message-tools button");
         setFoxEmotion(fox, emotion);
       };
+      const assessmentQuestions = lesson.assessmentQuestions;
+      let assessmentIndex = 0;
+      let assessmentAttempts = 0;
+      let assessmentScore = 0;
+      let selectedAssessmentOption = null;
+      const missedAssessmentQuestions = [];
+      const syncStudyActivityButton = document.createElement("button");
+      syncStudyActivityButton.type = "button";
+      syncStudyActivityButton.textContent = "Thử đồng bộ tiến độ Dashboard";
+      syncStudyActivityButton.hidden = true;
+      const studyActivitySyncStatus = document.createElement("p");
+      studyActivitySyncStatus.className = "study-assessment-feedback";
+      studyActivitySyncStatus.setAttribute("role", "status");
+      studyActivitySyncStatus.setAttribute("aria-live", "polite");
+      const studyActivityEventId = crypto.randomUUID();
+      let studyActivityRecorded = false;
+      let syncingStudyActivity = false;
+      const syncStudyActivity = async () => {
+        if (studyActivityRecorded) return;
+        if (syncingStudyActivity) return;
+        syncingStudyActivity = true;
+        syncStudyActivityButton.disabled = true;
+        studyActivitySyncStatus.textContent = "Đang đồng bộ kết quả học lên Dashboard…";
+        try {
+          const response = await fetch("/api/minigame/study-activity", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              eventId: studyActivityEventId,
+              topicId: roadmap.topicId,
+              focusTopic: lesson.focusTopic,
+              phase: lesson.phase,
+              questionsAnswered: assessmentQuestions.length,
+              correctAnswers: assessmentScore,
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || "Không thể đồng bộ hoạt động học.");
+          studyActivityRecorded = true;
+          studyActivitySyncStatus.textContent = "Đã đồng bộ số câu đã làm và câu đúng vào Dashboard.";
+          syncStudyActivityButton.hidden = true;
+        } finally {
+          syncingStudyActivity = false;
+          syncStudyActivityButton.disabled = false;
+        }
+      };
+      syncStudyActivityButton.addEventListener("click", async () => {
+        try {
+          await syncStudyActivity();
+        } catch (error) {
+          studyActivitySyncStatus.textContent = `Chưa đồng bộ được tiến độ: ${error.message}`;
+        }
+      });
+      const renderAssessmentQuestion = () => {
+        const currentQuestion = assessmentQuestions?.[assessmentIndex];
+        if (!currentQuestion || !Array.isArray(currentQuestion.options)) {
+          throw new Error("Bài học chưa có đủ câu hỏi kiểm tra. Hãy tải lại bài học.");
+        }
+        selectedAssessmentOption = null;
+        assessmentFeedback.textContent = "";
+        assessmentProgress.textContent = `Câu ${assessmentIndex + 1}/${assessmentQuestions.length} · Đúng ${assessmentScore}/${assessmentQuestions.length}`;
+        assessmentQuestion.textContent = currentQuestion.question;
+        assessmentOptions.replaceChildren();
+        currentQuestion.options.forEach((option, index) => {
+          const optionButton = document.createElement("button");
+          optionButton.type = "button";
+          optionButton.setAttribute("aria-pressed", "false");
+          optionButton.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+          optionButton.addEventListener("click", () => {
+            selectedAssessmentOption = index;
+            for (const button of assessmentOptions.children) {
+              button.setAttribute("aria-pressed", String(button === optionButton));
+            }
+            assessmentCheck.disabled = false;
+          });
+          assessmentOptions.append(optionButton);
+        });
+        assessmentCheck.hidden = false;
+        assessmentCheck.disabled = true;
+        assessmentNext.hidden = true;
+      };
+      const lessonNote = document.createElement("section");
+      lessonNote.className = "study-lesson-note";
+      const lessonNoteHeading = document.createElement("h3");
+      lessonNoteHeading.textContent = "Bài giảng · đọc theo từng ý";
+      lessonNote.append(lessonNoteHeading);
+      (lesson.sections?.length ? lesson.sections : [{ title: "Nội dung trọng tâm", content: lesson.theory }])
+        .forEach((section) => {
+          const sectionElement = document.createElement("section");
+          sectionElement.className = "study-lesson-section";
+          const sectionHeading = document.createElement("h4");
+          sectionHeading.textContent = section.title;
+          const sectionText = document.createElement("p");
+          sectionText.textContent = section.content;
+          sectionElement.append(sectionHeading, sectionText);
+          if (section.code) {
+            const codeExample = document.createElement("div");
+            codeExample.className = "study-code-example";
+            const codeLabel = document.createElement("span");
+            codeLabel.className = "study-code-label";
+            codeLabel.textContent = "Ví dụ mã C chạy được";
+            const pre = document.createElement("pre");
+            const code = document.createElement("code");
+            code.textContent = section.code;
+            pre.append(code);
+            codeExample.append(codeLabel, pre);
+            sectionElement.append(codeExample);
+          }
+          if (Array.isArray(section.codeNotes) && section.codeNotes.length) {
+            const notes = document.createElement("ol");
+            notes.className = "study-code-notes";
+            section.codeNotes.forEach((note) => {
+              const item = document.createElement("li");
+              item.textContent = note;
+              notes.append(item);
+            });
+            sectionElement.append(notes);
+          }
+          if (section.codeOutput) {
+            const output = document.createElement("p");
+            output.className = "study-code-output";
+            const outputLabel = document.createElement("strong");
+            outputLabel.textContent = "Kết quả mong đợi";
+            const outputCode = document.createElement("code");
+            outputCode.textContent = section.codeOutput;
+            output.append(outputLabel, outputCode);
+            sectionElement.append(output);
+          }
+          lessonNote.append(sectionElement);
+        });
+      if (/history\.com\/articles\/battle-of-dien-bien-phu/i.test(lesson.theory)) {
+        const source = document.createElement("p");
+        source.className = "study-lesson-source";
+        source.textContent = "Lưu ý về dữ kiện: nguồn được dẫn không có bảng thương vong con người đầy đủ, thống nhất; bài học không tự đưa ra con số hoặc giờ chính xác khi chưa xác minh được.";
+        lessonNote.append(source);
+      }
+
+      const comprehension = document.createElement("section");
+      comprehension.className = "study-comprehension";
+      const comprehensionQuestion = document.createElement("p");
+      comprehensionQuestion.textContent = "Bạn đã hiểu phần vừa học chưa?";
+      const comprehensionActions = document.createElement("div");
+      comprehensionActions.className = "study-comprehension-actions";
+      const understoodButton = document.createElement("button");
+      understoodButton.type = "button";
+      understoodButton.textContent = "Đã hiểu — bắt đầu kiểm tra";
+      const clarifyButton = document.createElement("button");
+      clarifyButton.type = "button";
+      clarifyButton.textContent = "Chưa hiểu, mình muốn hỏi";
+      comprehensionActions.append(understoodButton, clarifyButton);
+      const clarification = document.createElement("form");
+      clarification.className = "study-clarification";
+      clarification.hidden = true;
+      const clarificationQuestion = document.createElement("textarea");
+      clarificationQuestion.maxLength = 2_000;
+      clarificationQuestion.setAttribute("aria-label", "Câu hỏi về nội dung đang học");
+      clarificationQuestion.placeholder = "Bạn đang vướng ý nào trong bài này?";
+      const clarificationSubmit = document.createElement("button");
+      clarificationSubmit.type = "submit";
+      clarificationSubmit.textContent = "Hỏi Lụa về bài này";
+      clarification.append(clarificationQuestion, clarificationSubmit);
+      comprehension.append(comprehensionQuestion, comprehensionActions, clarification);
+      const assessment = document.createElement("section");
+      assessment.className = "study-assessment";
+      assessment.hidden = true;
+      assessment.setAttribute("aria-label", "Bài kiểm tra kiến thức");
+      const assessmentHeading = document.createElement("h3");
+      assessmentHeading.textContent = "Bài kiểm tra · cần đạt ít nhất 90%";
+      const assessmentProgress = document.createElement("p");
+      assessmentProgress.className = "study-assessment-progress";
+      const assessmentQuestion = document.createElement("p");
+      assessmentQuestion.className = "study-assessment-question";
+      const assessmentOptions = document.createElement("div");
+      assessmentOptions.className = "study-assessment-options";
+      const assessmentFeedback = document.createElement("p");
+      assessmentFeedback.className = "study-assessment-feedback";
+      assessmentFeedback.setAttribute("role", "status");
+      assessmentFeedback.setAttribute("aria-live", "polite");
+      const assessmentActions = document.createElement("div");
+      assessmentActions.className = "study-assessment-actions";
+      const assessmentCheck = document.createElement("button");
+      assessmentCheck.type = "button";
+      assessmentCheck.textContent = "Kiểm tra đáp án";
+      assessmentCheck.disabled = true;
+      const assessmentNext = document.createElement("button");
+      assessmentNext.type = "button";
+      assessmentNext.textContent = "Câu tiếp theo →";
+      assessmentNext.hidden = true;
+      assessmentActions.append(assessmentCheck, assessmentNext, syncStudyActivityButton);
+      assessment.append(assessmentHeading, assessmentProgress, assessmentQuestion, assessmentOptions, assessmentFeedback, studyActivitySyncStatus, assessmentActions);
+      understoodButton.addEventListener("click", () => {
+        comprehension.hidden = true;
+        if (lesson.remediationIndex > 0) {
+          say(lesson.practiceQuestion, "happy", true);
+          composer.hidden = false;
+          hint.hidden = false;
+          hintButton.hidden = false;
+          answer.focus();
+          status.textContent = "Câu hỏi ôn lại phần còn sai. Trả lời đúng để đạt yêu cầu và tiếp tục.";
+        } else {
+          assessment.hidden = false;
+          renderAssessmentQuestion();
+          status.textContent = "Bài kiểm tra gồm ba câu mới về nội dung vừa học; cần đạt ít nhất 90% để mở bước tiếp theo.";
+        }
+      });
+      clarifyButton.addEventListener("click", () => {
+        clarification.hidden = false;
+        clarificationQuestion.focus();
+      });
+      clarification.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const question = clarificationQuestion.value.trim();
+        if (!question || checking) return;
+        checking = true;
+        clarificationSubmit.disabled = true;
+        try {
+          const response = await fetch("/api/study-roadmap/clarify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              topicId: roadmap.topicId,
+              focusTopic: lesson.focusTopic,
+              question,
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || "Lụa chưa giải đáp được câu hỏi.");
+          say(data.answer, data.inScope ? "happy" : "sad", true);
+          if (!data.inScope) {
+            const linkMessage = appendTutorMessage(log, "Câu hỏi này nằm ngoài chặng hiện tại. Bạn có thể tìm hiểu sâu hơn tại Chat với Lụa.", { autoRead: false });
+            const link = document.createElement("a");
+            link.href = data.chatUrl || "/chat";
+            link.textContent = "Mở Chat với Lụa";
+            linkMessage.querySelector(".tutor-bubble")?.append(document.createElement("br"), link);
+          }
+          clarificationQuestion.value = "";
+        } catch (error) {
+          say(`${error.message} Bạn có thể thử gửi lại câu hỏi.`, "sad", false);
+        } finally {
+          checking = false;
+          clarificationSubmit.disabled = false;
+        }
+      });
       const addNextStepButton = () => {
         if (nextButton) return;
         nextButton = document.createElement("button");
@@ -1631,12 +2177,132 @@
         });
       };
 
-      say(`Chào bạn! Hôm nay mình cùng học "${lesson.focusTopic}" nhé.\n\n${lesson.theory}`, "happy", true);
-      appendStudyIllustration(log, lesson.focusTopic, roadmap.topicId);
-      say(lesson.practiceQuestion, "happy", true);
+      const addRemediationButton = () => {
+        if (remediationButton) return;
+        remediationButton = document.createElement("button");
+        remediationButton.type = "button";
+        remediationButton.className = "send";
+        remediationButton.textContent = "Ôn phần chưa đúng bằng câu hỏi mới";
+        quickActions.append(remediationButton);
+        composer.hidden = true;
+        hint.hidden = true;
+        remediationButton.addEventListener("click", async () => {
+          remediationButton.disabled = true;
+          await loadStudyLesson(
+            lesson.stepIndex,
+            (lesson.remediationIndex || 0) + 1,
+            lesson.missedQuestionPhases || [],
+          );
+        });
+      };
+      const finishAssessment = async () => {
+        const scorePercent = Math.round(assessmentScore / assessmentQuestions.length * 100);
+        assessmentHeading.textContent = `Kết quả kiểm tra: ${scorePercent}% · yêu cầu ≥90%`;
+        assessmentProgress.textContent = `Bạn đúng ${assessmentScore}/${assessmentQuestions.length} câu.`;
+        try {
+          await syncStudyActivity();
+        } catch (error) {
+          studyActivitySyncStatus.textContent = `Chưa đồng bộ được tiến độ Dashboard: ${error.message}`;
+          syncStudyActivityButton.hidden = false;
+        }
+        if (scorePercent >= 90) {
+          say(`Bạn đạt ${scorePercent}%, vượt ngưỡng 90%. Mình đã ghi nhận bạn nắm được phần này.`, "happy", true);
+          canAdvance = true;
+          addNextStepButton();
+          progress.children[lesson.stepIndex]?.classList.add("active");
+          celebrateTutor(card, fox);
+          status.textContent = `Đạt ${scorePercent}% (yêu cầu tối thiểu 90%); bạn có thể sang bước tiếp theo.`;
+          return;
+        }
+
+        const missedSummary = missedAssessmentQuestions
+          .map(({ question, explanation }, index) => `${index + 1}. ${question}\nCần ôn: ${explanation}`)
+          .join("\n\n");
+        lesson.missedQuestionPhases = missedAssessmentQuestions.map(({ phase }) => phase);
+        assessmentFeedback.textContent = `Chưa đạt ngưỡng 90%. Mình chỉ ôn lại ${missedAssessmentQuestions.length} câu bạn làm sai:\n\n${missedSummary}`;
+        say(`Bạn đạt ${scorePercent}%, chưa đủ ngưỡng 90%. Mình đã khoanh đúng phần cần ôn và sẽ kiểm tra lại bằng câu hỏi mới, không lặp câu vừa làm sai.`, "sad", true);
+        addRemediationButton();
+        status.textContent = `Chưa đạt ${scorePercent}%; hãy ôn phần sai và trả lời câu hỏi mới trước khi tiếp tục.`;
+      };
+
+      assessmentCheck.addEventListener("click", async () => {
+        const currentQuestion = assessmentQuestions?.[assessmentIndex];
+        if (!currentQuestion || selectedAssessmentOption === null || checking) return;
+        checking = true;
+        assessmentCheck.disabled = true;
+        try {
+          const response = await fetch("/api/study-roadmap/answer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              topicId: roadmap.topicId,
+              focusTopic: lesson.focusTopic,
+              phase: currentQuestion.phase,
+              question: currentQuestion.question,
+              selectedOptionIndex: selectedAssessmentOption,
+              reasoning: "",
+              hintLevel: Math.min(assessmentAttempts, 3),
+              attemptNumber: assessmentAttempts + 1,
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || "Lụa chưa kiểm tra được đáp án.");
+          assessmentAttempts += 1;
+          if (data.correct) {
+            assessmentScore += 1;
+            assessmentFeedback.textContent = `${data.feedback}\n\n${data.explanation}`;
+            for (const button of assessmentOptions.children) button.disabled = true;
+            assessmentNext.hidden = false;
+            assessmentCheck.hidden = true;
+          } else if (data.solution) {
+            missedAssessmentQuestions.push({
+              phase: currentQuestion.phase,
+              question: currentQuestion.question,
+              explanation: data.solution.explanation,
+            });
+            assessmentFeedback.textContent = `Đáp án cần xem lại: ${data.solution.answer}\n\n${data.solution.explanation}`;
+            for (const button of assessmentOptions.children) button.disabled = true;
+            assessmentNext.hidden = false;
+            assessmentCheck.hidden = true;
+          } else {
+            assessmentFeedback.textContent = [
+              data.feedback,
+              data.whyWrong ? `Chỗ dễ nhầm: ${data.whyWrong}` : "",
+              data.hint ? `Gợi ý: ${data.hint}` : "",
+              `Lượt ${assessmentAttempts}/3 — hãy chọn lại đáp án.`,
+            ].filter(Boolean).join("\n\n");
+            selectedAssessmentOption = null;
+            for (const button of assessmentOptions.children) button.setAttribute("aria-pressed", "false");
+            assessmentCheck.disabled = true;
+          }
+        } catch (error) {
+          assessmentFeedback.textContent = `${error.message} Bạn có thể kiểm tra lại đáp án.`;
+          assessmentCheck.disabled = selectedAssessmentOption === null;
+        } finally {
+          checking = false;
+        }
+      });
+      assessmentNext.addEventListener("click", async () => {
+        if (assessmentIndex + 1 >= assessmentQuestions.length) {
+          assessmentNext.hidden = true;
+          await finishAssessment();
+          return;
+        }
+        assessmentIndex += 1;
+        assessmentAttempts = 0;
+        renderAssessmentQuestion();
+      });
+
+      say(`Chào bạn! Hôm nay mình cùng học "${lesson.focusTopic}" nhé. Mình đã chia bài thành từng ý và có hình minh họa.`, "happy", true);
+      lastTutorText = lesson.theory;
+      hintButton.hidden = true;
+      log.append(lessonNote);
+      appendStudyIllustration(log, lesson.focusTopic, roadmap.topicId, lesson.phase);
+      log.append(comprehension, assessment);
 
       roadmapToggle.addEventListener("click", () => {
         layout.classList.toggle("roadmap-collapsed");
+        roadmapToggle.setAttribute("aria-expanded", String(!layout.classList.contains("roadmap-collapsed")));
       });
       hintButton.addEventListener("click", () => {
         hintLevel = Math.min(hintLevel + 1, 3);
@@ -1728,13 +2394,12 @@
             addNextStepButton();
             progress.children[lesson.stepIndex]?.classList.add("active");
             celebrateTutor(card, fox);
-            status.textContent = "Câu trả lời đúng. Lụa đã giải thích kỹ; bạn chủ động sang bước tiếp theo khi sẵn sàng.";
+            status.textContent = "Đạt 100% (yêu cầu tối thiểu 90%). Lụa đã giải thích kỹ; bạn chủ động sang bước tiếp theo khi sẵn sàng.";
           } else if (data.solution) {
-            say(`Mình đã cùng bạn thử ${attempts} lần. Giờ mình đưa lời giải mẫu để bạn đối chiếu.\n\nLời giải: ${data.solution.answer}\n\nGiải thích: ${data.solution.explanation}`, "happy", true);
-            if (data.solution.diagram) appendSolutionDiagram(log, data.solution.diagram, lesson.focusTopic);
-            canAdvance = true;
-            addNextStepButton();
-            status.textContent = "Lụa đã trình bày lời giải mẫu và sơ đồ minh họa.";
+                say(`Bạn chưa đạt ngưỡng 90% ở câu này. Mình đưa lời giải để bạn hiểu phần còn nhầm, sau đó sẽ kiểm tra lại bằng một câu hỏi mới.\n\nLời giải: ${data.solution.answer}\n\nGiải thích: ${data.solution.explanation}`, "happy", true);
+                if (data.solution.diagram) appendSolutionDiagram(log, data.solution.diagram, lesson.focusTopic);
+                addRemediationButton();
+                status.textContent = "Chưa đạt ngưỡng 90%; hãy ôn phần vừa sai và làm một câu hỏi mới trước khi sang bước tiếp theo.";
           } else {
             const feedback = [
               data.feedback,
@@ -1758,6 +2423,7 @@
       });
 
       studyScreen.replaceChildren(card);
+      log.scrollTop = 0;
     }
 
     function renderStudyLesson(lesson) {
@@ -2375,21 +3041,50 @@
       return `${shortened.slice(0, lastSpace > 0 ? lastSpace : shortened.length)}. Phần nhận xét còn lại hiển thị bên dưới.`;
     }
 
+    function buildSubmittedCommentary(result) {
+      const missedTopics = [...new Set(result.incorrectAnswers.map((item) => item.topic).filter(Boolean))].slice(0, 3);
+      const parts = [result.scoreText];
+      if (missedTopics.length) {
+        parts.push(`Các phần cần củng cố: ${missedTopics.join(", ")}.`);
+        parts.push(...result.incorrectAnswers.slice(0, 3).map((item, index) =>
+          `Câu sai ${index + 1}: ${item.explanation}`
+        ));
+        parts.push("Hãy đọc lại lời giải, sau đó tự trả lời lại các câu đã sai.");
+      } else {
+        parts.push(`Bạn đã trả lời đúng tất cả câu hỏi về ${selectedTopicTitle()}.`);
+        parts.push("Hãy tiếp tục với lộ trình củng cố và vận dụng nâng cao.");
+      }
+      const text = parts.join(" ");
+      if (text.length <= 1_200) return text;
+      return `${text.slice(0, 1_180).replace(/\s+\S*$/, "")}.`;
+    }
+
     async function speakCommentary(text, button, playbackStatus) {
-      stopCommentary();
-      button.disabled = true;
-      playbackStatus.textContent = "Đang tạo giọng đọc nhận xét...";
-      try {
-        const response = await fetch("/api/speak", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
+      return speakCommentaryAudio(createCommentaryAudio(text), button, playbackStatus);
+    }
+
+    function createCommentaryAudio(text) {
+      return fetch("/api/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text.slice(0, 1_200) }),
+      }).then(async (response) => {
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
           throw new Error(error.error || "Không tạo được giọng đọc.");
         }
-        commentaryAudioUrl = URL.createObjectURL(await response.blob());
+        return response.blob();
+      });
+    }
+
+    async function speakCommentaryAudio(audioTask, button, playbackStatus) {
+      stopCommentary();
+      button.disabled = true;
+      playbackStatus.textContent = "Kết quả đã hiển thị; đang tạo giọng đọc song song...";
+      try {
+        const audioBlob = await audioTask;
+        if (audioBlob?.speechError) throw new Error(audioBlob.speechError);
+        commentaryAudioUrl = URL.createObjectURL(audioBlob);
         commentaryAudio = new Audio(commentaryAudioUrl);
         commentaryAudio.addEventListener("ended", () => {
           button.disabled = false;
@@ -2411,7 +3106,10 @@
       const note = document.createElement("p");
       note.className = "feedback";
       const issues = Array.isArray(verification?.issues) ? verification.issues : [];
-      if (verification?.status === "verified") {
+      if (verification?.status === "instant") {
+        note.textContent = "Kết luận và lộ trình được tạo trực tiếp từ kết quả đúng/sai và lời giải của bài, không phải chờ dịch vụ AI bên ngoài.";
+        note.classList.add("correct");
+      } else if (verification?.status === "verified") {
         note.textContent = `Groq/Qwen (${verification.model}) đã rà soát thêm; không thấy vấn đề rõ ràng. Đây không phải bảo đảm tuyệt đối.`;
         note.classList.add("correct");
       } else if (verification?.status === "concern") {
@@ -2430,7 +3128,7 @@
       return note;
     }
 
-    function renderAnalysis(analysis, scoreText, verification) {
+    function renderAnalysis(analysis, scoreText, verification, commentaryAudioTask) {
       stopCommentary();
       const card = document.createElement("article");
       card.className = "panel analysis";
@@ -2483,7 +3181,9 @@
       analysisResults.replaceChildren(card);
       const commentary = buildCommentaryText(analysis, scoreText);
       speakButton.addEventListener("click", () => speakCommentary(commentary, speakButton, speechStatus));
-      if (verification?.status === "verified") {
+      if (commentaryAudioTask) {
+        speakCommentaryAudio(commentaryAudioTask, speakButton, speechStatus);
+      } else if (verification?.status === "verified") {
         speakCommentary(commentary, speakButton, speechStatus);
       } else {
         speechStatus.textContent = "Nhận xét chưa được xác minh; hãy xem cảnh báo phía trên trước khi nghe.";
@@ -2548,9 +3248,11 @@
         analysisResults.replaceChildren(score);
       }
 
-      status.textContent = "Đang phân tích kết quả và xây dựng lộ trình học...";
+      status.textContent = "Đang đồng thời tạo nhận xét, lộ trình học và giọng đọc...";
       button.disabled = true;
-      button.textContent = "Đang chấm bài...";
+      button.textContent = "Đang chấm & tạo giọng đọc...";
+      const commentaryAudioTask = createCommentaryAudio(buildSubmittedCommentary(submittedResult))
+        .catch((error) => ({ speechError: error.message }));
       try {
         const response = await fetch("/api/analyze-quiz-result", {
           method: "POST",
@@ -2564,11 +3266,9 @@
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Không phân tích được kết quả.");
-        renderAnalysis(data.analysis, submittedResult.scoreText, data.verification);
+        renderAnalysis(data.analysis, submittedResult.scoreText, data.verification, commentaryAudioTask);
         completed = true;
-        status.textContent = data.fallbackReason
-          ? `Gemini gặp lỗi (${data.fallbackReason}); kết quả đã được phân tích bằng Ollama. Đã hoàn thành bài kiểm tra và lộ trình học của bạn.`
-          : `Đã hoàn thành bài kiểm tra và lộ trình học của bạn bằng ${data.generator || "AI"}.`;
+        status.textContent = `Đã chấm bài và tạo nhận xét, lộ trình học bằng ${data.generator || "Quiz AI"}.`;
         button.textContent = "Đã hoàn thành";
       } catch (error) {
         status.textContent = `${submittedResult.scoreText} ${error.message} Bạn có thể thử phân tích lại.`;
@@ -2590,7 +3290,7 @@
       analysisResults.hidden = false;
       studyScreen.hidden = true;
       quizTitle.textContent = topic.title;
-      status.textContent = "Quiz AI đang soạn câu hỏi theo chủ đề đã chọn...";
+      status.textContent = "Đang lấy câu hỏi đã biên soạn cho chủ đề đã chọn...";
       results.replaceChildren();
       analysisResults.replaceChildren();
       try {
@@ -2676,16 +3376,13 @@
       .then(async (response) => {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Không kiểm tra được cấu hình Quiz.");
-        if (!data.ready) {
-          quizProviderStatus.className = "provider-status warning";
-          quizProviderStatus.textContent = `Chưa có bộ tạo câu hỏi khả dụng. Cấu hình GROQ_API_KEY hoặc khởi động Ollama với model ${data.ollamaModel}.`;
-        } else if (!data.quizApiConfigured || data.cloudCreationForbidden) {
-          quizProviderStatus.className = "provider-status ready";
-          quizProviderStatus.textContent = `Có thể tạo và làm Quiz bằng ${data.groqConfigured ? "Groq/Qwen" : "Ollama"}${data.ollamaAvailable && data.groqConfigured ? " (Ollama dự phòng)" : ""}. QuizAPI.io chưa lưu cloud${data.cloudCreationForbidden ? " do gói hiện tại không có quyền tạo" : " vì chưa cấu hình key"}; đề vẫn dùng được trong phiên hiện tại.`;
-        } else {
-          quizProviderStatus.className = "provider-status ready";
-          quizProviderStatus.textContent = `Đã sẵn sàng tạo Quiz bằng ${data.groqConfigured ? "Groq/Qwen" : "Ollama"}${data.ollamaAvailable && data.groqConfigured ? " (Ollama dự phòng)" : ""}; ứng dụng sẽ lưu cloud qua QuizAPI.io nếu tài khoản có quyền, nếu không đề vẫn dùng được trong phiên hiện tại.`;
-        }
+        quizProviderStatus.className = "provider-status ready";
+        const documentProvider = data.groqConfigured
+          ? "Quiz từ tài liệu riêng có thể dùng Groq/Qwen"
+          : data.ollamaAvailable
+            ? `Quiz từ tài liệu riêng dùng Ollama (${data.ollamaModel})`
+            : "";
+        quizProviderStatus.textContent = `Quiz theo chủ đề dùng ngân hàng câu hỏi đã biên soạn và xáo trộn ngay.${documentProvider ? ` ${documentProvider}.` : ""}`;
       })
       .catch((error) => {
         quizProviderStatus.className = "provider-status warning";

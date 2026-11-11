@@ -7,7 +7,9 @@
   <title>Học Mà Chơi · AI Study Mentor</title>
   <link rel="stylesheet" href="/dangKy_dangNhap/auth.css">
   <link rel="stylesheet" href="/bright-theme.css">
+  <link rel="stylesheet" href="/avatar-picker.css?v=avatar-picker-v4">
   <script src="/dangKy_dangNhap/session.js" defer></script>
+  <script src="/avatar-picker.js?v=avatar-picker-v4" defer></script>
   <script src="/dashboard.js" defer></script>
   <style>
     :root {
@@ -69,22 +71,21 @@
       gap:11px;
       margin:0 4px 18px;
       color:var(--dash-text);
-      font-size:1.04rem;
+      font-size:.9rem;
       font-weight:850;
       line-height:1.15;
       text-decoration:none;
     }
+    .dashboard-brand > span:last-child { min-width:0; white-space:nowrap; }
     .dashboard-brand-mark {
       display:grid;
-      width:44px;
-      height:44px;
+      width:52px;
+      height:56px;
       flex:none;
       place-items:center;
-      border:1px solid #ffffff25;
-      border-radius:15px;
-      background:var(--dash-gradient);
-      box-shadow:0 7px 20px #6545c855;
-      font-size:1.35rem;
+      object-fit:cover;
+      object-position:center;
+      filter:drop-shadow(0 6px 10px #05052166);
     }
     .dashboard-brand small {
       display:block;
@@ -92,6 +93,7 @@
       color:var(--dash-muted);
       font-size:.67rem;
       font-weight:550;
+      white-space:normal;
     }
     .dashboard-nav {
       display:grid;
@@ -277,12 +279,92 @@
       position:relative;
       z-index:1;
       display:block;
-      width:min(220px,90%);
-      max-height:250px;
+      width:min(170px,90%);
+      max-height:190px;
       object-fit:contain;
       filter:drop-shadow(0 14px 18px #0505218c);
       animation:dashboard-float 5s ease-in-out infinite;
     }
+    .dashboard-welcome { min-height:235px; grid-template-columns:minmax(0,1.3fr) minmax(140px,.45fr) minmax(230px,.7fr); padding:22px; }
+    .welcome-copy h1 { margin-top:11px; font-size:clamp(1.7rem,3vw,2.4rem); }
+    .welcome-actions { margin-top:13px; }
+    .welcome-avatar { min-height:175px; }
+    .streak-card {
+      position:relative;
+      z-index:1;
+      min-width:0;
+      align-self:stretch;
+      padding:18px;
+      border:1px solid #ffffff24;
+      border-radius:20px;
+      background:linear-gradient(145deg,#ffffff12,#ffffff08);
+      box-shadow:inset 0 1px 0 #ffffff12;
+    }
+    .streak-title { color:#eeeaff; font-size:.84rem; font-weight:800; }
+    .streak-count { display:block; margin:14px 0 2px; color:#fff; font-size:clamp(1.6rem,2.5vw,2.15rem); font-weight:900; line-height:1.1; }
+    .streak-copy { color:#c5c2e6; font-size:.75rem; }
+    .streak-track { height:8px; margin:13px 0 7px; overflow:hidden; border-radius:99px; background:#ffffff20; }
+    .streak-track span { display:block; width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,#ffb21f,#22c55e); transition:width .25s ease; }
+    .streak-scale { display:flex; justify-content:space-between; color:#aaa7d2; font-size:.67rem; }
+    .dashboard-metrics { grid-template-columns:repeat(4,minmax(0,1fr)); margin-top:13px; }
+    .metric-card { min-height:112px; padding:16px; }
+    .metric-card.xp { background:linear-gradient(130deg,#593bd2,#3e2d99); }
+    .metric-card.questions { background:linear-gradient(130deg,#0d9c75,#087055); }
+    .metric-card.today { background:linear-gradient(130deg,#315de0,#3632a4); }
+    .metric-card.rank { background:linear-gradient(130deg,#df8b12,#99600b); }
+    .metric-label { display:block; color:#ffffffce; font-size:.76rem; }
+    .metric-value { display:block; margin:5px 0 2px; color:#fff; font-size:clamp(1.2rem,2vw,1.7rem); font-weight:900; line-height:1.15; overflow-wrap:anywhere; }
+    .metric-note { color:#ffffffc9; font-size:.72rem; }
+    .rank-track { height:6px; margin-top:8px; overflow:hidden; border-radius:99px; background:#ffffff30; }
+    .rank-track span { display:block; width:0; height:100%; border-radius:inherit; background:#fff; }
+    .dashboard-social-grid { grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:13px; }
+    .dashboard-panel { min-width:0; }
+    .dashboard-panel-heading { display:flex; align-items:center; gap:8px; margin-bottom:13px; }
+    .dashboard-panel-heading h2 { margin:0; font-size:.98rem; }
+    .week-days { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; }
+    .week-day { min-width:0; padding:8px 2px; border-radius:10px; color:#aaa7d2; text-align:center; }
+    .week-day.active { color:#fff; background:#ffffff0b; }
+    .week-day-label,.week-day-mark { display:block; }
+    .week-day-label { font-size:.68rem; }
+    .week-day-mark { margin-top:6px; color:#22c55e; font-size:1.05rem; font-weight:900; }
+    .week-day:not(.active) .week-day-mark { color:#7f7da8; }
+    .week-summary { min-height:38px; margin:12px 0 0!important; color:#b8b5d8!important; font-size:.75rem!important; }
+    .rank-list,.friend-list,.request-list { display:grid; gap:7px; margin:0; padding:0; list-style:none; }
+    .rank-row,.friend-row,.request-row { display:flex; min-width:0; align-items:center; gap:8px; padding:7px 8px; border-radius:10px; color:#e7e5ff; background:#ffffff07; font-size:.76rem; }
+    .rank-row.current { background:#593bd255; }
+    .rank-row-name,.friend-name { min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .rank-row-points { flex:none; color:#d5d0ff; font-weight:800; }
+    .friend-row button,.request-row button,.friend-add-form button {
+      flex:none;
+      min-height:30px;
+      padding:5px 9px;
+      border:1px solid #ffffff20;
+      border-radius:999px;
+      color:#eae7ff;
+      background:#ffffff10;
+      font-size:.68rem;
+      font-weight:750;
+      cursor:pointer;
+    }
+    .friend-action { flex:none; padding:5px 9px; border:1px solid #ffffff20; border-radius:999px; color:#eae7ff; background:#ffffff10; font-size:.68rem; font-weight:750; text-decoration:none; }
+    .friend-row button:disabled,.request-row button:disabled,.friend-add-form button:disabled { opacity:.6; cursor:wait; }
+    .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+    .friend-add-form { display:flex; gap:6px; margin:0 0 11px; }
+    .friend-add-form input { width:0; min-width:0; flex:1; padding:8px 10px; border:1px solid #ffffff20; border-radius:10px; color:#fff; background:#111132; }
+    .friend-add-form input::placeholder { color:#aaa7d2; }
+    .friend-status { min-height:16px; margin:-5px 0 8px; color:#c8c4e7; font-size:.7rem; }
+    .friend-row.empty,.rank-row.empty { color:#aaa7d2; }
+    .friend-row small { display:block; color:#aaa7d2; font-size:.66rem; }
+    .friend-section-label { margin:11px 0 6px; color:#aaa7d2; font-size:.7rem; font-weight:800; }
+    .dashboard-insights-grid { grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,1fr)); margin-top:13px; }
+    .knowledge-chart { display:block; width:100%; height:130px; overflow:visible; }
+    .knowledge-chart text { fill:#aaa7d2; font-family:inherit; font-size:10px; }
+    .knowledge-chart .chart-grid { stroke:#ffffff15; stroke-width:1; }
+    .knowledge-chart .chart-line { fill:none; stroke:#38bdf8; stroke-linecap:round; stroke-linejoin:round; stroke-width:3; }
+    .knowledge-chart .chart-point { fill:#38bdf8; stroke:#1c1a47; stroke-width:2; }
+    .chart-empty { color:#aaa7d2!important; font-size:.75rem!important; }
+    .dashboard-error { margin:10px 0 0; color:#ffb6b6; font-size:.78rem; }
+    .dashboard-footnote { margin:8px 0 0!important; color:#aaa7d2!important; font-size:.68rem!important; line-height:1.45; }
     @keyframes dashboard-float { 50% { transform:translateY(-7px); } }
     .dashboard-section-heading {
       display:flex;
@@ -370,13 +452,18 @@
     :focus-visible { outline:3px solid #bba8ff; outline-offset:3px; }
     @media(max-width:1050px) {
       .dashboard-shortcuts { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .dashboard-welcome { grid-template-columns:minmax(0,1.2fr) minmax(120px,.5fr) minmax(205px,.7fr); }
+      .dashboard-social-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .friends-panel { grid-column:1/-1; }
+      .dashboard-insights-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .dashboard-insights-grid > :first-child { grid-column:1/-1; }
     }
     @media(max-width:760px) {
       body { padding:9px; }
-      .dashboard-shell { grid-template-columns:1fr; gap:12px; }
+      .dashboard-shell { grid-template-columns:minmax(0,1fr); gap:12px; }
       .dashboard-sidebar { position:static; height:auto; min-height:0; gap:10px; padding:11px; border-radius:18px; }
       .dashboard-brand { margin:0 3px; }
-      .dashboard-brand-mark { width:39px; height:39px; }
+      .dashboard-brand-mark { width:43px; height:46px; }
       .dashboard-nav { display:flex; overflow-x:auto; gap:5px; padding-bottom:2px; scrollbar-width:thin; }
       .dashboard-nav a { min-height:40px; flex:none; gap:7px; padding:8px 10px; font-size:.76rem; white-space:nowrap; }
       .dashboard-mentor { display:none; }
@@ -386,10 +473,18 @@
       .dashboard-topbar .dashboard-search-wrap { flex-basis:100%; order:2; }
       .topbar-mentor { margin-left:auto; }
       .dashboard-topbar .auth-session-badge { max-width:calc(100% - 130px); }
-      .dashboard-welcome { min-height:0; grid-template-columns:minmax(0,1fr) 150px; gap:4px; padding:23px 18px; border-radius:20px; }
+      .dashboard-welcome { min-height:0; grid-template-columns:minmax(0,1fr) 125px; gap:4px; padding:20px 16px; border-radius:20px; }
       .welcome-avatar { min-height:170px; }
-      .welcome-avatar img { width:145px; max-height:170px; }
-      .welcome-avatar::before { width:145px; }
+      .welcome-avatar img { width:120px; max-height:145px; }
+      .welcome-avatar::before { width:125px; }
+      .streak-card { grid-column:1/-1; padding:13px 15px; }
+      .streak-count { margin:6px 0 1px; font-size:1.45rem; }
+      .streak-track { margin:8px 0 5px; }
+      .dashboard-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .dashboard-social-grid { grid-template-columns:1fr; }
+      .friends-panel { grid-column:auto; }
+      .dashboard-insights-grid { grid-template-columns:1fr; }
+      .dashboard-insights-grid > :first-child { grid-column:auto; }
       .welcome-copy h1 { font-size:clamp(1.7rem,7vw,2.4rem); }
       .welcome-copy p { font-size:.84rem; }
       .dashboard-section-heading { align-items:flex-start; flex-direction:column; margin-top:21px; }
@@ -400,10 +495,14 @@
       .shortcut-card { min-height:138px; padding:13px; }
       .shortcut-card h3 { font-size:.85rem; }
       .shortcut-card p { font-size:.7rem; }
-      .dashboard-welcome { grid-template-columns:minmax(0,1fr) 98px; padding:20px 14px; }
-      .welcome-avatar { min-height:125px; }
-      .welcome-avatar img { width:105px; max-height:130px; }
-      .welcome-avatar::before { width:105px; }
+      .dashboard-welcome { grid-template-columns:minmax(0,1fr) 90px; padding:16px 12px; }
+      .welcome-avatar { min-height:115px; }
+      .welcome-avatar img { width:90px; max-height:105px; }
+      .welcome-avatar::before { width:90px; }
+      .metric-card { min-height:100px; padding:12px; }
+      .metric-label { font-size:.69rem; }
+      .metric-value { font-size:1.22rem; }
+      .week-days { gap:1px; }
       .welcome-actions { gap:7px; }
       .dashboard-button { min-height:40px; padding:8px 10px; font-size:.75rem; }
       .topbar-mentor { display:none; }
@@ -418,11 +517,14 @@
   <div class="dashboard-shell">
     <aside class="dashboard-sidebar" aria-label="Điều hướng chính">
       <a class="dashboard-brand" href="/" aria-label="Học Mà Chơi, trang chủ">
-        <span class="dashboard-brand-mark" aria-hidden="true">🎓</span>
+        <img class="dashboard-brand-mark" data-player-avatar src="/images/ai-knight.png" alt="Avatar của bạn">
         <span>AI Study Mentor<small>Học thông minh · vui mỗi ngày</small></span>
       </a>
       <nav class="dashboard-nav">
         <a href="/" aria-current="page"><span class="nav-icon" aria-hidden="true">🏠</span>Dashboard</a>
+        <section class="avatar-picker" data-avatar-picker>
+          <button type="button" class="avatar-picker-trigger" data-avatar-open>Chọn avatar cho bạn</button>
+        </section>
         <a href="/chat?style=normal"><span class="nav-icon" aria-hidden="true">🤖</span>Chat với Lụa</a>
         <a href="/quiz"><span class="nav-icon" aria-hidden="true">📖</span>Lộ trình học</a>
         <a href="/quiz"><span class="nav-icon" aria-hidden="true">🏆</span>Quiz AI</a>
@@ -442,22 +544,94 @@
           <span class="dashboard-search-icon" aria-hidden="true">⌕</span>
           <input class="dashboard-search" type="search" placeholder="Tìm Chat, Quiz, phòng chơi…" aria-label="Tìm tính năng">
         </label>
-        <div class="topbar-mentor"><img src="/images/lua-fox.png" alt=""><span>Không gian học của bạn</span></div>
+        <div class="topbar-mentor"><img src="/images/lua-fox.png" data-player-avatar alt="Avatar của bạn"><span>Avatar của bạn</span></div>
       </header>
       <section class="dashboard-welcome" aria-labelledby="welcome-title">
         <div class="welcome-copy">
-          <span class="welcome-eyebrow"><span aria-hidden="true">✦</span> HỌC THEO CÁCH CỦA BẠN</span>
-          <h1 id="welcome-title">Mỗi ngày một chút,<br>tiến bộ thật nhiều 👋</h1>
-          <p>Cùng Lụa khám phá điều mới, luyện tập theo nhịp riêng và biến mỗi buổi học thành một hành trình vui vẻ.</p>
+          <span class="welcome-eyebrow"><span aria-hidden="true">✦</span> KHÔNG GIAN HỌC CỦA BẠN</span>
+          <h1 id="welcome-title">Chào mừng trở lại, <span data-player-name>...</span>! 👋</h1>
+          <p>Học hôm nay — tiến bộ ngày mai! Theo dõi hành trình và rủ bạn bè cùng chơi.</p>
           <div class="welcome-actions">
-            <a class="dashboard-button primary" href="/chat?style=normal"><span aria-hidden="true">💬</span>Bắt đầu trò chuyện</a>
-            <a class="dashboard-button" href="/quiz"><span aria-hidden="true">✦</span>Luyện tập ngay</a>
+            <a class="dashboard-button primary" href="/quiz"><span aria-hidden="true">📚</span>Bắt đầu học ngay →</a>
+            <a class="dashboard-button" href="/mini-game"><span aria-hidden="true">🎮</span>Chơi cùng bạn</a>
           </div>
         </div>
         <div class="welcome-avatar">
-          <img src="/images/lua-fox.png" alt="Lụa, gia sư AI đồng hành cùng bạn">
+          <img src="/images/lua-fox.png" data-player-avatar alt="Avatar của bạn">
         </div>
+        <aside class="streak-card" aria-label="Chuỗi ngày học">
+          <span class="streak-title">🔥 Chuỗi ngày học</span>
+          <strong class="streak-count" id="streak-count">Đang tải…</strong>
+          <span class="streak-copy" id="streak-copy">Hoàn thành một câu hỏi hôm nay để giữ chuỗi nhé!</span>
+          <div class="streak-track" role="progressbar" aria-label="Tiến độ mục tiêu chuỗi ngày" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0"><span id="streak-progress"></span></div>
+          <div class="streak-scale"><span>0</span><span>7 ngày</span></div>
+        </aside>
       </section>
+      <section class="dashboard-grid dashboard-metrics" aria-label="Tiến độ học tập và chơi game">
+        <article class="dashboard-card metric-card xp">
+          <span class="metric-label">Tổng kinh nghiệm</span>
+          <strong class="metric-value" id="total-xp">Đang tải…</strong>
+          <span class="metric-note">Điểm tích lũy từ các ván hoàn thành</span>
+        </article>
+        <article class="dashboard-card metric-card questions">
+          <span class="metric-label">Câu hỏi đã trả lời</span>
+          <strong class="metric-value" id="total-questions">Đang tải…</strong>
+          <span class="metric-note" id="question-history-note">Tổng từ mini-game và kiểm tra lộ trình học</span>
+        </article>
+        <article class="dashboard-card metric-card today">
+          <span class="metric-label">Hoàn thành hôm nay</span>
+          <strong class="metric-value" id="today-questions">Đang tải…</strong>
+          <span class="metric-note" id="today-correct">Câu đúng hôm nay</span>
+        </article>
+        <article class="dashboard-card metric-card rank">
+          <span class="metric-label">Cấp độ hiện tại</span>
+          <strong class="metric-value" id="current-rank">Đang tải…</strong>
+          <span class="metric-note" id="rank-progress-copy">Điểm để lên hạng tiếp theo</span>
+          <div class="rank-track" role="progressbar" aria-label="Tiến độ lên hạng tiếp theo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="rank-progress"></span></div>
+        </article>
+      </section>
+      <p class="dashboard-error" id="dashboard-data-error" role="status" aria-live="polite"></p>
+      <div class="dashboard-grid dashboard-social-grid">
+        <section class="dashboard-card dashboard-panel" aria-labelledby="week-title">
+          <div class="dashboard-panel-heading"><span aria-hidden="true">🗓️</span><h2 id="week-title">Hoạt động 7 ngày</h2></div>
+          <div class="week-days" id="week-days" aria-label="Hoạt động từng ngày"></div>
+          <p class="week-summary" id="week-summary">Đang tải thống kê hoạt động…</p>
+        </section>
+        <section class="dashboard-card dashboard-panel" aria-labelledby="rankings-title">
+          <div class="dashboard-panel-heading"><span aria-hidden="true">🏆</span><h2 id="rankings-title">Bảng xếp hạng</h2></div>
+          <ol class="rank-list" id="dashboard-leaderboard"><li class="rank-row empty">Đang tải bảng xếp hạng…</li></ol>
+        </section>
+        <section class="dashboard-card dashboard-panel friends-panel" aria-labelledby="friends-title">
+          <div class="dashboard-panel-heading"><span aria-hidden="true">👥</span><h2 id="friends-title">Bạn bè của bạn</h2></div>
+          <form class="friend-add-form" id="friend-add-form">
+            <label class="sr-only" for="friend-username">Tên người dùng để kết bạn</label>
+            <input id="friend-username" name="username" maxlength="24" autocomplete="off" placeholder="Tên người dùng" required>
+            <button type="submit">Kết bạn</button>
+          </form>
+          <p class="friend-status" id="friend-status" role="status" aria-live="polite"></p>
+          <ul class="friend-list" id="friend-list"><li class="friend-row empty">Đang tải danh sách bạn bè…</li></ul>
+          <div id="friend-requests"></div>
+        </section>
+      </div>
+      <div class="dashboard-grid dashboard-insights-grid">
+        <section class="dashboard-card dashboard-panel" aria-labelledby="knowledge-title">
+          <div class="dashboard-panel-heading"><span aria-hidden="true">📈</span><h2 id="knowledge-title">Thống kê tri thức</h2></div>
+          <svg class="knowledge-chart" id="knowledge-chart" viewBox="0 0 420 150" role="img" aria-label="Số câu trả lời đúng trong 7 ngày gần nhất từ mini-game và lộ trình học"></svg>
+          <p class="chart-empty" id="chart-empty">Biểu đồ sẽ có dữ liệu sau khi bạn trả lời câu hỏi.</p>
+          <p class="dashboard-footnote">Số câu đúng mỗi ngày từ mini-game và bài kiểm tra lộ trình học.</p>
+        </section>
+        <section class="dashboard-card dashboard-panel mentor-panel" aria-labelledby="mentor-title">
+          <img src="/images/lua-fox.png" data-player-avatar alt="Avatar của bạn">
+          <h2 id="mentor-title">AI Study Mentor</h2>
+          <p>Bạn cần hỗ trợ gì hôm nay? Giải bài học, luyện tập để thi và tạo lộ trình học.</p>
+          <a class="dashboard-button primary" href="/chat?style=normal">Chat ngay →</a>
+        </section>
+        <section class="dashboard-card dashboard-panel mentor-panel" aria-labelledby="play-with-friends-title">
+          <div class="dashboard-panel-heading"><span aria-hidden="true">🎮</span><h2 id="play-with-friends-title">Chơi cùng bạn bè</h2></div>
+          <p>Kết bạn để mời nhau vào phòng trực tiếp. Mã phòng vẫn luôn có thể sao chép và chia sẻ.</p>
+          <a class="dashboard-button primary" href="/mini-game">Mở phòng chơi →</a>
+        </section>
+      </div>
       <div class="dashboard-section-heading">
         <h2>Chọn hành trình của bạn</h2>
         <p>Một chạm để bắt đầu khám phá</p>
@@ -504,7 +678,7 @@
           </div>
         </section>
         <section class="dashboard-card dashboard-panel mentor-panel" aria-labelledby="mentor-title">
-          <img src="/images/lua-fox.png" alt="Lụa">
+          <img src="/images/lua-fox.png" data-player-avatar alt="Avatar của bạn">
           <h2 id="mentor-title">Lụa đồng hành cùng bạn</h2>
           <p>Giải đáp bài học, luyện tập và tìm cách học phù hợp với bạn.</p>
           <a class="dashboard-button primary" href="/chat?style=normal">Trò chuyện với Lụa →</a>

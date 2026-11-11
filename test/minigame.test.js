@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import Database from "better-sqlite3";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import express from "express";
@@ -33,7 +34,10 @@ async function startServer() {
   app.use(express.json());
   app.use((req, _res, next) => {
     const userId = req.get("x-test-user");
-    if (userId) req.authUser = { id: userId, username: userId };
+    if (userId) {
+      req.authUser = { id: userId, username: userId };
+      req.getPlayerAvatar = () => userId === "player-a" ? "knight" : "fox";
+    }
     next();
   });
 
@@ -103,6 +107,7 @@ test("friends can join a room, start together, answer, and persist leaderboard r
   assert.match(lobby.code, /^[A-HJ-NP-Z2-9]{6}$/);
   assert.equal(lobby.phase, "lobby");
   assert.equal(lobby.players.length, 1);
+  assert.equal(lobby.players[0].avatarId, "knight");
   assert.equal(lobby.currentQuestion, null);
 
   const noEarlyStart = await api(`/api/minigame/rooms/${lobby.code}/start`, "player-a", "POST", {});
@@ -112,7 +117,9 @@ test("friends can join a room, start together, answer, and persist leaderboard r
   assert.equal(invalidRoom.status, 404);
   const join = await api(`/api/minigame/rooms/${lobby.code}/join`, "player-b", "POST", {});
   assert.equal(join.status, 200);
-  assert.equal((await join.json()).players.length, 2);
+  const joinedRoom = await join.json();
+  assert.equal(joinedRoom.players.length, 2);
+  assert.equal(joinedRoom.players[1].avatarId, "fox");
 
   const hostAck = await api(`/api/minigame/rooms/${lobby.code}/rules/acknowledge`, "player-a", "POST", {});
   const guestAck = await api(`/api/minigame/rooms/${lobby.code}/rules/acknowledge`, "player-b", "POST", {});
@@ -171,12 +178,169 @@ test("friends can join a room, start together, answer, and persist leaderboard r
   const final = await finalResponse.json();
   assert.equal(final.phase, "finished");
   assert.equal(final.finalResult.players.length, 2);
+  assert.equal(final.finalResult.players.find((player) => player.username === "player-a").avatarId, "knight");
+  assert.equal(final.finalResult.players.find((player) => player.username === "player-b").avatarId, "fox");
 
   const leaderboardResponse = await api("/api/minigame/leaderboard", "player-b");
   assert.equal(leaderboardResponse.status, 200);
   const leaderboard = await leaderboardResponse.json();
   assert.equal(leaderboard.entries.length, 2);
   assert.ok(leaderboard.entries.every((entry) => entry.gamesPlayed === 1));
+  const progress = await (await api("/api/minigame/progress", "player-a")).json();
+  assert.equal(progress.totalAnswered, 5);
+  assert.equal(progress.questionsToday, 5);
+  assert.equal(progress.gamesPlayed, 1);
+  assert.equal(progress.streakDays, 1);
+  assert.equal(progress.chart.at(-1).questionsAnswered, 5);
+});
+
+test("study roadmap assessments update daily activity and knowledge statistics once", async () => {
+  temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "hoc-ma-choi-study-progress-"));
+  game = createMiniGame({ projectDir: temporaryDirectory, clock: () => now });
+  await startServer();
+
+  const event = {
+    eventId: "e02171bc-4f4e-4e31-8e59-c429f08fc7b1",
+    topicId: "cProgramming",
+    focusTopic: "Struct",
+    phase: "foundation",
+    questionsAnswered: 3,
+    correctAnswers: 2,
+  };
+  const anonymous = await api("/api/minigame/study-activity", undefined, "POST", event);
+  assert.equal(anonymous.status, 401);
+
+  const response = await api("/api/minigame/study-activity", "player-a", "POST", event);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { recorded: true, questionsAnswered: 3, correctAnswers: 2 });
+  const progress = await (await api("/api/minigame/progress", "player-a")).json();
+  assert.equal(progress.totalAnswered, 3);
+  assert.equal(progress.correctAnswers, 2);
+  assert.equal(progress.questionsToday, 3);
+  assert.equal(progress.correctToday, 2);
+  assert.equal(progress.chart.at(-1).questionsAnswered, 3);
+  assert.equal(progress.chart.at(-1).correctAnswers, 2);
+  assert.equal(progress.streakDays, 1);
+  assert.equal(progress.totalPoints, 0, "study activity updates learning metrics without granting rank XP");
+
+  const duplicate = await api("/api/minigame/study-activity", "player-a", "POST", event);
+  assert.equal(duplicate.status, 200);
+  assert.equal((await duplicate.json()).recorded, false);
+  const afterDuplicate = await (await api("/api/minigame/progress", "player-a")).json();
+  assert.equal(afterDuplicate.totalAnswered, 3);
+  assert.equal(afterDuplicate.correctToday, 2);
+
+  const invalid = await api("/api/minigame/study-activity", "player-a", "POST", {
+    ...event,
+    eventId: "not-a-uuid",
+  });
+  assert.equal(invalid.status, 400);
+});
+
+test("players can befriend each other and accept direct game invitations without a room code", async () => {
+  temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "hoc-ma-choi-social-"));
+  const users = new Map([
+    ["player-a", { id: "player-a", username: "player-a" }],
+    ["player-b", { id: "player-b", username: "player-b" }],
+  ]);
+  game = createMiniGame({
+    projectDir: temporaryDirectory,
+    clock: () => now,
+    findUserByUsername: (username) => users.get(username.toLowerCase()) || null,
+  });
+  await startServer();
+
+  const sentRequest = await api("/api/minigame/friends/requests", "player-a", "POST", { username: "player-b" });
+  assert.equal(sentRequest.status, 201);
+  assert.equal((await api("/api/minigame/friends/requests", "player-a", "POST", { username: "player-b" })).status, 409);
+
+  const pending = await (await api("/api/minigame/friends", "player-b")).json();
+  assert.equal(pending.incoming.length, 1);
+  assert.equal(pending.incoming[0].username, "player-a");
+  assert.equal((await api(`/api/minigame/friends/requests/${pending.incoming[0].id}/accept`, "player-a", "POST", {})).status, 404);
+  assert.equal((await api(`/api/minigame/friends/requests/${pending.incoming[0].id}/accept`, "player-b", "POST", {})).status, 200);
+
+  const friendsA = await (await api("/api/minigame/friends", "player-a")).json();
+  assert.deepEqual(friendsA.friends.map((friend) => friend.username), ["player-b"]);
+  const room = await (await api("/api/minigame/rooms", "player-a", "POST", {
+    topicId: "english",
+    questionCount: 5,
+  })).json();
+  const invitation = await api(`/api/minigame/friends/player-b/invites`, "player-a", "POST", { roomCode: room.code });
+  assert.equal(invitation.status, 201);
+  assert.equal((await api(`/api/minigame/friends/player-b/invites`, "player-a", "POST", { roomCode: room.code })).status, 409);
+
+  const inbox = await (await api("/api/minigame/invites", "player-b")).json();
+  assert.equal(inbox.invites.length, 1);
+  assert.equal(inbox.invites[0].invitedByUsername, "player-a");
+  const accepted = await api(`/api/minigame/invites/${inbox.invites[0].id}/accept`, "player-b", "POST", {});
+  assert.equal(accepted.status, 200);
+  const joined = await accepted.json();
+  assert.equal(joined.code, room.code);
+  assert.deepEqual(joined.players.map((player) => player.username).sort(), ["player-a", "player-b"]);
+  const inboxAfterAccept = await (await api("/api/minigame/invites", "player-b")).json();
+  assert.equal(inboxAfterAccept.invites.length, 0);
+});
+
+test("cumulative rank tiers use the requested point thresholds", async () => {
+  temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "hoc-ma-choi-ranks-"));
+  game = createMiniGame({ projectDir: temporaryDirectory, clock: () => now });
+  await startServer();
+  const database = new Database(path.join(temporaryDirectory, ".data", "minigame.sqlite"));
+  try {
+    database.prepare(`
+      INSERT INTO leaderboard (user_id, username, total_points, updated_at)
+      VALUES ('player-a', 'player-a', 0, ?)
+    `).run(now);
+    const cases = [
+      [0, "Newbie"],
+      [4_999, "Newbie"],
+      [5_000, "Đồng Bạc"],
+      [10_000, "Vàng"],
+      [15_000, "Kim Cương"],
+      [50_000, "Huyền Thoại"],
+      [100_000, "Trạng Nguyên"],
+    ];
+    for (const [points, expectedRank] of cases) {
+      database.prepare("UPDATE leaderboard SET total_points = ? WHERE user_id = 'player-a'").run(points);
+      const progress = await (await api("/api/minigame/progress", "player-a")).json();
+      assert.equal(progress.rank.name, expectedRank);
+    }
+  } finally {
+    database.close();
+  }
+});
+
+test("existing leaderboard totals migrate to lifetime question counts without inventing daily history", async () => {
+  temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "hoc-ma-choi-progress-migration-"));
+  const dataDirectory = path.join(temporaryDirectory, ".data");
+  await mkdir(dataDirectory, { recursive: true });
+  const oldDatabase = new Database(path.join(dataDirectory, "minigame.sqlite"));
+  oldDatabase.exec(`
+    CREATE TABLE leaderboard (
+      user_id TEXT PRIMARY KEY,
+      username TEXT NOT NULL,
+      total_points INTEGER NOT NULL DEFAULT 0,
+      wins INTEGER NOT NULL DEFAULT 0,
+      games_played INTEGER NOT NULL DEFAULT 0,
+      correct_answers INTEGER NOT NULL DEFAULT 0,
+      updated_at INTEGER NOT NULL
+    );
+  `);
+  oldDatabase.prepare(`
+    INSERT INTO leaderboard (user_id, username, total_points, games_played, correct_answers, updated_at)
+    VALUES ('legacy-user', 'legacy-user', 4000, 12, 37, ?)
+  `).run(now);
+  oldDatabase.close();
+
+  game = createMiniGame({ projectDir: temporaryDirectory, clock: () => now });
+  await startServer();
+  const progress = await (await api("/api/minigame/progress", "legacy-user")).json();
+  assert.equal(progress.totalPoints, 4_000);
+  assert.equal(progress.totalAnswered, 37);
+  assert.equal(progress.correctAnswers, 37);
+  assert.equal(progress.streakDays, 0);
+  assert.equal(progress.chart.every((day) => day.correctAnswers === 0 && day.questionsAnswered === 0), true);
 });
 
 test("each new quiz room requests and uses a fresh AI question set", async () => {
@@ -425,7 +589,13 @@ test("obstacle mode draws a private AI puzzle and uses untimed buzzer turns", as
   assert.match(finalState.obstacle.logic, /sông Hồng/);
   assert.equal(finalState.finalResult.players.every((player) => player.score === 0), true);
   const leaderboard = await (await api("/api/minigame/leaderboard", "player-a")).json();
-  assert.equal(leaderboard.entries.length, 0);
+  assert.equal(leaderboard.entries.length, 2);
+  assert.ok(leaderboard.entries.every((entry) => entry.gamesPlayed === 1 && entry.totalPoints === 0));
+  const progress = await (await api("/api/minigame/progress", "player-a")).json();
+  assert.equal(progress.totalAnswered, 5);
+  assert.equal(progress.correctAnswers, 4);
+  assert.equal(progress.questionsToday, 5);
+  assert.equal(progress.correctToday, 4);
 });
 
 test("obstacle mode supports 10 or 15 clue rows plus a separate center question", async () => {

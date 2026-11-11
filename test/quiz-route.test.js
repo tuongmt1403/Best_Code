@@ -28,6 +28,79 @@ test("leaves an imperfect-score analysis unchanged", () => {
   assert.equal(adaptPerfectScoreAnalysis(analysis, 4, 5, "History"), analysis);
 });
 
+test("returns a grounded quiz analysis and learning plan without waiting for external AI", async () => {
+  const originalFetch = globalThis.fetch;
+  let externalAiCalls = 0;
+  globalThis.fetch = async (url, options) => {
+    if (String(url).startsWith("http://127.0.0.1:")) return originalFetch(url, options);
+    externalAiCalls += 1;
+    throw new Error("Quiz result analysis must not wait for external AI.");
+  };
+  const app = express();
+  app.use(express.json());
+  app.use(createQuizRouter({
+    geminiApiKeys: ["test-gemini-key"],
+    groqApiKeys: ["test-groq-key"],
+  }));
+  const server = app.listen(0);
+
+  try {
+    await new Promise((resolve, reject) => {
+      server.once("listening", resolve);
+      server.once("error", reject);
+    });
+    const requestStartedAt = performance.now();
+    const response = await originalFetch(`http://127.0.0.1:${server.address().port}/api/analyze-quiz-result`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        topicId: "cProgramming",
+        totalQuestions: 5,
+        correctAnswers: 2,
+        incorrectAnswers: [
+          {
+            topic: "Con trỏ",
+            question: "Con trỏ lưu gì?",
+            selectedAnswer: "Giá trị",
+            correctAnswer: "Địa chỉ",
+            explanation: "Con trỏ lưu địa chỉ của vùng nhớ.",
+          },
+          {
+            topic: "Con trỏ",
+            question: "Toán tử lấy địa chỉ là gì?",
+            selectedAnswer: "*",
+            correctAnswer: "&",
+            explanation: "Toán tử & lấy địa chỉ của một biến.",
+          },
+          {
+            topic: "Mảng",
+            question: "Chỉ số đầu tiên của mảng là gì?",
+            selectedAnswer: "1",
+            correctAnswer: "0",
+            explanation: "Chỉ số mảng trong C bắt đầu từ 0.",
+          },
+        ],
+      }),
+    });
+    const elapsedMs = performance.now() - requestStartedAt;
+    const data = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(elapsedMs < 8_000, `analysis took ${elapsedMs}ms`);
+    assert.equal(externalAiCalls, 0);
+    assert.equal(data.generator, "Quiz AI tức thì");
+    assert.equal(data.verification.status, "instant");
+    assert.match(data.analysis.summary, /2\/5/);
+    assert.equal(data.analysis.weaknesses[0].topic, "Con trỏ");
+    assert.match(data.analysis.weaknesses[0].knowledgeToReview, /địa chỉ của vùng nhớ/);
+    assert.equal(data.analysis.studyPlan.length, 3);
+    assert.match(data.analysis.studyPlan[0].activity, /địa chỉ của vùng nhớ/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("opens direct lessons for menu topics without claiming quiz results", async () => {
   const app = express();
   app.use(express.json());
@@ -47,10 +120,23 @@ test("opens direct lessons for menu topics without claiming quiz results", async
     });
 
     const menuLessons = [
+      ["antiUsWar", "Phong trào Đồng Khởi", "Lịch sử: Phong trào Đồng Khởi"],
       ["antiUsWar", "Hiệp định Genève", "Lịch sử: Hiệp định Genève"],
+      ["antiUsWar", "Chiến dịch Điện Biên Phủ", "Lịch sử: Chiến dịch Điện Biên Phủ"],
+      ["antiUsWar", "Tết Mậu Thân", "Lịch sử: Tết Mậu Thân"],
       ["antiUsWar", "Hiệp định Paris", "Lịch sử: Hiệp định Paris"],
+      ["antiUsWar", "Kết thúc chiến tranh", "Lịch sử: Kết thúc chiến tranh"],
       ["geography", "Khí hậu", "Địa lý: Khí hậu"],
+      ["cProgramming", "Cấu trúc chương trình C", "Lập trình C: Tìm hiểu về Cấu trúc chương trình C"],
+      ["cProgramming", "Thư viện chuẩn", "Lập trình C: Tìm hiểu về Thư viện chuẩn"],
+      ["cProgramming", "Biến & Kiểu dữ liệu", "Lập trình C: Tìm hiểu về Biến & Kiểu dữ liệu"],
+      ["cProgramming", "Cấu trúc điều khiển", "Lập trình C: Tìm hiểu về Cấu trúc điều khiển"],
+      ["cProgramming", "Hàm", "Lập trình C: Tìm hiểu về Hàm"],
+      ["cProgramming", "Mảng & Chuỗi", "Lập trình C: Tìm hiểu về Mảng & Chuỗi"],
       ["cProgramming", "Con trỏ", "Lập trình C: Tìm hiểu về Con trỏ"],
+      ["cProgramming", "Struct", "Lập trình C: Tìm hiểu về Struct"],
+      ["cProgramming", "Bộ nhớ động", "Lập trình C: Tìm hiểu về Bộ nhớ động"],
+      ["cProgramming", "Tệp", "Lập trình C: Tìm hiểu về Tệp"],
     ];
     for (const [topicId, focusTopic, expectedTitle] of menuLessons) {
       const response = await requestLesson(topicId, focusTopic);
@@ -60,13 +146,114 @@ test("opens direct lessons for menu topics without claiming quiz results", async
       assert.equal(lesson.focusTopic, focusTopic);
       assert.equal(lesson.totalSteps, 3);
       assert.match(lesson.practiceQuestion, new RegExp(focusTopic));
+      assert.equal(lesson.assessmentQuestions.length, 3);
+      assert.equal(new Set(lesson.assessmentQuestions.map(({ question }) => question)).size, 3);
+      for (const assessmentQuestion of lesson.assessmentQuestions) {
+        assert.ok(Array.isArray(assessmentQuestion.options));
+        assert.equal(Object.hasOwn(assessmentQuestion, "answerIndex"), false);
+      }
       assert.equal(Object.hasOwn(lesson, "quizQuestion"), false);
       assert.equal(Object.hasOwn(lesson, "quizOptions"), false);
       assert.equal(Object.hasOwn(lesson, "correctIndex"), false);
       assert.equal(Object.hasOwn(lesson, "answerIndex"), false);
       assert.doesNotMatch(lesson.theory, /Bạn đã làm tốt câu|bạn đã chọn/);
+      if (topicId === "cProgramming") {
+        const codeSection = lesson.sections.find(({ code }) => code);
+        assert.ok(codeSection, `${focusTopic} should provide a runnable C example`);
+        assert.notEqual(lesson.sections[0].title, "Nội dung trọng tâm", `${focusTopic} should use topic-specific lesson content`);
+        assert.match(codeSection.code, /int main\(void\)/);
+        assert.ok(codeSection.codeNotes.length > 0);
+        assert.ok(codeSection.codeOutput);
+        assert.equal(lesson.assessmentQuestions.length, 3);
+      }
       if (focusTopic === "Hiệp định Genève") {
-        assert.doesNotMatch(`${lesson.title} ${lesson.theory} ${lesson.practiceQuestion}`, /Hiệp định Paris/);
+        assert.doesNotMatch(`${lesson.title} ${lesson.theory} ${lesson.practiceQuestion}`, /Hiệp định Paris.{0,40}(?:ký|1954)|(?:ký|1954).{0,40}Hiệp định Paris/);
+        assert.match(lesson.sections[0].content, /tháng 7\/1954/);
+        assert.match(lesson.sections[1].content, /tổng tuyển cử.*1956/);
+      }
+      if (focusTopic === "Phong trào Đồng Khởi") {
+        assert.match(lesson.sections[0].content, /Bến Tre.*1960/);
+        assert.match(lesson.sections[1].content, /không nên mô tả Đồng Khởi như một trận đánh đơn lẻ/i);
+        assert.match(lesson.assessmentQuestions[0].question, /Đồng Khởi/);
+      }
+      if (focusTopic === "Tết Mậu Thân") {
+        assert.match(lesson.sections[0].content, /năm 1968/);
+        assert.match(lesson.sections[1].content, /không đạt mọi mục tiêu quân sự/);
+        assert.match(lesson.assessmentQuestions[0].question, /Tết Mậu Thân/);
+      }
+      if (focusTopic === "Hiệp định Paris") {
+        assert.match(lesson.sections[0].content, /27\/1\/1973/);
+        assert.match(lesson.sections[1].content, /không phải mốc kết thúc chiến tranh/);
+        assert.doesNotMatch(lesson.sections[0].content, /chiến tranh kết thúc tại miền Nam/);
+      }
+      if (focusTopic === "Kết thúc chiến tranh") {
+        assert.match(lesson.sections[0].content, /Tây Nguyên.*Huế–Đà Nẵng.*Hồ Chí Minh/);
+        assert.match(lesson.sections[1].content, /26\/4\/1975/);
+        assert.match(lesson.sections[1].content, /30\/4.*tuyên bố đầu hàng/);
+        assert.match(lesson.sections[2].content, /thống nhất nhà nước.*1976/);
+        assert.doesNotMatch(lesson.sections[0].content, /Hiệp định Paris.*được ký/);
+        const answerResponse = await fetch(`${baseUrl}/api/study-roadmap/answer`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            topicId,
+            focusTopic,
+            phase: "foundation",
+            question: lesson.assessmentQuestions[0].question,
+            selectedOptionIndex: 1,
+            hintLevel: 0,
+            attemptNumber: 1,
+          }),
+        });
+        const answer = await answerResponse.json();
+        assert.equal(answerResponse.status, 200);
+        assert.equal(answer.correct, true);
+        assert.match(answer.explanation, /Chiến dịch Hồ Chí Minh bắt đầu ngày 26\/4\/1975/);
+        assert.match(answer.example, /Tây Nguyên → Huế–Đà Nẵng → Hồ Chí Minh/);
+      }
+      if (focusTopic === "Struct") {
+        const codeSection = lesson.sections.find(({ code }) => code);
+        assert.match(codeSection.code, /typedef struct/);
+        assert.match(codeSection.code, /student\.name/);
+        assert.match(codeSection.code, /record->score/);
+        assert.equal(codeSection.codeNotes.length, 4);
+        assert.equal(codeSection.codeOutput, "An, 18 tuoi\nDiem: 8.5");
+        assert.match(lesson.sections[0].content, /bản ghi/);
+        assert.match(lesson.sections[2].content, /Student students\[30\]/);
+      }
+      if (focusTopic === "Cấu trúc chương trình C") {
+        assert.match(lesson.sections[0].content, /bắt đầu từ hàm main/);
+        assert.match(lesson.sections[1].code, /#include <stdio\.h>/);
+        assert.match(lesson.sections[1].code, /int main\(void\)/);
+        assert.match(lesson.sections[1].codeOutput, /Tong = 11/);
+      }
+      if (focusTopic === "Thư viện chuẩn") {
+        const codeSection = lesson.sections.find(({ code }) => code);
+        assert.match(lesson.sections[0].content, /header.*khai báo giao diện/i);
+        assert.match(codeSection.code, /#include <string\.h>/);
+        assert.match(codeSection.code, /#include <stdlib\.h>/);
+        assert.match(codeSection.code, /strlen\(course\)/);
+        assert.match(codeSection.code, /abs\(7 - 10\)/);
+        assert.match(lesson.sections[2].content, /phần cài đặt/);
+        assert.equal(codeSection.codeOutput, "Mon C co 1 ky tu; |7-10| = 3");
+        const answerResponse = await fetch(`${baseUrl}/api/study-roadmap/answer`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            topicId,
+            focusTopic,
+            phase: "foundation",
+            question: lesson.assessmentQuestions[0].question,
+            selectedOptionIndex: 3,
+            hintLevel: 0,
+            attemptNumber: 1,
+          }),
+        });
+        const answer = await answerResponse.json();
+        assert.equal(answerResponse.status, 200);
+        assert.equal(answer.correct, true);
+        assert.match(answer.explanation, /header chuẩn/);
+        assert.match(answer.example, /strlen/);
       }
     }
 
@@ -79,6 +266,98 @@ test("opens direct lessons for menu topics without claiming quiz results", async
     assert.equal(invalidTopic.status, 400);
   } finally {
     await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("provides a detailed, source-qualified Dien Bien Phu lesson and fresh remediation prompts", async () => {
+  const app = express();
+  app.use(express.json());
+  app.use(createQuizRouter({ groqApiKeys: [] }));
+  const server = app.listen(0);
+
+  try {
+    await new Promise((resolve, reject) => {
+      server.once("listening", resolve);
+      server.once("error", reject);
+    });
+    const baseUrl = `http://127.0.0.1:${server.address().port}`;
+    const requestLesson = (remediationIndex = 0, missedQuestionPhases = []) => fetch(`${baseUrl}/api/study-roadmap/lesson`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        topicId: "antiUsWar",
+        quizResults: [],
+        stepIndex: 0,
+        focusTopic: "Chiến dịch Điện Biên Phủ",
+        remediationIndex,
+        missedQuestionPhases,
+      }),
+    });
+
+    const lesson = await (await requestLesson()).json();
+    const remediation = await (await requestLesson(1)).json();
+    const focusedRemediation = await (await requestLesson(1, ["foundation"])).json();
+    assert.equal(lesson.phase, "foundation");
+    assert.ok(lesson.sections.length >= 2);
+    assert.match(lesson.theory, /gần 50\.000 quân/);
+    assert.match(lesson.theory, /62 chiếc.*167 chiếc khác bị hư hại/);
+    assert.match(lesson.theory, /không cung cấp một bảng số liệu thương vong con người đầy đủ/);
+    assert.match(lesson.theory, /history\.com\/articles\/battle-of-dien-bien-phu/);
+    assert.notEqual(remediation.practiceQuestion, lesson.practiceQuestion);
+    assert.equal(remediation.remediationIndex, 1);
+    assert.match(focusedRemediation.theory, /Câu cần ôn: Chiến dịch Điện Biên Phủ năm 1954 thuộc cuộc kháng chiến nào/);
+    assert.doesNotMatch(focusedRemediation.theory, /62 chiếc/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("answers clarification from the current lesson and routes out-of-scope questions to Chat", async () => {
+  const originalFetch = globalThis.fetch;
+  const prompts = [];
+  globalThis.fetch = async (url, options = {}) => {
+    if (String(url).startsWith("http://127.0.0.1:")) return originalFetch(url, options);
+    if (String(url).startsWith("https://api.groq.com/")) {
+      const requestBody = JSON.parse(options.body);
+      prompts.push(requestBody.messages[1].content);
+      const clarification = prompts.length === 1
+        ? { inScope: true, answer: "Khí hậu Việt Nam mang tính nhiệt đới ẩm gió mùa." }
+        : { inScope: false, answer: "Câu hỏi này vượt ra ngoài nội dung khí hậu đang học." };
+      return Response.json({
+        choices: [{ message: { content: JSON.stringify(clarification) } }],
+      });
+    }
+    throw new Error(`Unexpected external request: ${String(url)}`);
+  };
+  const app = express();
+  app.use(express.json());
+  app.use(createQuizRouter({ groqApiKeys: ["test-groq-key"] }));
+  const server = app.listen(0);
+
+  try {
+    await new Promise((resolve, reject) => {
+      server.once("listening", resolve);
+      server.once("error", reject);
+    });
+    const baseUrl = `http://127.0.0.1:${server.address().port}`;
+    const clarify = (question) => originalFetch(`${baseUrl}/api/study-roadmap/clarify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ topicId: "geography", focusTopic: "Khí hậu", question }),
+    });
+    const inScope = await (await clarify("Khí hậu Việt Nam có đặc điểm gì?")).json();
+    const outOfScope = await (await clarify("Kể thêm một chủ đề không có trong bài")).json();
+
+    assert.equal(inScope.inScope, true);
+    assert.equal(inScope.chatUrl, undefined);
+    assert.equal(outOfScope.inScope, false);
+    assert.equal(outOfScope.chatUrl, "/chat");
+    assert.match(prompts[0], /Khí hậu Việt Nam mang tính chất nhiệt đới ẩm gió mùa/);
+    assert.doesNotMatch(prompts[0], /Hiệp định Paris/);
+    assert.equal(prompts.length, 2);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    globalThis.fetch = originalFetch;
   }
 });
 
@@ -265,7 +544,7 @@ test("builds foundation, practice, and advanced roadmap steps from quiz performa
     assert.equal(foundation.totalSteps, 3);
     assert.equal(foundation.focusTopic, "Mảng");
     assert.equal(advanced.focusTopic, "Mảng");
-    assert.match(foundation.theory, /Mảng chứa nhiều phần tử cùng kiểu/);
+    assert.match(foundation.theory, /Mảng giữ nhiều giá trị cùng kiểu/);
     assert.match(foundation.practiceQuestion, /giải thích nguyên tắc/);
     assert.match(practice.practiceQuestion, /tình huống hoặc ví dụ mới/);
     assert.match(advanced.theory, /bỏ qua phần nhập môn/);
@@ -389,7 +668,10 @@ test("generates a C programming quiz with Ollama when Groq is rate-limited and Q
     const response = await originalFetch(`http://127.0.0.1:${address.port}/api/generate-quiz`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topicId: "cProgramming", numQuestions: 1 }),
+      body: JSON.stringify({
+        documentText: "Lập trình C cơ bản đến trung cấp.\nCon trỏ lưu địa chỉ của một vùng nhớ.\nChỉ số mảng bắt đầu từ 0.",
+        numQuestions: 1,
+      }),
     });
     const data = await response.json();
 
@@ -417,5 +699,125 @@ test("generates a C programming quiz with Ollama when Groq is rate-limited and Q
     else process.env.QUIZAPI_IO_KEY = previousQuizApiKey;
     if (previousGroqModel === undefined) delete process.env.GROQ_MODEL;
     else process.env.GROQ_MODEL = previousGroqModel;
+  }
+});
+
+test("retries duplicate Ollama options and removes generated letter labels before showing the quiz", async () => {
+  const originalFetch = globalThis.fetch;
+  const previousQuizApiKey = process.env.QUIZAPI_IO_KEY;
+  process.env.QUIZAPI_IO_KEY = "";
+  let ollamaAttempts = 0;
+  const invalidQuiz = [{
+    question: "Hiệp định Paris được ký năm nào?",
+    topic: "Lịch sử",
+    options: ["A. 1973", "B. 1973", "C. 1954", "D. 1975"],
+    answer: "A",
+    explanation: "Tài liệu nêu rõ mốc ký kết.",
+  }];
+  const validQuiz = [{
+    question: "Hiệp định Paris được ký năm nào?",
+    topic: "Lịch sử",
+    options: ["A. 1973", "B. 1954", "C. 1968", "D. 1975"],
+    answer: "A",
+    explanation: "Tài liệu nêu rõ mốc ký kết.",
+  }];
+  globalThis.fetch = async (url, options = {}) => {
+    if (String(url).startsWith("http://127.0.0.1:")) return originalFetch(url, options);
+    if (String(url) === "http://ollama.test/api/chat") {
+      ollamaAttempts += 1;
+      const request = JSON.parse(options.body);
+      assert.match(request.messages[0].content, /không thêm tiền tố A\/B\/C\/D/);
+      assert.match(request.messages[1].content, /không thêm nhãn A\/B\/C\/D/);
+      return Response.json({
+        message: { content: JSON.stringify(ollamaAttempts === 1 ? invalidQuiz : validQuiz) },
+      });
+    }
+    throw new Error(`Unexpected external request: ${url}`);
+  };
+
+  const app = express();
+  app.use(express.json());
+  app.use(createQuizRouter({ baseUrl: "http://ollama.test", groqApiKeys: [], geminiApiKeys: [] }));
+  const server = app.listen(0);
+
+  try {
+    await new Promise((resolve, reject) => {
+      server.once("listening", resolve);
+      server.once("error", reject);
+    });
+    const response = await originalFetch(`http://127.0.0.1:${server.address().port}/api/generate-quiz`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        documentText: "Hiệp định Paris về Việt Nam được ký ngày 27/1/1973.",
+        numQuestions: 1,
+      }),
+    });
+    const data = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(ollamaAttempts, 2);
+    assert.deepEqual(data.quiz[0].options, ["1973", "1954", "1968", "1975"]);
+    assert.equal(data.quiz[0].answer, "1973");
+    assert.ok(data.quiz[0].options.includes(data.quiz[0].answer));
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    globalThis.fetch = originalFetch;
+    if (previousQuizApiKey === undefined) delete process.env.QUIZAPI_IO_KEY;
+    else process.env.QUIZAPI_IO_KEY = previousQuizApiKey;
+  }
+});
+
+test("serves shuffled prewritten quizzes for 5, 10, or 50 questions without waiting for AI or cloud storage", async () => {
+  const originalFetch = globalThis.fetch;
+  const previousQuizApiKey = process.env.QUIZAPI_IO_KEY;
+  process.env.QUIZAPI_IO_KEY = "test-quizapi-key";
+  const externalRequests = [];
+  globalThis.fetch = async (url, options = {}) => {
+    if (String(url).startsWith("http://127.0.0.1:")) return originalFetch(url, options);
+    externalRequests.push(String(url));
+    throw new Error(`Prewritten quiz should not call an external service: ${url}`);
+  };
+
+  const app = express();
+  app.use(express.json());
+  app.use(createQuizRouter({ groqApiKeys: [], geminiApiKeys: [] }));
+  const server = app.listen(0);
+
+  try {
+    await new Promise((resolve, reject) => {
+      server.once("listening", resolve);
+      server.once("error", reject);
+    });
+    const baseUrl = `http://127.0.0.1:${server.address().port}`;
+    for (const topicId of ["antiUsWar", "geography", "cProgramming"]) {
+      for (const numQuestions of [5, 10, 50]) {
+        const startedAt = performance.now();
+        const response = await originalFetch(`${baseUrl}/api/generate-quiz`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topicId, numQuestions }),
+        });
+        const elapsedMs = performance.now() - startedAt;
+        const data = await response.json();
+
+        assert.equal(response.status, 200, `${topicId} ${numQuestions}: ${data.error}`);
+        assert.equal(data.total_questions, numQuestions);
+        assert.equal(data.question_bank_size >= numQuestions, true);
+        assert.match(data.generator, /Ngân hàng câu hỏi đã biên soạn/);
+        assert.ok(elapsedMs < 15_000, `${topicId} ${numQuestions} took ${elapsedMs}ms`);
+        assert.equal(new Set(data.quiz.map(({ question }) => question)).size, numQuestions);
+        assert.ok(data.quiz.every(({ options, answer }) =>
+          options.length === 4 && new Set(options).size === 4 && options.includes(answer)
+        ));
+      }
+    }
+
+    assert.deepEqual(externalRequests, []);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    globalThis.fetch = originalFetch;
+    if (previousQuizApiKey === undefined) delete process.env.QUIZAPI_IO_KEY;
+    else process.env.QUIZAPI_IO_KEY = previousQuizApiKey;
   }
 });

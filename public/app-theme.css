@@ -67,6 +67,11 @@ body.app-page .app-brand {
   margin:0 4px 17px;
   color:#f3f1ff;
 }
+body.app-page .app-brand > span:last-child {
+  min-width:0;
+  font-size:.9rem;
+  white-space:nowrap;
+}
 body.app-page .app-page-content .settings-panel label { color:#f3f1ff !important; }
 body.app-page .app-page-content .settings-panel #question-count {
   border-color:#ffffff30;
@@ -79,15 +84,13 @@ body.app-page .app-page-content .settings-panel #question-count {
 }
 
 body.app-page .app-brand-icon {
-  display:grid;
-  width:42px;
-  height:42px;
+  display:block;
+  width:50px;
+  height:54px;
   flex:none;
-  place-items:center;
-  border:1px solid #ffffff25;
-  border-radius:14px;
-  background:linear-gradient(125deg,#8b5cf6,#38bdf8);
-  font-size:1.25rem;
+  object-fit:cover;
+  object-position:center;
+  filter:drop-shadow(0 5px 9px #05052166);
 }
 
 body.app-page .app-brand small {
@@ -96,6 +99,7 @@ body.app-page .app-brand small {
   color:#aaa7d2;
   font-size:.65rem;
   font-weight:550;
+  white-space:normal;
 }
 
 body.app-page .app-nav { display:grid; gap:5px; }
@@ -327,6 +331,18 @@ body.app-page .app-page-content .study-ui-card {
   background:linear-gradient(145deg,#171642,#111132);
   box-shadow:0 12px 30px #03031c4d,inset 0 1px 0 #ffffff0a;
 }
+body.app-page .app-page-content .topic-card {
+  border-color:#ffffff20;
+  color:#f3f1ff !important;
+  background:linear-gradient(145deg,#201d4a,#151437) !important;
+}
+body.app-page .app-page-content .topic-card h2 {
+  color:#f3f1ff !important;
+  -webkit-text-fill-color:#f3f1ff;
+}
+body.app-page .app-page-content .topic-card .muted {
+  color:#c7c4e2 !important;
+}
 body.app-page .app-page-content .topic-period,
 body.app-page .app-page-content .study-phase,
 body.app-page .app-page-content .study-ui-question-meta,
@@ -410,6 +426,48 @@ body.app-page .app-page-content .tutor-lesson-title h2 { color:#f3f1ff; }
 body.app-page .app-page-content .study-learning p,
 body.app-page .app-page-content .tutor-roadmap-panel > p,
 body.app-page .app-page-content .tutor-roadmap-item small { color:#b8b5d8; }
+body.app-page .app-page-content .study-lesson-note,
+body.app-page .app-page-content .study-comprehension {
+  border-color:#514b83;
+  color:#f3f1ff;
+  background:#171642;
+}
+body.app-page .app-page-content .study-lesson-note h3,
+body.app-page .app-page-content .study-lesson-section h4 { color:#d5c9ff; }
+body.app-page .app-page-content .study-lesson-section p,
+body.app-page .app-page-content .study-lesson-source { color:#e0def4; }
+body.app-page .app-page-content .study-code-notes { color:#e0def4; }
+body.app-page .app-page-content .study-code-output { color:#234534; background:#eef8f1; }
+body.app-page .app-page-content .study-code-output strong { color:#286847; }
+body.app-page .app-page-content .study-code-output code { color:#234534; }
+body.app-page .app-page-content .study-comprehension { background:#211e49; }
+body.app-page .app-page-content .study-assessment {
+  border-color:#514b83;
+  color:#f3f1ff;
+  background:#171642;
+}
+body.app-page .app-page-content .study-assessment h3,
+body.app-page .app-page-content .study-assessment-question { color:#f3f1ff; }
+body.app-page .app-page-content .study-assessment-progress,
+body.app-page .app-page-content .study-assessment-feedback { color:#e0def4; }
+body.app-page .app-page-content .study-assessment-options button[aria-pressed="true"] { background:#373064 !important; }
+body.app-page .app-page-content .study-learning .tutor-message.assistant .tutor-bubble {
+  border-color:#d6c27f;
+  color:#292d48;
+  background:#fff8df;
+}
+body.app-page .app-page-content .study-learning .tutor-message.assistant.sad .tutor-bubble {
+  border-color:#e4b9bf;
+  color:#54262d;
+  background:#fff0f1;
+}
+body.app-page .app-page-content .study-clarification textarea {
+  border-color:#62549b;
+  color:#f3f1ff;
+  background:#111132;
+}
+body.app-page .app-page-content .study-learning .tutor-composer[hidden],
+body.app-page .app-page-content .study-learning .tutor-hint[hidden] { display:none !important; }
 body.app-page .app-page-content #quiz-results .option { background:#1b1a3d; }
 body.app-page .app-page-content #analysis-results > .score { border-color:var(--line); color:#ddd6ff; background:#211e49; }
 body.app-page .app-page-content .roadmap-actions .secondary { color:#eeeaff; background:#29234f; }
@@ -468,6 +526,39 @@ body.app-page .leaderboard-card {
   background:linear-gradient(145deg,#171642,#111132);
   box-shadow:0 14px 36px #03031c5c,inset 0 1px 0 #ffffff0b;
 }
+body.app-page .game-invitations {
+  display:grid;
+  gap:10px;
+  margin:0 0 14px;
+  padding:15px;
+  border:1px solid #38bdf866;
+  border-radius:17px;
+  background:#151443;
+}
+body.app-page .game-invitations[hidden] { display:none; }
+body.app-page .game-invitations-heading { margin:0; color:#f3f1ff; font-size:1rem; }
+body.app-page .game-invitation {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px;
+  border:1px solid #ffffff18;
+  border-radius:12px;
+  background:#ffffff08;
+}
+body.app-page .game-invitation-copy { margin:0; color:#e4e0ff; }
+body.app-page .game-invitation-actions { display:flex; flex-wrap:wrap; gap:7px; }
+body.app-page .friend-invite-panel {
+  margin:15px 0;
+  padding:13px;
+  border:1px solid #ffffff18;
+  border-radius:14px;
+  background:#ffffff07;
+}
+body.app-page .friend-invite-list { display:grid; gap:7px; }
+body.app-page .friend-invite-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+body.app-page .friend-invite-status { min-height:18px; margin:7px 0 0; color:#b8b5d8 !important; font-size:.78rem; }
 body.app-page .leaderboard-heading h2,
 body.app-page .leaderboard-heading p,
 body.app-page .leaderboard-note,
@@ -475,6 +566,83 @@ body.app-page .game-card p,
 body.app-page .game-card label,
 body.app-page .game-card h2,
 body.app-page .game-card h3 { color:#f3f1ff; }
+body.app-page.minigame-page .leaderboard-entry,
+body.app-page.minigame-page .player-row,
+body.app-page.minigame-page .round-score-row,
+body.app-page.minigame-page .final-score-row,
+body.app-page.minigame-page .podium-loser {
+  border-color:#ffffff20;
+  color:#f3f1ff;
+  background:linear-gradient(120deg,#201e50,#171642);
+}
+body.app-page.minigame-page .leaderboard-entry:first-child,
+body.app-page.minigame-page .final-score-row:first-child {
+  border-color:#f5b02a70;
+  background:linear-gradient(120deg,#40331f,#211d42);
+}
+body.app-page.minigame-page .leaderboard-name,
+body.app-page.minigame-page .player-name,
+body.app-page.minigame-page .round-score-row,
+body.app-page.minigame-page .final-score-row,
+body.app-page.minigame-page .loser-name,
+body.app-page.minigame-page .loser-score,
+body.app-page.minigame-page .podium-draw-note {
+  color:#f3f1ff;
+}
+body.app-page.minigame-page .leaderboard-meta,
+body.app-page.minigame-page .player-tag {
+  color:#c5c2e6;
+}
+body.app-page.minigame-page .leaderboard-score,
+body.app-page.minigame-page .round-score-row strong,
+body.app-page.minigame-page .final-score-row strong {
+  color:#ffd166;
+}
+body.app-page.minigame-page .leaderboard-rank,
+body.app-page.minigame-page .player-avatar,
+body.app-page.minigame-page .option-number {
+  border-color:#ffffff24;
+  color:#101132;
+  background:#38bdf8;
+}
+body.app-page.minigame-page .rules-panel,
+body.app-page.minigame-page .question-box {
+  border-color:#8b7bff80;
+  color:#f3f1ff;
+  background:linear-gradient(145deg,#201d4a,#151437);
+  box-shadow:0 10px 24px #03031c40,inset 0 1px 0 #ffffff0b;
+}
+body.app-page.minigame-page .rules-title,
+body.app-page.minigame-page .rules-list,
+body.app-page.minigame-page .question-prompt,
+body.app-page.minigame-page .answer-waiting,
+body.app-page.minigame-page .room-copy-status,
+body.app-page.minigame-page .picture-game-status {
+  color:#e7e5ff;
+}
+body.app-page.minigame-page .primary-action,
+body.app-page.minigame-page .secondary-action,
+body.app-page.minigame-page .option-button,
+body.app-page.minigame-page .leave-button,
+body.app-page.minigame-page .room-copy,
+body.app-page.minigame-page .picture-letter-button,
+body.app-page.minigame-page .picture-buzz-button {
+  border-color:#ffffff35;
+  color:#111334;
+  background:linear-gradient(115deg,#55d2ff,#38bdf8);
+  box-shadow:0 5px 14px #03031c40,inset 0 1px 0 #ffffff70;
+}
+body.app-page.minigame-page .secondary-action,
+body.app-page.minigame-page .leave-button,
+body.app-page.minigame-page .room-copy {
+  color:#f3f1ff;
+  background:linear-gradient(115deg,#6e50d8,#3c76d3);
+}
+body.app-page.minigame-page .timer-pill {
+  border-color:#ffffff30;
+  color:#101132;
+  background:#38bdf8;
+}
 body.app-page .game-columns.obstacle-mode-active .game-card { border-color:#8b5cf680; }
 
 @media(max-width:900px) {
@@ -489,7 +657,7 @@ body.app-page .game-columns.obstacle-mode-active .game-card { border-color:#8b5c
     border-radius:17px;
   }
   body.app-page .app-brand { margin:0 2px; }
-  body.app-page .app-brand-icon { width:37px; height:37px; }
+  body.app-page .app-brand-icon { width:43px; height:46px; }
   body.app-page .app-nav { display:flex; min-width:0; max-width:100%; overflow-x:auto; gap:4px; padding:1px 0 3px; scrollbar-width:thin; }
   body.app-page .app-nav a { min-height:38px; flex:none; gap:7px; padding:7px 9px; font-size:.73rem; white-space:nowrap; }
   body.app-page .app-sidebar-mentor { display:none; }

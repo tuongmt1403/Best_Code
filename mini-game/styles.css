@@ -102,7 +102,7 @@ body.minigame-page {
 .player-list { display: grid; gap: 9px; margin: 0 0 20px; padding: 0; list-style: none; }
 .player-row { justify-content: space-between; gap: 12px; min-height: 55px; padding: 9px 12px; border: 1px solid #ffffff1b; border-radius: 14px; background: #0b123b82; }
 .player-identity { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.player-avatar { display: grid; width: 36px; height: 36px; flex: none; place-items: center; border: 1px solid #7d7bdf80; border-radius: 13px; background: linear-gradient(145deg,#6446b9,#207cab); font-size: 1rem; }
+.player-avatar { display: block; width: 44px; height: 48px; flex: none; border: 1px solid #7d7bdf80; border-radius: 13px; background: linear-gradient(145deg,#6446b9,#207cab); object-fit: contain; }
 .player-name { overflow: hidden; color: #fff; font-size: .88rem; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
 .player-tag { display: block; margin-top: 2px; color: #aab5e4; font-size: .7rem; font-weight: 600; }
 .game-hint { margin: 14px 0 0; color: #b1bde8; font-size: .8rem; line-height: 1.6; }

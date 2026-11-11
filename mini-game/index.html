@@ -6,12 +6,14 @@
   <meta name="theme-color" content="#090d3b">
   <title>Mini Game · Học Mà Chơi</title>
   <link rel="stylesheet" href="/dangKy_dangNhap/auth.css">
-  <link rel="stylesheet" href="/mini-game/styles.css?v=obstacle-board-v3">
+  <link rel="stylesheet" href="/mini-game/styles.css?v=avatar-picker-v2">
   <link rel="stylesheet" href="/bright-theme.css?v=obstacle-board-v3">
-  <link rel="stylesheet" href="/app-theme.css">
-  <script src="/app-shell.js" defer></script>
+  <link rel="stylesheet" href="/app-theme.css?v=avatar-picker-v4">
+  <link rel="stylesheet" href="/avatar-picker.css?v=avatar-picker-v4">
+  <script src="/app-shell.js?v=avatar-picker-v4" defer></script>
+  <script src="/avatar-picker.js?v=avatar-picker-v4" defer></script>
   <script src="/dangKy_dangNhap/session.js" defer></script>
-  <script src="/mini-game/client.js?v=obstacle-board-v3" defer></script>
+  <script src="/mini-game/client.js?v=avatar-picker-v4" defer></script>
 </head>
 <body class="auth-page minigame-page">
   <main class="game-scene">
@@ -31,6 +33,8 @@
       <h1>Thử tài cùng bạn bè</h1>
       <p>Tạo phòng, gửi mã cho bạn và cùng khám phá các câu hỏi theo chủ đề.</p>
     </section>
+
+    <section id="game-invitations" class="game-invitations" aria-live="polite" hidden></section>
 
     <div class="game-columns">
       <section id="game-card" class="game-card" aria-live="polite">

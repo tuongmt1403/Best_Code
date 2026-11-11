@@ -8,6 +8,20 @@ answers, a persistent points leaderboard, and a short result screen between roun
 At the end of a game, winners appear on a trophy podium and other players get a
 gentle, sad-face "next round" reaction; detailed scores remain available below.
 
+Players can send and accept friend requests by username from the dashboard. During a
+room lobby, the host can invite an existing friend directly; the recipient accepts
+the in-app invitation to join without entering a room code. Room codes and invite
+links remain available for sharing.
+
+The lifetime points leaderboard also determines a player's rank: Newbie, Đồng Bạc
+(5,000 points), Vàng (10,000), Kim Cương (15,000), Huyền Thoại (50,000), and
+Trạng Nguyên (100,000). Existing game scoring supplies rank points; cooperative
+obstacle games continue to award no points. The dashboard shows cumulative points,
+answered/correct question counts, a daily activity streak, and a seven-day correct
+answer chart. Historic lifetime totals are retained, but daily streak and chart
+history begin when activity tracking is introduced; older question totals can only
+use correct answers that were already stored.
+
 All players must open the same application server URL. When joining from another
 device, use the server computer's reachable LAN address or public domain, not
 `localhost` (which points to each player's own device). Each player also needs a

@@ -13,6 +13,9 @@ let activeMusicPhase = "";
 let victoryPlayed = false;
 let activeGameTrackStarted = false;
 let musicMuted = sessionStorage.getItem("minigame-music-muted") === "true";
+let socialData = { friends: [], incoming: [], outgoing: [] };
+let invitedFriendIds = new Set();
+let invitePollTimer = null;
 let olympiaSpeechKey = "";
 let olympiaAudio = null;
 let olympiaAudioUrl = "";
@@ -25,6 +28,10 @@ function node(tag, className, text) {
   if (className) element.className = className;
   if (text !== undefined) element.textContent = text;
   return element;
+}
+
+function avatarImage(avatarId) {
+  return avatarId === "knight" ? "/images/ai-knight.png" : "/images/lua-fox.png";
 }
 
 function setError(text) {
@@ -60,6 +67,58 @@ async function request(url, options = {}) {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || "Không thể hoàn tất yêu cầu.");
   return data;
+}
+
+async function loadSocialData() {
+  socialData = await request("/api/minigame/friends");
+  return socialData;
+}
+
+async function pollGameInvites() {
+  const container = document.querySelector("#game-invitations");
+  if (!container) return;
+  const { invites } = await request("/api/minigame/invites");
+  container.replaceChildren();
+  container.hidden = invites.length === 0;
+  if (!invites.length) return;
+  const heading = node("h2", "game-invitations-heading", "🎮 Lời mời chơi từ bạn bè");
+  container.append(heading);
+  invites.forEach((invite) => {
+    const card = node("article", "game-invitation");
+    const details = node("p", "game-invitation-copy", `${invite.invitedByUsername} mời bạn chơi: ${invite.topic}`);
+    const actions = node("div", "game-invitation-actions");
+    const accept = node("button", "primary-action", "Vào chơi ngay");
+    accept.type = "button";
+    accept.addEventListener("click", async () => {
+      accept.disabled = true;
+      try {
+        const room = await request(`/api/minigame/invites/${encodeURIComponent(invite.id)}/accept`, {
+          method: "POST",
+          body: "{}",
+        });
+        enterRoom(room.code);
+      } catch (error) {
+        accept.disabled = false;
+        setError(error.message);
+        await pollGameInvites();
+      }
+    });
+    const decline = node("button", "secondary-action", "Từ chối");
+    decline.type = "button";
+    decline.addEventListener("click", async () => {
+      decline.disabled = true;
+      try {
+        await request(`/api/minigame/invites/${encodeURIComponent(invite.id)}`, { method: "DELETE" });
+        await pollGameInvites();
+      } catch (error) {
+        decline.disabled = false;
+        setError(error.message);
+      }
+    });
+    actions.append(accept, decline);
+    card.append(details, actions);
+    container.append(card);
+  });
 }
 
 function playGameMusic(src, loop = true) {
@@ -126,7 +185,7 @@ function renderLeaderboard(entries) {
     const item = node("li", "leaderboard-entry");
     const rank = node("span", "leaderboard-rank", ["🥇", "🥈", "🥉"][index] || String(index + 1));
     const info = node("span", "leaderboard-name", entry.username);
-    info.append(node("small", "leaderboard-meta", `${entry.wins} thắng · ${entry.gamesPlayed} ván · ${entry.correctAnswers} câu đúng`));
+    info.append(node("small", "leaderboard-meta", `${entry.rank.icon} ${entry.rank.name} · ${entry.wins} thắng · ${entry.gamesPlayed} ván · ${entry.correctAnswers} câu đúng`));
     item.append(rank, info, node("strong", "leaderboard-score", `${entry.totalPoints} điểm`));
     leaderboardList.append(item);
   });
@@ -244,7 +303,9 @@ function renderSetup() {
         ? "✨ AI đang tạo câu hỏi và tự vẽ tranh..."
         : modeSelect.value === "olympia"
           ? "✨ AI đang tạo câu hỏi Olympia..."
-      : `✨ AI đang tạo ${countSelect.value} câu (~10–16 giây)...`;
+      : modeSelect.value === "quiz"
+        ? "✨ Ollama đang tạo câu hỏi..."
+        : `✨ AI đang tạo ${countSelect.value} câu...`;
     setError("");
     try {
       const room = await request("/api/minigame/rooms", {
@@ -281,6 +342,7 @@ function enterRoom(code) {
   stopOlympiaVoice();
   olympiaSpeechKey = "";
   roomCode = code.toUpperCase();
+  invitedFriendIds = new Set();
   victoryPlayed = false;
   activeGameTrackStarted = false;
   playLobbyMusic();
@@ -295,7 +357,10 @@ function renderPlayerList(players) {
   players.forEach((player) => {
     const item = node("li", "player-row");
     const identity = node("span", "player-identity");
-    identity.append(node("span", "player-avatar", player.isHost ? "👑" : "🦊"));
+    const avatar = node("img", "player-avatar");
+    avatar.src = avatarImage(player.avatarId);
+    avatar.alt = `${player.username} đã chọn avatar`;
+    identity.append(avatar);
     const name = node("span", "player-name", player.username);
     name.append(node("small", "player-tag", `${player.isHost ? "Người tạo phòng · " : ""}${player.rulesAcknowledged ? "Đã hiểu luật ✓" : "Chưa đọc luật"}`));
     identity.append(name);
@@ -330,6 +395,41 @@ function renderLobby(snapshot) {
     : null;
   const playersHeading = node("h3", "answer-label", `Người chơi (${snapshot.players.length}/6)`);
   const players = renderPlayerList(snapshot.players);
+  const friendInvitePanel = node("section", "friend-invite-panel");
+  friendInvitePanel.append(node("h3", "answer-label", "Mời bạn bè trực tiếp"));
+  if (!snapshot.isHost) {
+    friendInvitePanel.append(node("p", "game-hint", "Chỉ chủ phòng có thể gửi lời mời trực tiếp."));
+  } else if (socialData.friends.length === 0) {
+    friendInvitePanel.append(node("p", "game-hint", "Chưa có bạn bè để mời. Kết bạn từ trang chính hoặc tiếp tục chia sẻ mã phòng."));
+  } else {
+    const friendList = node("div", "friend-invite-list");
+    const invitedStatus = node("p", "friend-invite-status");
+    socialData.friends.forEach((friend) => {
+      const row = node("div", "friend-invite-row");
+      row.append(node("span", "", friend.username));
+      const inviteButton = node("button", "secondary-action", invitedFriendIds.has(friend.userId) ? "Đã mời" : "Mời vào phòng");
+      inviteButton.type = "button";
+      inviteButton.disabled = invitedFriendIds.has(friend.userId) || snapshot.players.some((player) => player.username === friend.username);
+      inviteButton.addEventListener("click", async () => {
+        inviteButton.disabled = true;
+        try {
+          await request(`/api/minigame/friends/${encodeURIComponent(friend.userId)}/invites`, {
+            method: "POST",
+            body: JSON.stringify({ roomCode: snapshot.code }),
+          });
+          invitedFriendIds.add(friend.userId);
+          inviteButton.textContent = "Đã mời";
+          invitedStatus.textContent = `Đã gửi lời mời cho ${friend.username}.`;
+        } catch (error) {
+          invitedStatus.textContent = error.message;
+          inviteButton.disabled = false;
+        }
+      });
+      row.append(inviteButton);
+      friendList.append(row);
+    });
+    friendInvitePanel.append(friendList, invitedStatus);
+  }
   const rules = node("section", "rules-panel");
   rules.append(node("h3", "rules-title", "LUẬT CHƠI – CẢ NHÓM CẦN ĐỒNG Ý"));
   const ruleItems = snapshot.mode === "olympia"
@@ -407,6 +507,7 @@ function renderLobby(snapshot) {
     ...(reviewWarning ? [reviewWarning] : []),
     playersHeading,
     players,
+    friendInvitePanel,
     rules,
     actions,
     error,
@@ -1183,7 +1284,8 @@ function renderFinalResult(snapshot) {
     const winner = node("article", "podium-winner");
     const character = node("div", "winner-character");
     const fox = node("img", "winner-fox");
-    fox.src = "/images/lua-fox.png";
+    const playerAvatar = snapshot.players.find((item) => item.username === player.username)?.avatarId;
+    fox.src = avatarImage(playerAvatar);
     fox.alt = `${player.username} vui mừng trên bục chiến thắng`;
     const trophy = node("span", "winner-trophy", "🏆");
     trophy.setAttribute("role", "img");
@@ -1209,6 +1311,7 @@ function renderFinalResult(snapshot) {
       const loser = node("article", "podium-loser");
       const fox = node("img", "loser-fox");
       fox.src = "/images/lua-fox-sad.png";
+      fox.src = avatarImage(snapshot.players.find((item) => item.username === player.username)?.avatarId);
       fox.alt = `${player.username} tiếc nuối sau ván chơi`;
       const details = node("span", "loser-details");
       details.append(
@@ -1360,7 +1463,7 @@ async function leaveRoom() {
 
 async function initialize() {
   try {
-    await Promise.all([loadTopics(), loadLeaderboard()]);
+    await Promise.all([loadTopics(), loadLeaderboard(), loadSocialData()]);
     renderSetup();
     const inviteCode = query.get("room");
     if (inviteCode) {
@@ -1372,6 +1475,12 @@ async function initialize() {
     }
   } catch (error) {
     content.replaceChildren(node("p", "game-error", `${error.message} Hãy tải lại trang để thử lại.`));
+  }
+  await pollGameInvites().catch((error) => { liveStatus.textContent = error.message; });
+  if (!invitePollTimer) {
+    invitePollTimer = window.setInterval(() => {
+      pollGameInvites().catch((error) => { liveStatus.textContent = error.message; });
+    }, 5000);
   }
 }
 

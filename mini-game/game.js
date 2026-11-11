@@ -1,10 +1,67 @@
 import Database from "better-sqlite3";
 import express from "express";
-import { randomInt } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-const questionBanks = {
+const rankLevels = [
+  { name: "Newbie", icon: "🌱", threshold: 0 },
+  { name: "Đồng Bạc", icon: "🥉", threshold: 5_000 },
+  { name: "Vàng", icon: "🥇", threshold: 10_000 },
+  { name: "Kim Cương", icon: "💎", threshold: 15_000 },
+  { name: "Huyền Thoại", icon: "🏆", threshold: 50_000 },
+  { name: "Trạng Nguyên", icon: "👑", threshold: 100_000 },
+];
+const activityDateFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: "Asia/Ho_Chi_Minh",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function activityDate(timestamp) {
+  const parts = Object.fromEntries(activityDateFormatter.formatToParts(new Date(timestamp))
+    .map(({ type, value }) => [type, value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function shiftActivityDate(date, offset) {
+  const value = new Date(`${date}T12:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + offset);
+  return value.toISOString().slice(0, 10);
+}
+
+function rankForPoints(points) {
+  let rankIndex = 0;
+  for (let index = 1; index < rankLevels.length; index += 1) {
+    if (points < rankLevels[index].threshold) break;
+    rankIndex = index;
+  }
+  const rank = rankLevels[rankIndex];
+  const nextRank = rankLevels[rankIndex + 1] || null;
+  return {
+    ...rank,
+    nextRank,
+    pointsToNext: nextRank ? Math.max(0, nextRank.threshold - points) : 0,
+    progressPercent: nextRank
+      ? Math.min(100, Math.floor((points - rank.threshold) / (nextRank.threshold - rank.threshold) * 100))
+      : 100,
+  };
+}
+
+function currentStreak(activeDates, today) {
+  const dates = new Set(activeDates);
+  let date = dates.has(today) ? today : shiftActivityDate(today, -1);
+  if (!dates.has(date)) return 0;
+  let count = 0;
+  while (dates.has(date)) {
+    count += 1;
+    date = shiftActivityDate(date, -1);
+  }
+  return count;
+}
+
+export const questionBanks = {
   english: {
     title: "Từ vựng tiếng Anh",
     questions: [
@@ -332,11 +389,29 @@ const ROOM_CODE_LENGTH = 6;
 function publicPlayer(player) {
   return {
     username: player.username,
+    avatarId: player.avatarId,
     score: player.score,
     correctAnswers: player.correctAnswers,
     hasAnswered: Boolean(player.answer),
     rulesAcknowledged: Boolean(player.rulesAcknowledged),
     isHost: player.isHost,
+  };
+}
+
+function makePlayer(id, username, isHost, getAvatar = () => "fox") {
+  return {
+    id,
+    username,
+    get avatarId() {
+      return getAvatar() === "knight" ? "knight" : "fox";
+    },
+    isHost,
+    score: 0,
+    correctAnswers: 0,
+    answer: null,
+    rulesAcknowledged: false,
+    answeredQuestionIndices: new Set(),
+    correctQuestionIndices: new Set(),
   };
 }
 
@@ -510,17 +585,7 @@ function finishRoom(room, db, now) {
   const winnerIds = new Set(winners.map((player) => player.id));
   const saveResults = db.transaction(() => {
     for (const player of players) {
-      db.prepare(`
-        INSERT INTO leaderboard (user_id, username, total_points, wins, games_played, correct_answers, updated_at)
-        VALUES (?, ?, ?, ?, 1, ?, ?)
-        ON CONFLICT(user_id) DO UPDATE SET
-          username = excluded.username,
-          total_points = leaderboard.total_points + excluded.total_points,
-          wins = leaderboard.wins + excluded.wins,
-          games_played = leaderboard.games_played + 1,
-          correct_answers = leaderboard.correct_answers + excluded.correct_answers,
-          updated_at = excluded.updated_at
-      `).run(player.id, player.username, player.score, winnerIds.has(player.id) && winners.length === 1 ? 1 : 0, player.correctAnswers, now);
+      room.recordGamePlayed(player, now, player.score, winnerIds.has(player.id) && winners.length === 1 ? 1 : 0);
     }
   });
   saveResults();
@@ -531,6 +596,7 @@ function finishRoom(room, db, now) {
       .sort((a, b) => b.score - a.score || b.correctAnswers - a.correctAnswers || a.username.localeCompare(b.username))
       .map((player) => ({
         username: player.username,
+        avatarId: player.avatarId === "knight" ? "knight" : "fox",
         score: player.score,
         correctAnswers: player.correctAnswers,
         outcome: winners.length > 1 ? "draw" : winnerIds.has(player.id) ? "win" : "loss",
@@ -540,6 +606,10 @@ function finishRoom(room, db, now) {
 }
 
 function finishObstacleRoom(room, now, outcome) {
+  const saveResults = room.db.transaction(() => {
+    for (const player of room.players.values()) room.recordGamePlayed(player, now, 0, 0);
+  });
+  saveResults();
   room.phase = "finished";
   room.finishedAt = now;
   room.obstacleFinalOutcome = outcome;
@@ -548,7 +618,7 @@ function finishObstacleRoom(room, now, outcome) {
     players: [...room.players.values()].map((player) => ({
       username: player.username,
       score: 0,
-      correctAnswers: 0,
+      correctAnswers: player.correctAnswers,
       outcome: "draw",
     })),
   };
@@ -599,7 +669,7 @@ function resolveRound(room, now) {
       ? 100 + Math.max(0, Math.floor((ROUND_DURATION_MS - Math.min(elapsedMs, ROUND_DURATION_MS)) / ROUND_DURATION_MS * 50))
       : 0;
     player.score += points;
-    if (correct) player.correctAnswers += 1;
+    if (answer) room.recordQuestionActivity(room, player, now, correct);
     player.answer = null;
     return {
       userId: player.id,
@@ -689,7 +759,6 @@ function resolveOlympiaRound(room, now, winnerId, answerTimedOut = false) {
   });
   if (winner) {
     winner.score += 100;
-    winner.correctAnswers += 1;
   }
   room.phase = "roundResult";
   room.roundResult = {
@@ -848,6 +917,7 @@ export function createMiniGame({
   projectDir,
   clock = Date.now,
   generateQuestions,
+  findUserByUsername = () => null,
 } = {}) {
   if (!projectDir) throw new TypeError("projectDir is required to initialize mini-game storage.");
 
@@ -863,17 +933,168 @@ export function createMiniGame({
       wins INTEGER NOT NULL DEFAULT 0,
       games_played INTEGER NOT NULL DEFAULT 0,
       correct_answers INTEGER NOT NULL DEFAULT 0,
+      total_answered INTEGER NOT NULL DEFAULT 0,
       updated_at INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS player_activity (
+      user_id TEXT NOT NULL,
+      activity_date TEXT NOT NULL,
+      questions_answered INTEGER NOT NULL DEFAULT 0,
+      correct_answers INTEGER NOT NULL DEFAULT 0,
+      games_played INTEGER NOT NULL DEFAULT 0,
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY (user_id, activity_date)
+    );
+    CREATE TABLE IF NOT EXISTS study_activity_events (
+      user_id TEXT NOT NULL,
+      event_id TEXT NOT NULL,
+      topic_id TEXT NOT NULL,
+      focus_topic TEXT NOT NULL,
+      phase TEXT NOT NULL,
+      questions_answered INTEGER NOT NULL,
+      correct_answers INTEGER NOT NULL,
+      activity_date TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      PRIMARY KEY (user_id, event_id)
+    );
+    CREATE TABLE IF NOT EXISTS friendships (
+      user_id_a TEXT NOT NULL,
+      username_a TEXT NOT NULL,
+      user_id_b TEXT NOT NULL,
+      username_b TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      PRIMARY KEY (user_id_a, user_id_b),
+      CHECK (user_id_a < user_id_b)
+    );
+    CREATE TABLE IF NOT EXISTS friend_requests (
+      id TEXT PRIMARY KEY,
+      sender_id TEXT NOT NULL,
+      sender_username TEXT NOT NULL,
+      recipient_id TEXT NOT NULL,
+      recipient_username TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      UNIQUE (sender_id, recipient_id),
+      CHECK (sender_id != recipient_id)
     );
     CREATE INDEX IF NOT EXISTS leaderboard_rank_idx
       ON leaderboard(total_points DESC, wins DESC, correct_answers DESC);
+    CREATE INDEX IF NOT EXISTS player_activity_date_idx
+      ON player_activity(user_id, activity_date DESC);
+    CREATE INDEX IF NOT EXISTS study_activity_date_idx
+      ON study_activity_events(user_id, activity_date DESC);
+    CREATE INDEX IF NOT EXISTS friend_requests_recipient_idx
+      ON friend_requests(recipient_id, created_at);
   `);
+  const leaderboardColumns = new Set(db.pragma("table_info(leaderboard)").map((column) => column.name));
+  if (!leaderboardColumns.has("total_answered")) {
+    db.exec("ALTER TABLE leaderboard ADD COLUMN total_answered INTEGER NOT NULL DEFAULT 0");
+  }
+  db.exec("UPDATE leaderboard SET total_answered = correct_answers WHERE total_answered < correct_answers");
 
   const rooms = new Map();
   const playerRooms = new Map();
   const recentGeneratedQuestions = new Map();
   const pendingRoomCreations = new Set();
+  const pendingInvites = new Map();
   const router = express.Router();
+
+  const recordQuestionActivity = db.transaction((room, player, now, correct) => {
+    const newAnswer = !player.answeredQuestionIndices.has(room.questionIndex);
+    const newCorrect = correct && !player.correctQuestionIndices.has(room.questionIndex);
+    if (!newAnswer && !newCorrect) return;
+    if (newAnswer) player.answeredQuestionIndices.add(room.questionIndex);
+    if (newCorrect) {
+      player.correctQuestionIndices.add(room.questionIndex);
+      player.correctAnswers += 1;
+    }
+    const answeredDelta = newAnswer ? 1 : 0;
+    const correctDelta = newCorrect ? 1 : 0;
+    const date = activityDate(now);
+    db.prepare(`
+      INSERT INTO leaderboard (
+        user_id, username, total_points, wins, games_played, correct_answers, total_answered, updated_at
+      ) VALUES (?, ?, 0, 0, 0, ?, ?, ?)
+      ON CONFLICT(user_id) DO UPDATE SET
+        username = excluded.username,
+        correct_answers = leaderboard.correct_answers + excluded.correct_answers,
+        total_answered = leaderboard.total_answered + excluded.total_answered,
+        updated_at = excluded.updated_at
+    `).run(player.id, player.username, correctDelta, answeredDelta, now);
+    db.prepare(`
+      INSERT INTO player_activity (
+        user_id, activity_date, questions_answered, correct_answers, updated_at
+      ) VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(user_id, activity_date) DO UPDATE SET
+        questions_answered = player_activity.questions_answered + excluded.questions_answered,
+        correct_answers = player_activity.correct_answers + excluded.correct_answers,
+        updated_at = excluded.updated_at
+    `).run(player.id, date, answeredDelta, correctDelta, now);
+  });
+
+  const recordStudyActivity = db.transaction(({
+    userId,
+    username,
+    eventId,
+    topicId,
+    focusTopic,
+    phase,
+    questionsAnswered,
+    correctAnswers,
+    now,
+  }) => {
+    const date = activityDate(now);
+    const inserted = db.prepare(`
+      INSERT INTO study_activity_events (
+        user_id, event_id, topic_id, focus_topic, phase, questions_answered,
+        correct_answers, activity_date, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(user_id, event_id) DO NOTHING
+    `).run(userId, eventId, topicId, focusTopic, phase, questionsAnswered, correctAnswers, date, now);
+    if (!inserted.changes) return false;
+
+    db.prepare(`
+      INSERT INTO leaderboard (
+        user_id, username, total_points, wins, games_played, correct_answers, total_answered, updated_at
+      ) VALUES (?, ?, 0, 0, 0, ?, ?, ?)
+      ON CONFLICT(user_id) DO UPDATE SET
+        username = excluded.username,
+        correct_answers = leaderboard.correct_answers + excluded.correct_answers,
+        total_answered = leaderboard.total_answered + excluded.total_answered,
+        updated_at = excluded.updated_at
+    `).run(userId, username, correctAnswers, questionsAnswered, now);
+    db.prepare(`
+      INSERT INTO player_activity (
+        user_id, activity_date, questions_answered, correct_answers, updated_at
+      ) VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(user_id, activity_date) DO UPDATE SET
+        questions_answered = player_activity.questions_answered + excluded.questions_answered,
+        correct_answers = player_activity.correct_answers + excluded.correct_answers,
+        updated_at = excluded.updated_at
+    `).run(userId, date, questionsAnswered, correctAnswers, now);
+    return true;
+  });
+
+  function recordGamePlayed(player, now, score, won) {
+    const date = activityDate(now);
+    db.prepare(`
+      INSERT INTO leaderboard (
+        user_id, username, total_points, wins, games_played, correct_answers, total_answered, updated_at
+      ) VALUES (?, ?, ?, ?, 1, 0, 0, ?)
+      ON CONFLICT(user_id) DO UPDATE SET
+        username = excluded.username,
+        total_points = leaderboard.total_points + excluded.total_points,
+        wins = leaderboard.wins + excluded.wins,
+        games_played = leaderboard.games_played + 1,
+        updated_at = excluded.updated_at
+    `).run(player.id, player.username, score, won, now);
+    db.prepare(`
+      INSERT INTO player_activity (user_id, activity_date, games_played, updated_at)
+      VALUES (?, ?, 1, ?)
+      ON CONFLICT(user_id, activity_date) DO UPDATE SET
+        games_played = player_activity.games_played + 1,
+        updated_at = excluded.updated_at
+    `).run(player.id, date, now);
+  }
 
   async function createQuestionSet(topicId, questionCount) {
     if (typeof generateQuestions !== "function") {
@@ -886,6 +1107,7 @@ export function createMiniGame({
       topic: bank.title,
       count: questionCount,
       avoidQuestions: previousQuestions,
+      referenceQuestions: bank.questions,
     });
     const generated = Array.isArray(result) ? result : result?.questions;
     const questionReview = Array.isArray(result) ? null : result?.review || null;
@@ -952,16 +1174,270 @@ export function createMiniGame({
     })));
   });
 
+  router.get("/api/minigame/progress", (req, res) => {
+    const now = clock();
+    const today = activityDate(now);
+    const totals = db.prepare(`
+      SELECT total_points AS totalPoints, total_answered AS totalAnswered,
+        correct_answers AS correctAnswers, games_played AS gamesPlayed
+      FROM leaderboard WHERE user_id = ?
+    `).get(req.authUser.id) || { totalPoints: 0, totalAnswered: 0, correctAnswers: 0, gamesPlayed: 0 };
+    const dailyRows = db.prepare(`
+      SELECT activity_date AS date, questions_answered AS questionsAnswered,
+        correct_answers AS correctAnswers, games_played AS gamesPlayed
+      FROM player_activity
+      WHERE user_id = ? AND activity_date >= ?
+      ORDER BY activity_date ASC
+    `).all(req.authUser.id, shiftActivityDate(today, -6));
+    const dailyByDate = new Map(dailyRows.map((row) => [row.date, row]));
+    const chart = Array.from({ length: 7 }, (_, index) => {
+      const date = shiftActivityDate(today, index - 6);
+      const row = dailyByDate.get(date);
+      return {
+        date,
+        questionsAnswered: row?.questionsAnswered || 0,
+        correctAnswers: row?.correctAnswers || 0,
+      };
+    });
+
+    const activeDates = db.prepare(`
+      SELECT activity_date FROM player_activity
+      WHERE user_id = ? AND questions_answered > 0
+      ORDER BY activity_date DESC
+    `).all(req.authUser.id).map((row) => row.activity_date);
+    const todayActivity = dailyByDate.get(today);
+    res.set("Cache-Control", "no-store");
+    res.json({
+      username: req.authUser.username,
+      totalPoints: totals.totalPoints,
+      totalAnswered: totals.totalAnswered,
+      correctAnswers: totals.correctAnswers,
+      gamesPlayed: totals.gamesPlayed,
+      questionsToday: todayActivity?.questionsAnswered || 0,
+      correctToday: todayActivity?.correctAnswers || 0,
+      streakDays: currentStreak(activeDates, today),
+      rank: rankForPoints(totals.totalPoints),
+      chart,
+      historicalBaseline: "Tổng hợp mini-game và bài kiểm tra lộ trình học; lịch sử cũ chỉ lưu câu đúng.",
+    });
+  });
+
+  router.post("/api/minigame/study-activity", (req, res) => {
+    const { eventId, topicId, focusTopic, phase, questionsAnswered, correctAnswers } = req.body || {};
+    if (typeof eventId !== "string"
+      || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(eventId)
+      || typeof topicId !== "string" || !/^[a-zA-Z0-9_-]{1,60}$/.test(topicId)
+      || typeof focusTopic !== "string" || !focusTopic.trim() || focusTopic.length > 120
+      || !["foundation", "practice", "advanced"].includes(phase)
+      || !Number.isInteger(questionsAnswered) || questionsAnswered < 1 || questionsAnswered > 20
+      || !Number.isInteger(correctAnswers) || correctAnswers < 0 || correctAnswers > questionsAnswered) {
+      return res.status(400).json({ error: "Dữ liệu hoàn thành bài học không hợp lệ." });
+    }
+
+    const recorded = recordStudyActivity({
+      userId: req.authUser.id,
+      username: req.authUser.username,
+      eventId,
+      topicId,
+      focusTopic: focusTopic.trim(),
+      phase,
+      questionsAnswered,
+      correctAnswers,
+      now: clock(),
+    });
+    res.set("Cache-Control", "no-store");
+    return res.json({ recorded, questionsAnswered, correctAnswers });
+  });
+
   router.get("/api/minigame/leaderboard", (_req, res) => {
     const entries = db.prepare(`
-      SELECT username, total_points AS totalPoints, wins, games_played AS gamesPlayed,
+      SELECT user_id AS userId, username, total_points AS totalPoints, wins, games_played AS gamesPlayed,
         correct_answers AS correctAnswers
       FROM leaderboard
       ORDER BY total_points DESC, wins DESC, correct_answers DESC, username COLLATE NOCASE ASC
       LIMIT 25
     `).all();
+    entries.forEach((entry, index) => {
+      entry.position = index + 1;
+      entry.rank = rankForPoints(entry.totalPoints);
+    });
     res.set("Cache-Control", "no-store");
     res.json({ entries });
+  });
+
+  router.get("/api/minigame/friends", (req, res) => {
+    const friends = db.prepare(`
+      SELECT user_id_a AS userId, username_a AS username, created_at AS createdAt
+      FROM friendships WHERE user_id_b = ?
+      UNION ALL
+      SELECT user_id_b AS userId, username_b AS username, created_at AS createdAt
+      FROM friendships WHERE user_id_a = ?
+      ORDER BY username COLLATE NOCASE
+    `).all(req.authUser.id, req.authUser.id);
+    const incoming = db.prepare(`
+      SELECT id, sender_id AS userId, sender_username AS username, created_at AS createdAt
+      FROM friend_requests WHERE recipient_id = ? ORDER BY created_at DESC
+    `).all(req.authUser.id);
+    const outgoing = db.prepare(`
+      SELECT id, recipient_id AS userId, recipient_username AS username, created_at AS createdAt
+      FROM friend_requests WHERE sender_id = ? ORDER BY created_at DESC
+    `).all(req.authUser.id);
+    res.set("Cache-Control", "no-store");
+    res.json({ friends, incoming, outgoing });
+  });
+
+  router.post("/api/minigame/friends/requests", (req, res) => {
+    const username = typeof req.body?.username === "string" ? req.body.username.trim() : "";
+    if (!username || username.length > 24) {
+      return res.status(400).json({ error: "Nhập tên người dùng dài tối đa 24 ký tự." });
+    }
+    const recipient = findUserByUsername(username);
+    if (!recipient) return res.status(404).json({ error: "Không tìm thấy người dùng này." });
+    if (recipient.id === req.authUser.id) return res.status(400).json({ error: "Bạn không thể tự kết bạn với chính mình." });
+    const userA = req.authUser.id < recipient.id ? req.authUser.id : recipient.id;
+    const userB = userA === req.authUser.id ? recipient.id : req.authUser.id;
+    if (db.prepare("SELECT 1 FROM friendships WHERE user_id_a = ? AND user_id_b = ?").get(userA, userB)) {
+      return res.status(409).json({ error: "Hai bạn đã là bạn bè." });
+    }
+    const reciprocal = db.prepare(`
+      SELECT id FROM friend_requests WHERE sender_id = ? AND recipient_id = ?
+    `).get(recipient.id, req.authUser.id);
+    if (reciprocal) {
+      return res.status(409).json({ error: "Người này đã gửi lời mời cho bạn. Hãy chấp nhận lời mời đang chờ." });
+    }
+    if (db.prepare("SELECT 1 FROM friend_requests WHERE sender_id = ? AND recipient_id = ?").get(req.authUser.id, recipient.id)) {
+      return res.status(409).json({ error: "Lời mời kết bạn đã được gửi và đang chờ phản hồi." });
+    }
+    db.prepare(`
+      INSERT INTO friend_requests (id, sender_id, sender_username, recipient_id, recipient_username, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(randomUUID(), req.authUser.id, req.authUser.username, recipient.id, recipient.username, clock());
+    return res.status(201).json({ sent: true, username: recipient.username });
+  });
+
+  router.post("/api/minigame/friends/requests/:requestId/accept", (req, res) => {
+    const request = db.prepare(`
+      SELECT * FROM friend_requests WHERE id = ? AND recipient_id = ?
+    `).get(req.params.requestId, req.authUser.id);
+    if (!request) return res.status(404).json({ error: "Không tìm thấy lời mời kết bạn đang chờ." });
+    const userAIsSender = request.sender_id < request.recipient_id;
+    const insertFriendship = db.prepare(`
+      INSERT OR IGNORE INTO friendships (user_id_a, username_a, user_id_b, username_b, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    const accept = db.transaction(() => {
+      insertFriendship.run(
+        userAIsSender ? request.sender_id : request.recipient_id,
+        userAIsSender ? request.sender_username : request.recipient_username,
+        userAIsSender ? request.recipient_id : request.sender_id,
+        userAIsSender ? request.recipient_username : request.sender_username,
+        clock(),
+      );
+      db.prepare("DELETE FROM friend_requests WHERE id = ?").run(request.id);
+    });
+    accept();
+    return res.json({ accepted: true, username: request.sender_username });
+  });
+
+  router.delete("/api/minigame/friends/requests/:requestId", (req, res) => {
+    const result = db.prepare(`
+      DELETE FROM friend_requests
+      WHERE id = ? AND (sender_id = ? OR recipient_id = ?)
+    `).run(req.params.requestId, req.authUser.id, req.authUser.id);
+    if (result.changes === 0) return res.status(404).json({ error: "Không tìm thấy lời mời kết bạn." });
+    return res.json({ removed: true });
+  });
+
+  router.post("/api/minigame/friends/:friendId/invites", (req, res) => {
+    const friendId = req.params.friendId;
+    const userA = req.authUser.id < friendId ? req.authUser.id : friendId;
+    const userB = userA === req.authUser.id ? friendId : req.authUser.id;
+    if (!db.prepare("SELECT 1 FROM friendships WHERE user_id_a = ? AND user_id_b = ?").get(userA, userB)) {
+      return res.status(403).json({ error: "Chỉ có thể mời bạn bè đã kết nối." });
+    }
+    const roomCode = typeof req.body?.roomCode === "string" ? req.body.roomCode : "";
+    const room = getRoom(roomCode);
+    if (!room) return res.status(404).json({ error: "Không tìm thấy phòng chơi." });
+    if (room.hostId !== req.authUser.id) return res.status(403).json({ error: "Chỉ chủ phòng mới có thể gửi lời mời trực tiếp." });
+    advanceRoom(room, db, clock());
+    if (room.phase !== "lobby") return res.status(409).json({ error: "Chỉ có thể mời bạn vào phòng chờ trước khi ván chơi bắt đầu." });
+    if (room.players.has(friendId)) return res.status(409).json({ error: "Bạn này đã ở trong phòng." });
+    if (room.players.size >= 6) return res.status(409).json({ error: "Phòng đã đủ 6 người chơi." });
+    if (playerRooms.has(friendId)) return res.status(409).json({ error: "Bạn này đang ở trong một phòng khác." });
+    if ([...pendingInvites.values()].some((invite) => invite.roomCode === room.code && invite.invitedUserId === friendId)) {
+      return res.status(409).json({ error: "Lời mời chơi cho bạn này đã được gửi." });
+    }
+    const invite = {
+      id: randomUUID(),
+      roomCode: room.code,
+      invitedById: req.authUser.id,
+      invitedByUsername: req.authUser.username,
+      invitedUserId: friendId,
+      createdAt: clock(),
+    };
+    pendingInvites.set(invite.id, invite);
+    return res.status(201).json({ sent: true, inviteId: invite.id });
+  });
+
+  router.get("/api/minigame/invites", (req, res) => {
+    const invites = [];
+    for (const [id, invite] of pendingInvites) {
+      const room = getRoom(invite.roomCode);
+      if (!room || room.phase !== "lobby") {
+        pendingInvites.delete(id);
+        continue;
+      }
+      if (invite.invitedUserId !== req.authUser.id) continue;
+      invites.push({
+        id: invite.id,
+        invitedByUsername: invite.invitedByUsername,
+        topic: room.mode === "picture"
+          ? pictureQuestionBanks[room.topicId]?.title || "Đuổi hình bắt chữ"
+          : questionBanks[room.topicId]?.title || room.topic,
+        mode: room.mode,
+        createdAt: invite.createdAt,
+      });
+    }
+    res.set("Cache-Control", "no-store");
+    return res.json({ invites });
+  });
+
+  router.post("/api/minigame/invites/:inviteId/accept", (req, res) => {
+    const invite = pendingInvites.get(req.params.inviteId);
+    if (!invite || invite.invitedUserId !== req.authUser.id) {
+      return res.status(404).json({ error: "Lời mời chơi không còn hiệu lực." });
+    }
+    const room = getRoom(invite.roomCode);
+    if (!room) {
+      pendingInvites.delete(invite.id);
+      return res.status(410).json({ error: "Phòng chơi đã đóng." });
+    }
+    advanceRoom(room, db, clock());
+    if (room.phase !== "lobby") {
+      pendingInvites.delete(invite.id);
+      return res.status(409).json({ error: "Ván chơi đã bắt đầu; lời mời không còn hiệu lực." });
+    }
+    if (playerRooms.has(req.authUser.id) && !room.players.has(req.authUser.id)) {
+      return res.status(409).json({ error: "Bạn đang ở trong một phòng khác. Hãy rời phòng đó trước." });
+    }
+    if (!room.players.has(req.authUser.id)) {
+      if (room.players.size >= 6) return res.status(409).json({ error: "Phòng đã đủ 6 người chơi." });
+      const player = makePlayer(req.authUser.id, req.authUser.username, false, req.getPlayerAvatar);
+      room.players.set(player.id, player);
+      playerRooms.set(player.id, room.code);
+      room.lastActivityAt = clock();
+    }
+    pendingInvites.delete(invite.id);
+    return res.json(roomSnapshot(room, req.authUser.id, clock()));
+  });
+
+  router.delete("/api/minigame/invites/:inviteId", (req, res) => {
+    const invite = pendingInvites.get(req.params.inviteId);
+    if (!invite || ![invite.invitedUserId, invite.invitedById].includes(req.authUser.id)) {
+      return res.status(404).json({ error: "Không tìm thấy lời mời chơi." });
+    }
+    pendingInvites.delete(invite.id);
+    return res.json({ removed: true });
   });
 
   router.post("/api/minigame/rooms", async (req, res) => {
@@ -1001,6 +1477,9 @@ export function createMiniGame({
       let code = getRoomCode();
       while (rooms.has(code)) code = getRoomCode();
       const room = {
+        db,
+        recordQuestionActivity,
+        recordGamePlayed,
         code,
         mode: isPictureMode ? "picture" : isObstacleMode ? "obstacle" : isOlympiaMode ? "olympia" : "quiz",
         topicId: isPictureMode ? (pictureQuestionBanks[topicId] ? topicId : "english") : topicId,
@@ -1040,7 +1519,7 @@ export function createMiniGame({
         buzzDeadline: 0,
         buzzBlockedIds: new Set(),
       };
-      const player = { id: req.authUser.id, username: req.authUser.username, isHost: true, score: 0, correctAnswers: 0, answer: null, rulesAcknowledged: false };
+      const player = makePlayer(req.authUser.id, req.authUser.username, true, req.getPlayerAvatar);
       room.players.set(player.id, player);
       rooms.set(code, room);
       playerRooms.set(player.id, code);
@@ -1066,7 +1545,7 @@ export function createMiniGame({
       return res.status(409).json({ error: "Bạn đang ở trong một phòng khác. Hãy rời phòng đó trước." });
     }
     if (room.players.size >= 6) return res.status(409).json({ error: "Phòng đã đủ 6 người chơi." });
-    const player = { id: req.authUser.id, username: req.authUser.username, isHost: false, score: 0, correctAnswers: 0, answer: null, rulesAcknowledged: false };
+    const player = makePlayer(req.authUser.id, req.authUser.username, false, req.getPlayerAvatar);
     room.players.set(player.id, player);
     playerRooms.set(player.id, room.code);
     room.lastActivityAt = clock();
@@ -1243,6 +1722,7 @@ export function createMiniGame({
       ? req.body.optionIndex === question.answer
       : normalizeObstacleAnswer(answerText) === normalizeObstacleAnswer(expected);
     const now = clock();
+    recordQuestionActivity(room, player, now, correct);
     if (correct) {
       settleObstacleQuestion(room, now, true);
     } else {
@@ -1290,9 +1770,10 @@ export function createMiniGame({
       .toUpperCase().replace(/[^A-Z]/g, "");
     const question = room.questions[room.questionIndex];
     const expected = question.answer.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z]/g, "");
-    if (normalized === expected) {
+    const correct = normalized === expected;
+    recordQuestionActivity(room, player, now, correct);
+    if (correct) {
       player.score += 100;
-      player.correctAnswers += 1;
       resolvePictureRound(room, db, now, player.id, false);
     } else {
       player.score = Math.max(0, player.score - 20);
@@ -1321,6 +1802,7 @@ export function createMiniGame({
     const normalizeAnswer = (value) => normalizeQuestionText(value).replaceAll(" ", "");
     const acceptedAnswers = question.acceptedAnswers || [question.answer];
     const correct = acceptedAnswers.some((candidate) => normalizeAnswer(candidate) === normalizeAnswer(answer));
+    recordQuestionActivity(room, player, now, correct);
     if (correct) {
       resolveOlympiaRound(room, now, player.id);
     } else {

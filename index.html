@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lụa - bạn trò chuyện AI</title>
 <link rel="stylesheet" href="/dangKy_dangNhap/auth.css">
-<script src="/app-shell.js" defer></script>
+<script src="/app-shell.js?v=avatar-picker-v4" defer></script>
+<script src="/avatar-picker.js?v=avatar-picker-v4" defer></script>
 <script src="/dangKy_dangNhap/session.js" defer></script>
 <style>
   :root { --bg:#f7f8fc; --ink:#20243b; --muted:#70758a; --line:#e7e9f2; --surface:#fff;
@@ -180,7 +181,8 @@
   @media (prefers-reduced-motion:reduce) { .fox-avatar,.fox-orbit,.fox-spark,.fox-soundwave { animation:none !important; } }
 </style>
 <link rel="stylesheet" href="/bright-theme.css">
-<link rel="stylesheet" href="/app-theme.css">
+<link rel="stylesheet" href="/app-theme.css?v=avatar-picker-v4">
+<link rel="stylesheet" href="/avatar-picker.css?v=avatar-picker-v4">
 </head>
 <body class="chat-mode">
 <div class="chat-shell">
@@ -219,7 +221,7 @@
 </div>
  </div>
 <main class="chat-layout">
-<section class="character-card" aria-label="Nhân vật Lụa">
+<section class="character-card" aria-label="Avatar của bạn">
 <div id="stage" class="idle">
   <div class="fox-orbit" aria-hidden="true">
     <span class="fox-spark one">✦</span>
@@ -228,9 +230,9 @@
     <span class="fox-soundwave wave-one"></span>
     <span class="fox-soundwave wave-two"></span>
   </div>
-  <img class="fox-avatar" src="/images/lua-fox.png" alt="Lụa, chú cáo AI đồng hành học tập">
+  <img class="fox-avatar" data-player-avatar src="/images/lua-fox.png" alt="Avatar của bạn">
 </div>
-<p class="character-caption">Lụa luôn sẵn sàng cùng bạn học hỏi.</p>
+<p class="character-caption">Avatar đại diện của bạn trong ứng dụng và phòng chơi.</p>
 </section>
 <section class="conversation-card" aria-labelledby="conversation-heading">
 <h1 id="conversation-heading">Cuộc trò chuyện</h1>

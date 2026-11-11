@@ -458,6 +458,9 @@ export function createAuth({ projectDir, baseUrl, secureCookies = process.env.NO
     sessionMiddleware,
     requirePageAuth,
     requireApiAuth,
+    findUserByUsername: (username) => db.prepare(`
+      SELECT id, username FROM users WHERE username = ? COLLATE NOCASE
+    `).get(String(username || "").trim()) || null,
     close: () => db.close(),
   };
 }

@@ -7,6 +7,7 @@ services:
     environment:
       PORT: 3000
       PYTHON_EXECUTABLE: /opt/venv/bin/python
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
     ports:
       - "127.0.0.1:${PORT:-3000}:3000"
     volumes:

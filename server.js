@@ -6,7 +6,9 @@ import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createAuth } from "./dangKy_dangNhap/auth.js";
+import { createAvatarProfile } from "./avatar-profile.js";
 import { createMiniGame } from "./mini-game/game.js";
+import { generateMiniGameQuizWithOllama } from "./mini-game/ollama.js";
 import { createQuizRouter } from "./quiz-web/quiz.js";
 import { reviewWithGroq } from "./ai-review.js";
 import { fetchWithGeminiKeyFallback, getGeminiApiKeys } from "./gemini-api.js";
@@ -164,6 +166,9 @@ app.get("/dangKy_dangNhap/session.js", (_req, res) => res.sendFile(path.join(aut
 app.use(auth.sessionMiddleware);
 app.use(auth.router);
 app.use("/api", auth.requireApiAuth);
+const avatarProfile = createAvatarProfile({ projectDir });
+app.use("/api/player-avatar", avatarProfile.router);
+app.use(avatarProfile.attachToRequest);
 
 const chatHistoryDb = new Database(path.join(projectDir, ".data", "chat-history.sqlite"));
 chatHistoryDb.pragma("journal_mode = WAL");
@@ -212,7 +217,11 @@ const elevenLabsTestDir = path.join(projectDir, "elevenlabs-test");
 app.get("/elevenlabs-test", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(elevenLabsTestDir, "index.html")));
 app.get("/elevenlabs-test/styles.css", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(elevenLabsTestDir, "styles.css")));
 app.get("/elevenlabs-test/client.js", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(elevenLabsTestDir, "client.js")));
-app.use(createMiniGame({ projectDir, generateQuestions: generateMiniGameQuestions }).router);
+app.use(createMiniGame({
+  projectDir,
+  generateQuestions: generateMiniGameQuestions,
+  findUserByUsername: auth.findUserByUsername,
+}).router);
 app.get("/", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(projectDir, "main-web", "index.html")));
 app.get("/chat", auth.requirePageAuth, (_req, res) => {
   res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
@@ -246,11 +255,17 @@ if (elevenLabsApiKeys.length > 0) {
   console.log(`Đã nạp ${elevenLabsApiKeys.length} ElevenLabs API key (tự chuyển khi key hết quota hoặc bị từ chối).`);
 }
 
-async function generateMiniGameQuestions({ topic, count, avoidQuestions, avoidKeywords = [], mode = "quiz" }) {
-  if (geminiApiKeys.length === 0) throw new Error("Chưa cấu hình Gemini API key.");
-
+async function generateMiniGameQuestions({
+  topic,
+  count,
+  avoidQuestions,
+  referenceQuestions = [],
+  avoidKeywords = [],
+  mode = "quiz",
+}) {
   const isObstacleMode = mode === "obstacle";
   const isOlympiaMode = mode === "olympia";
+  const isStandardQuizMode = mode === "quiz";
   const questionCount = isObstacleMode ? count + 1 : count;
   const generationTimeoutMs = isObstacleMode ? 30_000 : 10_000;
   const prompt = isObstacleMode
@@ -292,52 +307,69 @@ async function generateMiniGameQuestions({ topic, count, avoidQuestions, avoidKe
       'Chỉ trả JSON object đúng dạng {"questions":[{"prompt":"...","question":"...","options":["...","...","...","..."],"answer":0,"explanation":"..."}]}. Không thêm markdown hay văn bản ngoài JSON.',
     ].join("\n");
   let generated;
-  try {
-    const { response } = await fetchWithGeminiKeyFallback({
-      apiKeys: geminiApiKeys,
-      timeoutMs: generationTimeoutMs,
-      signal: AbortSignal.timeout(generationTimeoutMs),
-      url: `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`,
-      init: {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.6,
-            maxOutputTokens: isObstacleMode ? 6_000 : 2_500,
-            responseMimeType: "application/json",
-          },
+  if (isStandardQuizMode) {
+    try {
+      generated = {
+        questions: await generateMiniGameQuizWithOllama({
+          topic,
+          count: questionCount,
+          avoidQuestions,
+          referenceQuestions,
         }),
-      },
-    });
-    const data = await response.json().catch(() => null);
-    if (!response.ok) throw new Error(`Gemini trả HTTP ${response.status}.`);
-    const text = data?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
-    if (!text) throw new Error("Gemini không trả về bộ câu hỏi.");
-    generated = JSON.parse(text);
-    if (!Array.isArray(generated?.questions) || generated.questions.length !== questionCount) {
-      throw new Error(`Gemini không trả đúng ${questionCount} câu hỏi.`);
+      };
+    } catch (error) {
+      console.error("Mini-game Ollama generation failed:", error.message);
+      throw Object.assign(error, { userMessage: error.message });
     }
-    if (isObstacleMode && (!generated.obstacle || typeof generated.obstacle.keyword !== "string"
-      || typeof generated.obstacle.logic !== "string")) {
-      throw new Error("Gemini không trả đúng từ khóa và logic của chướng ngại vật.");
-    }
-    if (isOlympiaMode && (typeof generated.introQuestion !== "string"
-      || !generated.introQuestion.trim()
-      || generated.questions.some((question) => typeof question.answer !== "string"
-        || !question.answer.trim()
-        || (question.acceptedAnswers !== undefined && !Array.isArray(question.acceptedAnswers))))) {
-      throw new Error("Gemini không trả đúng câu hỏi mở và đáp án nhánh của Olympia.");
-    }
-  } catch (error) {
-    console.error("Mini-game Gemini generation failed:", error.message);
-    if (error.name === "TimeoutError" || error.name === "AbortError") {
-      throw Object.assign(new Error("Gemini mất quá 10 giây để tạo câu hỏi."), {
-        userMessage: "Gemini đang phản hồi chậm nên chưa tạo xong câu hỏi trong 10 giây. Hãy thử lại.",
+  } else {
+    if (geminiApiKeys.length === 0) throw new Error("Chưa cấu hình Gemini API key cho chế độ này.");
+    try {
+      const { response } = await fetchWithGeminiKeyFallback({
+        apiKeys: geminiApiKeys,
+        timeoutMs: generationTimeoutMs,
+        signal: AbortSignal.timeout(generationTimeoutMs),
+        url: `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`,
+        init: {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.6,
+              maxOutputTokens: isObstacleMode ? 6_000 : 2_500,
+              responseMimeType: "application/json",
+            },
+          }),
+        },
       });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(`Gemini trả HTTP ${response.status}.`);
+      const text = data?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
+      if (!text) throw new Error("Gemini không trả về bộ câu hỏi.");
+      generated = JSON.parse(text);
+      if (!Array.isArray(generated?.questions) || generated.questions.length !== questionCount) {
+        throw new Error(`Gemini không trả đúng ${questionCount} câu hỏi.`);
+      }
+      if (isObstacleMode && (!generated.obstacle || typeof generated.obstacle.keyword !== "string"
+        || typeof generated.obstacle.logic !== "string")) {
+        throw new Error("Gemini không trả đúng từ khóa và logic của chướng ngại vật.");
+      }
+      if (isOlympiaMode && (typeof generated.introQuestion !== "string"
+        || !generated.introQuestion.trim()
+        || generated.questions.some((question) => typeof question.answer !== "string"
+          || !question.answer.trim()
+          || (question.acceptedAnswers !== undefined && !Array.isArray(question.acceptedAnswers))))) {
+        throw new Error("Gemini không trả đúng câu hỏi mở và đáp án nhánh của Olympia.");
+      }
+    } catch (error) {
+      console.error("Mini-game Gemini generation failed:", error.message);
+      if (error.name === "TimeoutError" || error.name === "AbortError") {
+        throw Object.assign(new Error("Gemini mất quá 10 giây để tạo câu hỏi."), {
+          userMessage: "Gemini đang phản hồi chậm nên chưa tạo xong câu hỏi trong 10 giây. Hãy thử lại.",
+        });
+      }
+      throw Object.assign(error, { userMessage: "Gemini chưa tạo được câu hỏi. Hãy thử lại sau." });
     }
-    throw Object.assign(error, { userMessage: "Gemini chưa tạo được câu hỏi. Hãy thử lại sau." });
   }
 
   let review = { status: "unavailable", issues: [] };

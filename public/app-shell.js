@@ -14,11 +14,14 @@ if (appPage && !document.querySelector("#auth-form")) {
   sidebar.setAttribute("aria-label", "Điều hướng chính");
   sidebar.innerHTML = `
     <a class="app-brand" href="/" aria-label="Học Mà Chơi, trang chủ">
-      <span class="app-brand-icon" aria-hidden="true">🎓</span>
+      <img class="app-brand-icon" data-player-avatar src="/images/ai-knight.png" alt="Avatar của bạn">
       <span>AI Study Mentor<small>Học thông minh · vui mỗi ngày</small></span>
     </a>
     <nav class="app-nav">
       <a href="/"><span aria-hidden="true">🏠</span>Dashboard</a>
+      <section class="avatar-picker" data-avatar-picker>
+        <button type="button" class="avatar-picker-trigger" data-avatar-open>Chọn avatar cho bạn</button>
+      </section>
       <a href="/chat?style=normal" data-app-path="/chat"><span aria-hidden="true">🤖</span>Chat với Lụa</a>
       <a href="/quiz#saved-roadmaps" data-app-path="/quiz" data-app-section="saved-roadmaps"><span aria-hidden="true">📖</span>Lộ trình học</a>
       <a href="/quiz" data-app-path="/quiz"><span aria-hidden="true">🏆</span>Quiz AI</a>

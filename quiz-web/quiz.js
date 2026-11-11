@@ -1,8 +1,9 @@
 import express from "express";
-import { generateWithGroq, reviewWithGroq } from "../ai-review.js";
+import { generateWithGroq } from "../ai-review.js";
 import { createQuizOnQuizApi, QuizApiError } from "../quiz-api.js";
-import { fetchWithGeminiKeyFallback, getGeminiApiKeys } from "../gemini-api.js";
+import { getGeminiApiKeys } from "../gemini-api.js";
 import { getGroqApiKeys } from "../groq-api.js";
+import { questionBanks } from "../mini-game/game.js";
 
 const DEFAULT_OLLAMA_MODEL = "qwen2.5:3b";
 const OLLAMA_TIMEOUT_MS = 180_000;
@@ -73,6 +74,14 @@ const studySolutionSchema = {
   },
   required: ["answer", "explanation", "diagram"],
 };
+const studyClarificationSchema = {
+  type: "object",
+  properties: {
+    inScope: { type: "boolean" },
+    answer: { type: "string" },
+  },
+  required: ["inScope", "answer"],
+};
 
 const quizTopics = {
   antiUsWar: {
@@ -84,7 +93,13 @@ const quizTopics = {
 
 Sau Hiệp định Genève năm 1954, Việt Nam tạm thời chia thành hai vùng tập kết quân sự ở hai phía vĩ tuyến 17; đây không được quy định là biên giới quốc gia vĩnh viễn. Hiệp định dự kiến tổng tuyển cử để thống nhất Việt Nam, nhưng cuộc tổng tuyển cử đó không diễn ra như dự kiến. Tình hình chính trị và quân sự ở hai miền ngày càng đối đầu.
 
-Trước Hiệp định Genève, Chiến dịch Điện Biên Phủ diễn ra từ ngày 13/3 đến ngày 7/5/1954 trong kháng chiến chống Pháp. Pháp xây dựng tập đoàn cứ điểm ở lòng chảo Điện Biên Phủ để giữ vị trí chiến lược ở Tây Bắc và hy vọng buộc lực lượng Việt Minh giao chiến theo cách có lợi cho họ. Phía Việt Minh mở chiến dịch, tổ chức lực lượng bao vây, vận chuyển lương thực và vũ khí qua địa hình núi rừng, đưa pháo vào trận địa và tiến công từng cụm cứ điểm. Giao tranh thường được khái quát thành ba đợt: mở màn với các cứ điểm phía bắc, chiến đấu kéo dài quanh các cao điểm phía đông, rồi tổng công kích từ ngày 1/5 đến ngày 7/5. Ngày 7/5/1954, sở chỉ huy tập đoàn cứ điểm bị đánh chiếm và quân Pháp tại đây thất bại. Chiến thắng tạo sức ép quyết định trong bối cảnh đàm phán, góp phần dẫn tới Hiệp định Genève tháng 7/1954; không nên hiểu rằng một trận đánh tự nó là toàn bộ nguyên nhân của hiệp định.
+Trước Hiệp định Genève, Chiến dịch Điện Biên Phủ diễn ra từ ngày 13/3 đến ngày 7/5/1954 trong kháng chiến chống Pháp. Pháp muốn dùng cứ điểm ở Tây Bắc để gây sức ép lên các tuyến tiếp tế sang Lào và dụ Việt Minh vào một trận đánh quy mô lớn mà Pháp tin rằng ưu thế hỏa lực, không vận sẽ giúp họ thắng. Pháp đưa hơn 15.000 quân vào khu vực, bố trí các cứ điểm quanh sân bay; theo History.com, lực lượng Việt Minh có gần 50.000 quân. Các con số này là ước tính của nguồn được dẫn, không phải số kiểm kê tuyệt đối.
+
+Tại Điện Biên Phủ, phía Việt Minh bao vây lòng chảo, đào chiến hào áp sát các cứ điểm và đưa pháo lên những vị trí trên sườn núi. Việc vận chuyển pháo, đạn và lương thực qua địa hình khó khăn giúp duy trì vòng vây và làm suy yếu khả năng tiếp tế bằng đường không của Pháp. Ngày 13/3, pháo binh mở màn đánh các cứ điểm vòng ngoài phía bắc; ngày hôm sau, sân bay bị vô hiệu hóa và một cứ điểm khác bị chiếm. Từ cuối tháng 3, giao tranh tập trung vào các cứ điểm và cao điểm phía đông. Đến ngày 22/4, phần lớn đường băng đã bị Việt Minh kiểm soát, khiến việc thả tiếp tế ngày càng khó khăn. Đợt tổng công kích cuối bắt đầu ngày 1/5; ngày 7/5/1954, sở chỉ huy tập đoàn cứ điểm bị đánh chiếm.
+
+Tại Điện Biên Phủ, kết quả trực tiếp là tập đoàn cứ điểm Pháp thất thủ và chiến dịch kết thúc. Chiến thắng góp phần tạo sức ép lớn tại Hội nghị Genève, nhưng không phải nguyên nhân duy nhất dẫn tới hiệp định. History.com ghi nhận máy bay Pháp mất 62 chiếc và 167 chiếc khác bị hư hại trong trận đánh; nguồn này không cung cấp một bảng số liệu thương vong con người đầy đủ, thống nhất cho cả hai phía. Vì vậy bài học không tự nêu số người chết/bị thương hoặc giờ chính xác nếu chưa có nguồn kiểm chứng đáng tin cậy.
+
+Nguồn tham khảo cho các số liệu và diễn biến nêu trên: History.com, “Battle of Dien Bien Phu” (https://www.history.com/articles/battle-of-dien-bien-phu).
 
 Cuối thập niên 1950 và đầu thập niên 1960, phong trào Đồng Khởi bùng lên ở miền Nam, tiêu biểu tại Bến Tre năm 1960. Hoa Kỳ tăng cường vai trò và sự hiện diện quân sự tại miền Nam. Từ năm 1965, quân chiến đấu Hoa Kỳ đổ bộ vào Đà Nẵng; chiến tranh mở rộng với các chiến dịch không quân và lực lượng mặt đất của Hoa Kỳ.
 
@@ -117,10 +132,10 @@ Khi phân tích một vấn đề địa lý, cần xác định vị trí và p
     id: "cProgramming",
     title: "Lập trình C cơ bản đến trung cấp",
     period: "C11/C17",
-    description: "Ôn nền tảng C, hàm, mảng, con trỏ, struct, bộ nhớ động và thao tác tệp.",
+    description: "Ôn cấu trúc chương trình, thư viện chuẩn, kiểu dữ liệu, hàm, mảng, con trỏ, struct, bộ nhớ động và thao tác tệp.",
     material: `Chủ đề: Lập trình C cơ bản đến trung cấp (theo các chuẩn C11/C17).
 
-Chương trình C thường bắt đầu từ hàm main. Mỗi câu lệnh thường kết thúc bằng dấu chấm phẩy; khối lệnh được đặt trong cặp ngoặc nhọn. Các thư viện chuẩn được khai báo bằng chỉ thị #include, chẳng hạn stdio.h cho nhập xuất cơ bản và stdlib.h cho một số hàm tiện ích.
+Chương trình C thường bắt đầu từ hàm main. Mỗi câu lệnh thường kết thúc bằng dấu chấm phẩy; khối lệnh được đặt trong cặp ngoặc nhọn. Các thư viện chuẩn được khai báo bằng chỉ thị #include, chẳng hạn stdio.h cho nhập xuất cơ bản, string.h cho thao tác chuỗi và stdlib.h cho một số hàm tiện ích.
 
 Biến lưu dữ liệu có kiểu. Các kiểu cơ bản thường gặp gồm char, int, float và double; sizeof cho biết kích thước tính bằng byte của một kiểu hoặc đối tượng trên môi trường đang chạy, nên không nên giả định mọi kiểu luôn có kích thước cố định trên mọi hệ thống. Hằng có thể được biểu diễn bằng const hoặc macro. Toán tử số học, so sánh, logic, gán và tăng/giảm được dùng để tạo biểu thức; cần chú ý thứ tự ưu tiên toán tử và phép chia số nguyên khi cả hai toán hạng là số nguyên.
 
@@ -149,46 +164,218 @@ function getQuizTopic(topicId) {
 }
 
 const studyFocusTopics = {
-  antiUsWar: ["Phong trào Đồng Khởi", "Hiệp định Paris", "Hiệp định Genève", "Chiến dịch Điện Biên Phủ"],
+  antiUsWar: ["Phong trào Đồng Khởi", "Hiệp định Genève", "Chiến dịch Điện Biên Phủ", "Tết Mậu Thân", "Hiệp định Paris", "Kết thúc chiến tranh"],
   geography: ["Địa lý tự nhiên", "Địa lý dân cư", "Khí hậu"],
-  cProgramming: ["Biến & Kiểu dữ liệu", "Cấu trúc điều khiển", "Hàm", "Con trỏ"],
+  cProgramming: ["Cấu trúc chương trình C", "Thư viện chuẩn", "Biến & Kiểu dữ liệu", "Cấu trúc điều khiển", "Hàm", "Mảng & Chuỗi", "Con trỏ", "Struct", "Bộ nhớ động", "Tệp"],
 };
 
-const analysisSchema = {
-  type: "object",
-  properties: {
-    summary: { type: "string", description: "Nhận xét chung về kết quả làm bài." },
-    weaknesses: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          topic: { type: "string" },
-          reason: { type: "string" },
-          knowledgeToReview: { type: "string" },
-        },
-        required: ["topic", "reason", "knowledgeToReview"],
-      },
-    },
-    studyPlan: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          step: { type: "integer" },
-          title: { type: "string" },
-          activity: { type: "string" },
-        },
-        required: ["step", "title", "activity"],
-      },
-    },
-    practiceTips: {
-      type: "array",
-      items: { type: "string" },
-    },
-  },
-  required: ["summary", "weaknesses", "studyPlan", "practiceTips"],
+function bankQuestion(topic, question, answer, distractors, explanation) {
+  return {
+    question,
+    topic,
+    options: [answer, ...distractors],
+    answer,
+    explanation,
+  };
+}
+
+const supplementalQuizQuestions = {
+  antiUsWar: [
+    bankQuestion("Hiệp định Genève", "Sau Hiệp định Genève năm 1954, hai vùng tập kết quân sự được phân định gần vĩ tuyến nào?", "Vĩ tuyến 17", ["Vĩ tuyến 13", "Vĩ tuyến 20", "Vĩ tuyến 25"], "Giới tuyến quân sự tạm thời nằm gần vĩ tuyến 17."),
+    bankQuestion("Hiệp định Genève", "Giới tuyến quân sự sau Hiệp định Genève được xác định là gì?", "Ranh giới tập kết quân sự tạm thời", ["Biên giới quốc gia vĩnh viễn", "Biên giới giữa Việt Nam và Lào", "Đường phân chia khí hậu"], "Giới tuyến không được quy định là biên giới quốc gia vĩnh viễn."),
+    bankQuestion("Hiệp định Genève", "Hiệp định Genève dự kiến tổ chức tổng tuyển cử nhằm mục đích gì?", "Thống nhất Việt Nam", ["Thành lập ASEAN", "Chọn thủ đô mới", "Bầu chính quyền cho toàn Đông Dương"], "Tổng tuyển cử được dự kiến để thống nhất Việt Nam."),
+    bankQuestion("Hiệp định Genève", "Điều gì đã xảy ra với cuộc tổng tuyển cử thống nhất dự kiến sau Hiệp định Genève?", "Không diễn ra như dự kiến", ["Diễn ra đúng kế hoạch năm 1954", "Diễn ra ngay sau Hiệp định Paris", "Được tổ chức vào năm 1976"], "Cuộc tổng tuyển cử dự kiến đã không diễn ra như kế hoạch."),
+    bankQuestion("Chiến dịch Điện Biên Phủ", "Chiến dịch Điện Biên Phủ năm 1954 diễn ra trong cuộc kháng chiến nào?", "Kháng chiến chống Pháp", ["Kháng chiến chống Mỹ", "Khởi nghĩa Lam Sơn", "Phong trào Cần Vương"], "Điện Biên Phủ là chiến dịch trong kháng chiến chống Pháp."),
+    bankQuestion("Chiến dịch Điện Biên Phủ", "Chiến dịch Điện Biên Phủ bắt đầu vào ngày nào?", "13/3/1954", ["7/5/1954", "27/1/1973", "30/4/1975"], "Pháo binh mở màn chiến dịch ngày 13/3/1954."),
+    bankQuestion("Chiến dịch Điện Biên Phủ", "Đợt tổng công kích cuối tại Điện Biên Phủ bắt đầu ngày nào?", "1/5/1954", ["13/3/1954", "22/4/1954", "7/5/1954"], "Đợt tổng công kích cuối bắt đầu ngày 1/5."),
+    bankQuestion("Chiến dịch Điện Biên Phủ", "Sự kiện nào diễn ra tại Điện Biên Phủ ngày 7/5/1954?", "Sở chỉ huy tập đoàn cứ điểm bị đánh chiếm", ["Hiệp định Paris được ký", "Quân đội Hoa Kỳ đổ bộ Đà Nẵng", "Phong trào Đồng Khởi bắt đầu"], "Sở chỉ huy bị đánh chiếm, chiến dịch kết thúc."),
+    bankQuestion("Chiến dịch Điện Biên Phủ", "Một mục tiêu của Pháp khi xây dựng tập đoàn cứ điểm Điện Biên Phủ là gì?", "Dụ Việt Minh vào trận đánh lớn theo cách Pháp tin là có lợi", ["Tổ chức tổng tuyển cử thống nhất Việt Nam", "Mở đường biển từ Hà Nội vào Sài Gòn", "Chuẩn bị ký Hiệp định Paris"], "Pháp tin ưu thế hỏa lực và không vận sẽ giúp họ thắng."),
+    bankQuestion("Chiến dịch Điện Biên Phủ", "Cách nào giúp Việt Minh duy trì vòng vây tại Điện Biên Phủ?", "Vận chuyển pháo, đạn và lương thực qua địa hình khó khăn", ["Tiếp tế bằng đường biển từ Sài Gòn", "Dùng sân bay của Pháp để đưa quân vào", "Rút khỏi các vị trí trên sườn núi"], "Hậu cần qua địa hình khó khăn giúp duy trì vòng vây."),
+    bankQuestion("Chiến dịch Điện Biên Phủ", "Việc kiểm soát phần lớn đường băng ảnh hưởng thế nào đến quân Pháp?", "Làm việc thả tiếp tế bằng đường không khó khăn hơn", ["Giúp Pháp mở thêm sân bay", "Khiến chiến dịch chuyển sang miền Nam", "Làm Hiệp định Paris được ký sớm"], "Đường băng bị kiểm soát khiến việc tiếp tế ngày càng khó."),
+    bankQuestion("Phong trào Đồng Khởi", "Phong trào Đồng Khởi tiêu biểu bùng lên ở địa phương nào?", "Bến Tre", ["Điện Biên", "Quảng Ninh", "Cao Bằng"], "Bến Tre là địa phương tiêu biểu của phong trào Đồng Khởi."),
+    bankQuestion("Phong trào Đồng Khởi", "Phong trào Đồng Khởi tiêu biểu ở Bến Tre diễn ra vào năm nào?", "1960", ["1954", "1968", "1973"], "Mốc tiêu biểu của Đồng Khởi ở Bến Tre là năm 1960."),
+    bankQuestion("Phong trào Đồng Khởi", "Phong trào Đồng Khởi phát triển chủ yếu ở miền nào?", "Miền Nam", ["Miền Bắc", "Tây Bắc", "Chỉ tại Hà Nội"], "Phong trào đấu tranh phát triển ở miền Nam."),
+    bankQuestion("Phong trào Đồng Khởi", "Nhận định nào đúng về phạm vi phong trào Đồng Khởi?", "Phong trào lan rộng ở nhiều nơi, không chỉ là một trận đánh đơn lẻ", ["Chỉ diễn ra tại một cứ điểm", "Chỉ là một hội nghị ngoại giao", "Diễn ra sau ngày 30/4/1975"], "Đồng Khởi là phong trào rộng, tiêu biểu ở Bến Tre."),
+    bankQuestion("Kháng chiến chống Mỹ", "Quân chiến đấu Hoa Kỳ đổ bộ vào Đà Nẵng từ năm nào theo tài liệu?", "1965", ["1954", "1960", "1973"], "Từ năm 1965, quân chiến đấu Hoa Kỳ đổ bộ vào Đà Nẵng."),
+    bankQuestion("Tết Mậu Thân", "Tết Mậu Thân diễn ra vào đầu năm nào?", "1968", ["1960", "1965", "1975"], "Cuộc Tổng tiến công và nổi dậy diễn ra đầu năm 1968."),
+    bankQuestion("Tết Mậu Thân", "Cuộc Tổng tiến công Tết Mậu Thân diễn ra tại phạm vi nào?", "Nhiều đô thị và địa bàn ở miền Nam", ["Chỉ tại Điện Biên Phủ", "Chỉ tại Paris", "Chỉ ở vùng núi phía Bắc"], "Cuộc tiến công diễn ra trên nhiều đô thị và địa bàn miền Nam."),
+    bankQuestion("Tết Mậu Thân", "Đánh giá nào phân biệt đúng kết quả quân sự và tác động của Tết Mậu Thân?", "Không đạt mọi mục tiêu quân sự dự kiến nhưng tạo tác động chính trị, truyền thông sâu rộng", ["Đạt mọi mục tiêu và kết thúc chiến tranh ngay", "Chỉ là một hiệp định ngừng bắn", "Không ảnh hưởng tới tranh luận hay đàm phán"], "Tác động chính trị rộng không đồng nghĩa đạt mọi mục tiêu quân sự."),
+    bankQuestion("Hiệp định Paris", "Hiệp định Paris về Việt Nam được ký vào ngày nào?", "27/1/1973", ["7/5/1954", "1/5/1968", "30/4/1975"], "Hiệp định Paris được ký ngày 27/1/1973."),
+    bankQuestion("Hiệp định Paris", "Theo tiến trình Hiệp định Paris, lực lượng nào rút khỏi Việt Nam?", "Quân đội Hoa Kỳ", ["Quân đội Pháp năm 1954", "Quân đội Việt Nam năm 1976", "Lực lượng Đồng Khởi"], "Hiệp định gắn với việc quân đội Hoa Kỳ rút khỏi Việt Nam."),
+    bankQuestion("Hiệp định Paris", "Điều gì tiếp tục sau khi quân đội Hoa Kỳ rút theo Hiệp định Paris?", "Xung đột giữa các lực lượng Việt Nam", ["Chiến tranh đã kết thúc ngay năm 1973", "Tổng tuyển cử năm 1956 được tổ chức", "Chiến dịch Điện Biên Phủ bắt đầu"], "Xung đột tiếp tục, nên chiến tranh chưa kết thúc năm 1973."),
+    bankQuestion("Kết thúc chiến tranh", "Chiến tranh tại miền Nam kết thúc vào năm nào?", "1975", ["1968", "1973", "1976"], "Chiến tranh tại miền Nam kết thúc năm 1975."),
+    bankQuestion("Kết thúc chiến tranh", "Ngày 30/4/1975 gắn với sự kiện nào?", "Lực lượng tiến công tiến vào Sài Gòn", ["Ký Hiệp định Paris", "Mở màn Điện Biên Phủ", "Phong trào Đồng Khởi ở Bến Tre"], "Ngày 30/4/1975, lực lượng tiến công tiến vào Sài Gòn."),
+    bankQuestion("Kết thúc chiến tranh", "Việc thống nhất nhà nước Việt Nam được thực hiện vào năm nào?", "1976", ["1968", "1973", "1975"], "Thống nhất nhà nước được thực hiện năm 1976."),
+    bankQuestion("Kết thúc chiến tranh", "Thứ tự các chiến dịch mùa Xuân 1975 nào được nêu trong tài liệu?", "Tây Nguyên → Huế–Đà Nẵng → Hồ Chí Minh", ["Hồ Chí Minh → Điện Biên Phủ → Tây Nguyên", "Paris → Đồng Khởi → Huế–Đà Nẵng", "Điện Biên Phủ → Paris → Hồ Chí Minh"], "Ba chiến dịch được nêu theo thứ tự Tây Nguyên, Huế–Đà Nẵng, Hồ Chí Minh."),
+  ],
+  geography: [
+    bankQuestion("Vị trí địa lý", "Việt Nam nằm ở rìa phía đông của bán đảo nào?", "Bán đảo Đông Dương", ["Bán đảo Triều Tiên", "Bán đảo Mã Lai", "Bán đảo Ả Rập"], "Việt Nam nằm ở rìa phía đông bán đảo Đông Dương."),
+    bankQuestion("Vị trí địa lý", "Việt Nam thuộc khu vực địa lý nào?", "Đông Nam Á", ["Đông Á", "Nam Á", "Tây Á"], "Việt Nam thuộc khu vực Đông Nam Á."),
+    bankQuestion("Vị trí địa lý", "Phần đất liền Việt Nam kéo dài chủ yếu theo hướng nào?", "Bắc–Nam", ["Đông–Tây", "Tây Bắc–Đông Nam", "Vòng cung"], "Phần đất liền kéo dài theo chiều Bắc–Nam."),
+    bankQuestion("Vị trí địa lý", "Phía bắc Việt Nam giáp quốc gia nào?", "Trung Quốc", ["Thái Lan", "Malaysia", "Singapore"], "Phía bắc Việt Nam giáp Trung Quốc."),
+    bankQuestion("Vị trí địa lý", "Phía tây Việt Nam giáp những quốc gia nào?", "Lào và Campuchia", ["Trung Quốc và Nhật Bản", "Thái Lan và Myanmar", "Malaysia và Singapore"], "Phía tây Việt Nam giáp Lào và Campuchia."),
+    bankQuestion("Vị trí địa lý", "Vùng biển nào giáp phía đông và phía nam phần đất liền Việt Nam?", "Biển Đông", ["Biển Đỏ", "Biển Nhật Bản", "Địa Trung Hải"], "Phía đông và phía nam Việt Nam giáp Biển Đông."),
+    bankQuestion("Vị trí địa lý", "Lãnh thổ Việt Nam gồm những bộ phận nào?", "Vùng đất, vùng biển và vùng trời", ["Chỉ vùng đất liền", "Vùng đất và vùng núi", "Vùng biển và vùng trời"], "Lãnh thổ gồm vùng đất, vùng biển và vùng trời."),
+    bankQuestion("Địa hình", "Đặc điểm nào mô tả đúng địa hình Việt Nam?", "Đồi núi chiếm phần lớn diện tích, chủ yếu là đồi núi thấp", ["Toàn bộ là đồng bằng cao", "Chủ yếu là núi băng", "Phần lớn là hoang mạc"], "Đồi núi chiếm phần lớn diện tích nhưng chủ yếu là núi thấp."),
+    bankQuestion("Địa hình", "Hai đồng bằng châu thổ lớn của Việt Nam là gì?", "Đồng bằng sông Hồng và đồng bằng sông Cửu Long", ["Đồng bằng sông Đà và sông Mã", "Đồng bằng Tây Nguyên và Đông Bắc", "Đồng bằng Trường Sơn và Hoàng Liên Sơn"], "Hai châu thổ lớn là sông Hồng và sông Cửu Long."),
+    bankQuestion("Địa hình", "Ngoài hai châu thổ lớn, đồng bằng Việt Nam còn phân bố ở đâu?", "Ven biển miền Trung", ["Trên đỉnh núi cao", "Chỉ ở vùng biên giới phía Bắc", "Giữa các đảo xa bờ"], "Tài liệu nêu các đồng bằng ven biển miền Trung."),
+    bankQuestion("Địa hình", "Địa hình có thể ảnh hưởng trực tiếp đến yếu tố nào?", "Phân bố dân cư và giao thông", ["Ngày ký hiệp định", "Ngôn ngữ lập trình", "Quỹ đạo Trái Đất"], "Địa hình ảnh hưởng tới dân cư, giao thông và sản xuất."),
+    bankQuestion("Địa hình", "Đồi núi chiếm phần lớn diện tích nhưng phần lớn là dạng núi nào?", "Đồi núi thấp", ["Núi băng cao", "Núi lửa đang hoạt động", "Núi cao trên 5.000 mét"], "Đồi núi Việt Nam chủ yếu là đồi núi thấp."),
+    bankQuestion("Khí hậu", "Khí hậu chung của Việt Nam mang tính chất nào?", "Nhiệt đới ẩm gió mùa", ["Ôn đới khô quanh năm", "Hoang mạc nhiệt đới", "Hàn đới lục địa"], "Khí hậu Việt Nam mang tính chất nhiệt đới ẩm gió mùa."),
+    bankQuestion("Khí hậu", "Những yếu tố nào góp phần tạo khác biệt khí hậu giữa các vùng?", "Vĩ độ, độ cao và ảnh hưởng của biển", ["Chỉ có kinh độ", "Chỉ có mật độ đường sá", "Màu sắc đất"], "Khí hậu khác nhau theo vĩ độ, độ cao và ảnh hưởng của biển."),
+    bankQuestion("Khí hậu", "So với miền Nam, miền Bắc có đặc điểm mùa đông nào?", "Lạnh hơn", ["Luôn nóng hơn", "Không có mùa đông", "Khô nóng như hoang mạc"], "Miền Bắc có mùa đông lạnh hơn miền Nam."),
+    bankQuestion("Khí hậu", "Đặc điểm nào thay đổi theo vùng ở Việt Nam?", "Lượng mưa, nhiệt độ và thời điểm mùa mưa", ["Độ nghiêng trục Trái Đất", "Vị trí các đại dương", "Độ dài một ngày"], "Lượng mưa, nhiệt độ và mùa mưa khác nhau theo vùng."),
+    bankQuestion("Khí hậu", "Thiên tai nào được nêu trong tài liệu địa lý?", "Bão, lũ, hạn hán và sạt lở", ["Động đất núi lửa hằng ngày", "Băng tuyết quanh năm", "Sóng thần thường trực"], "Tài liệu nêu bão, lũ, hạn hán và sạt lở."),
+    bankQuestion("Dân cư", "Dân cư Việt Nam phân bố như thế nào?", "Không đồng đều", ["Đồng đều tuyệt đối giữa mọi vùng", "Chỉ tập trung ở miền núi", "Chỉ sống tại đồng bằng"], "Dân cư Việt Nam phân bố không đồng đều."),
+    bankQuestion("Dân cư", "Những khu vực nào thường tập trung đông dân hơn?", "Đồng bằng, đô thị và vùng kinh tế phát triển", ["Đỉnh núi cao và rừng sâu", "Khu vực xa mọi tuyến giao thông", "Chỉ các đảo nhỏ"], "Dân cư thường tập trung ở đồng bằng, đô thị, vùng kinh tế phát triển."),
+    bankQuestion("Dân cư", "Dân số đông tạo ra lợi thế nào được nêu trong tài liệu?", "Nguồn lao động và thị trường lớn", ["Làm mất nhu cầu hạ tầng", "Xóa bỏ mọi thiên tai", "Đảm bảo tài nguyên vô hạn"], "Dân số đông tạo nguồn lao động và thị trường lớn."),
+    bankQuestion("Dân cư", "Dân số đông đồng thời đặt ra yêu cầu nào?", "Việc làm, hạ tầng, giáo dục và y tế", ["Loại bỏ hoàn toàn giao thông", "Ngừng sử dụng tài nguyên", "Chỉ xây dựng ở miền núi"], "Dân số đông đòi hỏi việc làm và dịch vụ thiết yếu."),
+    bankQuestion("Dân cư", "Khi xem xét mật độ dân cư, cần tránh cách khái quát nào?", "Cho rằng mọi khu vực đều phân bố dân cư giống nhau", ["So sánh đồng bằng và miền núi", "Xét ảnh hưởng của đô thị", "Tìm mối liên hệ với giao thông"], "Phân bố dân cư khác nhau giữa các khu vực."),
+    bankQuestion("Địa lý tự nhiên", "Đường bờ biển dài tạo điều kiện phát triển hoạt động nào?", "Giao thông, thủy sản và du lịch", ["Trồng cây ôn đới trên núi cao", "Khai thác băng tuyết", "Chăn nuôi tuần lộc"], "Bờ biển dài hỗ trợ giao thông, thủy sản và du lịch."),
+    bankQuestion("Địa lý tự nhiên", "Lãnh thổ Việt Nam có những vùng nào ngoài vùng đất?", "Vùng biển và vùng trời", ["Chỉ vùng núi", "Vùng sa mạc và vùng băng", "Vùng đồng bằng và vùng đô thị"], "Lãnh thổ gồm vùng đất, vùng biển và vùng trời."),
+    bankQuestion("Địa lý tự nhiên", "Địa hình ảnh hưởng đến sản xuất nào được nêu trong tài liệu?", "Nông nghiệp", ["Sản xuất vệ tinh", "Khai thác băng", "Đóng tàu vũ trụ"], "Địa hình ảnh hưởng tới sản xuất nông nghiệp."),
+    bankQuestion("Địa lý tự nhiên", "Khi phân tích một vấn đề địa lý, bước nào phù hợp?", "Xác định vị trí và phạm vi trước", ["Kết luận trước khi xem dữ kiện", "Bỏ qua mối liên hệ giữa các yếu tố", "Khái quát mọi vùng giống nhau"], "Cần xác định vị trí, phạm vi và đặc điểm trước khi giải thích."),
+    bankQuestion("Địa lý tự nhiên", "Vì sao cần xem xét thiên tai theo từng khu vực?", "Đặc điểm và nguy cơ thiên tai khác nhau theo vùng", ["Mọi vùng có cùng địa hình", "Khí hậu không thay đổi theo vùng", "Dân cư phân bố hoàn toàn đồng đều"], "Thiên tai cần được xem xét theo đặc điểm từng khu vực."),
+    bankQuestion("Địa lý tự nhiên", "Địa hình đa dạng có thể làm thay đổi yếu tố nào giữa các khu vực?", "Điều kiện giao thông và sản xuất", ["Độ dài năm dương lịch", "Vị trí của xích đạo", "Số giờ trong một ngày"], "Địa hình tác động tới giao thông và sản xuất."),
+    bankQuestion("Khí hậu", "Khi so sánh khí hậu hai vùng, cách nào phù hợp?", "Xét vị trí, độ cao, ảnh hưởng biển và mùa mưa", ["Cho rằng mọi nơi có cùng thời tiết", "Chỉ dựa vào một ngày đo", "Bỏ qua vị trí địa lý"], "Khí hậu khác nhau theo vĩ độ, độ cao và ảnh hưởng biển."),
+    bankQuestion("Địa lý dân cư", "Nhiều dân tộc ở Việt Nam tạo nên đặc điểm nào?", "Bản sắc văn hóa đa dạng", ["Một kiểu văn hóa duy nhất", "Không có khác biệt văn hóa", "Dân cư chỉ sống ở đô thị"], "Việt Nam có nhiều dân tộc với bản sắc đa dạng."),
+  ],
+  cProgramming: [
+    bankQuestion("Cấu trúc chương trình C", "Điểm bắt đầu thực thi thông thường của chương trình C là hàm nào?", "main", ["printf", "start", "include"], "Chương trình C thường bắt đầu từ hàm main."),
+    bankQuestion("Cấu trúc chương trình C", "Trong C, một câu lệnh thường kết thúc bằng ký tự nào?", "Dấu chấm phẩy", ["Dấu hai chấm", "Dấu phẩy", "Dấu chấm"], "Các câu lệnh C thường kết thúc bằng dấu chấm phẩy."),
+    bankQuestion("Thư viện chuẩn", "Header nào khai báo các hàm nhập xuất chuẩn như printf và scanf?", "stdio.h", ["stdlib.h", "string.h", "math.h"], "stdio.h khai báo các hàm nhập xuất chuẩn."),
+    bankQuestion("Kiểu dữ liệu", "Phép chia hai giá trị int trong C thường cho kết quả thuộc kiểu nào?", "Số nguyên nếu cả hai toán hạng là int", ["Luôn là số thực", "Luôn là chuỗi", "Kiểu con trỏ"], "Phép chia số nguyên bỏ phần thập phân."),
+    bankQuestion("Hàm", "C truyền đối số vào hàm theo cách nào?", "Theo giá trị", ["Luôn theo tham chiếu", "Theo tên biến toàn cục", "Không truyền đối số"], "C truyền đối số theo giá trị."),
+    bankQuestion("Mảng và chuỗi", "C có tự động kiểm tra biên khi truy cập phần tử mảng không?", "Không; chương trình phải tự bảo đảm chỉ số hợp lệ", ["Có, luôn tự sửa chỉ số sai", "Có, nhưng chỉ với mảng char", "Chỉ kiểm tra khi dùng printf"], "C không tự kiểm tra biên mảng khi truy cập."),
+    bankQuestion("Bộ nhớ động", "Nếu malloc cấp phát thất bại, giá trị trả về cần được kiểm tra là gì?", "NULL", ["EOF", "Một chuỗi rỗng", "Luôn là địa chỉ hợp lệ"], "Cần kiểm tra malloc trả về NULL trước khi dùng."),
+    bankQuestion("Tệp", "Sau khi thao tác xong với FILE*, nên gọi hàm nào?", "fclose", ["free", "continue", "sizeof"], "fclose đóng tệp đang mở."),
+  ],
 };
+
+function getHistoryEventKey(topic) {
+  const topicText = topic.toLocaleLowerCase("vi");
+  if (/điện biên phủ/.test(topicText)) return "dienBien";
+  if (/gen[eèê]ve/.test(topicText)) return "geneva";
+  if (/paris/.test(topicText)) return "paris";
+  if (/đồng khởi|bến tre/.test(topicText)) return "dongKhoi";
+  if (/mậu thân|tết 1968|tổng tiến công.*tết/.test(topicText)) return "tet";
+  if (/kết thúc chiến tranh|chiến dịch hồ chí minh|mùa xuân 1975|tây nguyên|huế.{0,10}đà nẵng|30\s*\/?\s*4|30 tháng 4|thống nhất.*1976/.test(topicText)) return "endWar";
+  return null;
+}
+
+function getHistoryStudySections(topic) {
+  const eventKey = getHistoryEventKey(topic);
+  if (eventKey === "dienBien") {
+    return [
+      {
+        title: "Mục tiêu của phía Pháp tại Điện Biên Phủ",
+        content: "Chiến dịch diễn ra từ 13/3 đến 7/5/1954 trong kháng chiến chống Pháp. Pháp xây dựng tập đoàn cứ điểm ở Tây Bắc, muốn gây sức ép lên các tuyến tiếp tế sang Lào và dụ Việt Minh vào trận đánh lớn mà họ tin ưu thế hỏa lực, không vận sẽ có lợi. Theo nguồn được dẫn trong tài liệu, Pháp đưa hơn 15.000 quân vào khu vực; đây là số ước tính của nguồn, không phải kiểm kê tuyệt đối.",
+      },
+      {
+        title: "Cách đánh và hậu cần của phía Việt Minh",
+        content: "Phía Việt Minh bao vây lòng chảo, đào chiến hào áp sát các cứ điểm và đưa pháo lên vị trí trên sườn núi. Vận chuyển pháo, đạn và lương thực qua địa hình khó khăn giúp duy trì vòng vây và làm suy yếu khả năng tiếp tế đường không của Pháp.",
+      },
+      {
+        title: "Diễn biến, kết quả và giới hạn dữ kiện",
+        content: "Ngày 13/3, pháo binh mở màn đánh các cứ điểm vòng ngoài phía bắc; sau đó sân bay bị vô hiệu hóa, giao tranh tập trung ở các cứ điểm và cao điểm phía đông. Đợt tổng công kích cuối bắt đầu ngày 1/5; ngày 7/5/1954, sở chỉ huy tập đoàn cứ điểm bị đánh chiếm. Chiến thắng góp phần tạo sức ép lớn tại Hội nghị Genève nhưng không phải nguyên nhân duy nhất dẫn tới hiệp định. Nguồn History.com nêu tổn thất máy bay Pháp, không có bảng thương vong con người đầy đủ, thống nhất cho cả hai phía; bài học không tự bịa con số hoặc giờ chính xác.",
+      },
+    ];
+  }
+  if (eventKey === "geneva") {
+    return [
+      {
+        title: "Hiệp định Genève: thỏa thuận đình chiến năm 1954",
+        content: "Hiệp định Genève về Đông Dương được ký tháng 7/1954 sau khi chiến tranh chống Pháp kết thúc. Ở Việt Nam, việc tập kết và chuyển quân được tổ chức tạm thời ở hai vùng; giới tuyến quân sự gần vĩ tuyến 17 không phải biên giới quốc gia vĩnh viễn.",
+      },
+      {
+        title: "Điều khoản, dự kiến và điều không diễn ra",
+        content: "Hiệp định dự kiến tổng tuyển cử để thống nhất Việt Nam vào năm 1956. Cuộc tổng tuyển cử đó không diễn ra như dự kiến. Cần phân biệt điều khoản được dự kiến với kết quả lịch sử thực tế, đồng thời không đồng nhất Genève năm 1954 với Paris năm 1973.",
+      },
+      {
+        title: "Sơ đồ mốc cần nhớ",
+        content: "Trình tự: chiến thắng Điện Biên Phủ tháng 5/1954 tạo bối cảnh đàm phán → Hiệp định Genève tháng 7/1954 → tập kết quân sự tạm thời và dự kiến tổng tuyển cử năm 1956. Hiệp định tạo bước ngoặt chấm dứt chiến tranh với Pháp ở Đông Dương, nhưng chưa thống nhất Việt Nam.",
+      },
+    ];
+  }
+  if (eventKey === "dongKhoi") {
+    return [
+      {
+        title: "Đồng Khởi bùng lên ở miền Nam",
+        content: "Cuối thập niên 1950 và đầu thập niên 1960, phong trào đấu tranh ở miền Nam phát triển trong bối cảnh chính quyền Ngô Đình Diệm đàn áp các lực lượng cách mạng. Bến Tre là địa phương tiêu biểu, phong trào Đồng Khởi bùng lên mạnh mẽ năm 1960 rồi lan ra nhiều nơi.",
+      },
+      {
+        title: "Diễn biến và ý nghĩa",
+        content: "Ở nhiều vùng nông thôn, quần chúng nổi dậy phá thế kìm kẹp, giành quyền làm chủ ở một số địa bàn; đấu tranh chính trị kết hợp với lực lượng vũ trang. Phong trào làm thay đổi tương quan và mở rộng lực lượng cách mạng ở miền Nam. Không nên mô tả Đồng Khởi như một trận đánh đơn lẻ chỉ diễn ra tại một điểm.",
+      },
+      {
+        title: "Mốc ghi nhớ",
+        content: "Gắn ba ý với nhau: Bến Tre là nơi tiêu biểu → năm 1960 là mốc phong trào Đồng Khởi → đây là phong trào rộng ở miền Nam, không phải sự kiện Điện Biên Phủ năm 1954 hay cuộc Tổng tiến công Tết Mậu Thân năm 1968.",
+      },
+    ];
+  }
+  if (eventKey === "tet") {
+    return [
+      {
+        title: "Tổng tiến công và nổi dậy Tết Mậu Thân 1968",
+        content: "Đầu năm 1968, lực lượng cách mạng mở cuộc Tổng tiến công và nổi dậy trên nhiều đô thị, địa bàn ở miền Nam vào dịp Tết. Đây là một đợt hoạt động quân sự quy mô rộng, không phải một trận đánh duy nhất ở một thành phố.",
+      },
+      {
+        title: "Kết quả quân sự và tác động chính trị",
+        content: "Cuộc tiến công không đạt mọi mục tiêu quân sự dự kiến và gây tổn thất lớn cho nhiều bên. Tuy vậy, quy mô và diễn biến của sự kiện tạo tác động chính trị, truyền thông sâu rộng, ảnh hưởng đến tranh luận tại Hoa Kỳ và tiến trình đàm phán. Cần tách kết quả quân sự trước mắt khỏi tác động chính trị lâu dài.",
+      },
+      {
+        title: "Phân biệt các mốc trong cuộc chiến",
+        content: "Tết Mậu Thân gắn với năm 1968; Hiệp định Paris được ký năm 1973; chiến tranh tại miền Nam kết thúc năm 1975. Ba mốc này liên quan trong tiến trình lịch sử nhưng không thể thay thế cho nhau.",
+      },
+    ];
+  }
+  if (eventKey === "paris") {
+    return [
+      {
+        title: "Hiệp định Paris được ký ngày 27/1/1973",
+        content: "Hiệp định Paris về chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam được ký ngày 27/1/1973. Thỏa thuận quy định ngừng bắn và việc quân đội Hoa Kỳ cùng lực lượng đồng minh rút khỏi Việt Nam theo tiến trình của hiệp định.",
+      },
+      {
+        title: "Rút quân không đồng nghĩa chiến tranh đã kết thúc",
+        content: "Sau khi quân đội Hoa Kỳ rút, xung đột giữa các lực lượng Việt Nam vẫn tiếp diễn. Vì vậy, năm 1973 là mốc ký hiệp định và rút quân Hoa Kỳ, không phải mốc kết thúc chiến tranh tại miền Nam.",
+      },
+      {
+        title: "Đặt Hiệp định Paris đúng trong dòng thời gian",
+        content: "Chuỗi mốc: Hiệp định Genève năm 1954 → Hiệp định Paris ngày 27/1/1973 → chiến dịch mùa Xuân năm 1975 và chiến tranh kết thúc tại miền Nam ngày 30/4/1975. Đừng gán sự kiện năm 1975 cho nội dung hiệp định năm 1973.",
+      },
+    ];
+  }
+  if (eventKey === "endWar") {
+    return [
+      {
+        title: "Chiến dịch mùa Xuân 1975 diễn ra liên tiếp",
+        content: "Mùa Xuân năm 1975, các chiến dịch Tây Nguyên, Huế–Đà Nẵng và Hồ Chí Minh diễn ra nối tiếp, làm thay đổi nhanh cục diện chiến trường. Ngày 10/3/1975, chiến dịch Tây Nguyên mở màn bằng cuộc tiến công Buôn Ma Thuột; sau đó lực lượng Việt Nam Cộng hòa rút lui khỏi Tây Nguyên và tình hình ở miền Trung biến chuyển nhanh.",
+      },
+      {
+        title: "Chiến dịch Hồ Chí Minh và ngày 30/4",
+        content: "Chiến dịch Hồ Chí Minh bắt đầu ngày 26/4/1975. Ngày 30/4, lực lượng tiến công tiến vào Sài Gòn; Tổng thống Dương Văn Minh tuyên bố đầu hàng. Đây là mốc kết thúc chiến tranh tại miền Nam Việt Nam, không phải ngày ký Hiệp định Paris.",
+      },
+      {
+        title: "Kết quả và mốc thống nhất nhà nước",
+        content: "Chiến tranh kết thúc tại miền Nam năm 1975; việc thống nhất nhà nước được thực hiện năm 1976. Khi kể lại, hãy xếp đúng thứ tự Tây Nguyên → Huế–Đà Nẵng → Hồ Chí Minh, rồi phân biệt mốc chiến tranh kết thúc với mốc thống nhất nhà nước.",
+      },
+    ];
+  }
+  return [
+    {
+      title: "Dòng thời gian chính của giai đoạn 1954–1975",
+      content: "Sau Hiệp định Genève năm 1954, phong trào Đồng Khởi phát triển ở miền Nam, tiêu biểu tại Bến Tre năm 1960; cuộc Tổng tiến công và nổi dậy Tết Mậu Thân diễn ra năm 1968; Hiệp định Paris được ký ngày 27/1/1973; chiến tranh tại miền Nam kết thúc ngày 30/4/1975.",
+    },
+    {
+      title: "Phân biệt mốc hiệp định và mốc kết thúc chiến tranh",
+      content: "Genève năm 1954 gắn với đình chiến và tập kết quân sự tạm thời; Paris năm 1973 gắn với thỏa thuận ngừng bắn và việc quân đội Hoa Kỳ rút; ngày 30/4/1975 là mốc chiến tranh kết thúc tại miền Nam. Đây là các sự kiện khác nhau, không dùng thay cho nhau.",
+    },
+    {
+      title: "Cách trình bày một sự kiện lịch sử",
+      content: "Khi câu hỏi chưa xác định rõ sự kiện, hãy nêu mốc thời gian, bối cảnh, lực lượng liên quan, diễn biến chính, kết quả và tác động; không tự gán một chi tiết của sự kiện này sang sự kiện khác. Việc thống nhất nhà nước được thực hiện năm 1976, sau mốc chiến tranh kết thúc tại miền Nam.",
+    },
+  ];
+}
 
 function getQuizValidationErrors(quiz, expectedCount) {
   if (!Array.isArray(quiz)) return ["response is not an array"];
@@ -203,7 +390,9 @@ function getQuizValidationErrors(quiz, expectedCount) {
     if (typeof item.topic !== "string" || !item.topic.trim()) errors.push(`question ${index + 1} has no topic`);
     if (!Array.isArray(item.options) || item.options.length !== 4
       || item.options.some((option) => typeof option !== "string" || !option.trim())
-      || new Set(item.options).size !== 4) errors.push(`question ${index + 1} does not have four distinct options`);
+      || new Set(item.options.map(normalizeQuizOption)).size !== 4) {
+      errors.push(`question ${index + 1} does not have four distinct options`);
+    }
     if (typeof item.answer !== "string" || !Array.isArray(item.options) || !item.options.includes(item.answer)) {
       errors.push(`question ${index + 1} answer does not match an option`);
     }
@@ -212,24 +401,114 @@ function getQuizValidationErrors(quiz, expectedCount) {
   return errors;
 }
 
+function getPrewrittenQuizPool(topicId) {
+  const bankId = topicId === "antiUsWar" ? "history" : topicId;
+  const candidates = (questionBanks[bankId]?.questions || [])
+    .filter((item) => !/quần đảo hoàng sa thuộc vùng biển/i.test(item.question))
+    .map((item) => ({
+      question: item.question,
+      topic: item.prompt,
+      options: item.options,
+      answer: item.options[item.answer],
+      explanation: item.explanation,
+    }));
+  for (const focusTopic of studyFocusTopics[topicId] || []) {
+    for (const phase of ["foundation", "practice", "advanced"]) {
+      const item = getStudyQuiz(topicId, focusTopic, phase);
+      candidates.push({
+        question: item.question,
+        topic: focusTopic,
+        options: item.options,
+        answer: item.options[item.answerIndex],
+        explanation: item.explanation,
+      });
+    }
+  }
+  candidates.push(...(supplementalQuizQuestions[topicId] || []));
+
+  const uniqueQuestions = new Map();
+  for (const item of candidates) {
+    const key = normalizeQuizOption(item.question);
+    if (!key || uniqueQuestions.has(key) || getQuizValidationErrors([item], 1).length) continue;
+    uniqueQuestions.set(key, item);
+  }
+  return [...uniqueQuestions.values()];
+}
+
+function shuffleQuizQuestions(questions) {
+  const shuffled = questions.map((question) => {
+    const options = question.options.map((option) => ({ option, correct: option === question.answer }));
+    for (let index = options.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [options[index], options[swapIndex]] = [options[swapIndex], options[index]];
+    }
+    return {
+      ...question,
+      options: options.map(({ option }) => option),
+      answer: options.find(({ correct }) => correct).option,
+    };
+  });
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function normalizeQuizOption(value) {
+  return value
+    .replace(/^\s*[A-D]\s*[.)、:]\s*/i, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeGeneratedQuiz(quiz) {
+  if (!Array.isArray(quiz)) return quiz;
+  return quiz.map((item) => {
+    if (!item || typeof item !== "object" || !Array.isArray(item.options)) return item;
+    const rawOptions = item.options;
+    const options = rawOptions.map((option) => typeof option === "string"
+      ? option.replace(/^\s*[A-D]\s*[.)、:]\s*/i, "").trim()
+      : option);
+    let answer = item.answer;
+    if (typeof answer === "string") {
+      let answerIndex = rawOptions.indexOf(answer);
+      if (answerIndex < 0) answerIndex = options.indexOf(answer.trim());
+      if (answerIndex < 0) {
+        const answerLabel = answer.trim().match(/^([A-D])(?:[.)])?$/i);
+        if (answerLabel) answerIndex = answerLabel[1].toUpperCase().charCodeAt(0) - 65;
+      }
+      answer = answerIndex >= 0 && answerIndex < options.length
+        ? options[answerIndex]
+        : answer.replace(/^\s*[A-D]\s*[.)、:]\s*/i, "").trim();
+    }
+    return { ...item, options, answer };
+  });
+}
+
 function getQuizPrompt(count, sourceText, selectedTopic, validationErrors = []) {
   const correction = validationErrors.length
-    ? `\n\nSỬA CÁC LỖI SAU TRONG LẦN TẠO TRƯỚC: ${validationErrors.join("; ")}. Mỗi câu cần đúng 4 phương án riêng biệt và chỉ một đáp án đúng.`
+    ? `\n\nSỬA CÁC LỖI SAU TRONG LẦN TẠO TRƯỚC: ${validationErrors.join("; ")}. Mỗi câu cần đúng 4 phương án riêng biệt, không gắn nhãn A/B/C/D vào nội dung lựa chọn, và chỉ một đáp án đúng.`
     : "";
-  return `Tạo CHÍNH XÁC ${count} câu hỏi trắc nghiệm tiếng Việt chỉ dựa trên tài liệu bên dưới. Trả về JSON dạng [{"question":"...","topic":"...","options":["A","B","C","D"],"answer":"A","explanation":"..."}]. Mỗi câu có đúng 4 phương án khác nhau, chỉ một đáp án đúng, đáp án phải trùng chính xác một phương án; lời giải thích căn cứ tài liệu. Không thêm dữ kiện ngoài tài liệu, không lặp câu hỏi.${correction}\n\n<TAI_LIEU ${selectedTopic ? `CHU_DE="${selectedTopic.title}"` : ""}>\n${sourceText.trim()}\n</TAI_LIEU>`;
+  return `Tạo CHÍNH XÁC ${count} câu hỏi trắc nghiệm tiếng Việt chỉ dựa trên tài liệu bên dưới. Trả về JSON dạng [{"question":"...","topic":"...","options":["Nội dung lựa chọn đúng","Nội dung lựa chọn sai 1","Nội dung lựa chọn sai 2","Nội dung lựa chọn sai 3"],"answer":"Nội dung lựa chọn đúng","explanation":"..."}]. Mỗi câu có đúng 4 phương án khác nhau, chỉ chứa nội dung phương án, không thêm nhãn A/B/C/D vì giao diện tự gắn nhãn; chỉ một đáp án đúng và answer phải trùng chính xác toàn bộ chuỗi trong một options; lời giải thích căn cứ tài liệu. Không thêm dữ kiện ngoài tài liệu, không lặp câu hỏi.${correction}\n\n<TAI_LIEU ${selectedTopic ? `CHU_DE="${selectedTopic.title}"` : ""}>\n${sourceText.trim()}\n</TAI_LIEU>`;
 }
 
 async function generateQuizWithOllama(ollama, count, sourceText, selectedTopic) {
   let validationErrors = [];
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const content = await ollama.chat(
-      "Bạn là trợ lý giáo dục chuyên tạo câu hỏi trắc nghiệm. Chỉ kiểm tra dữ kiện được nêu rõ trong tài liệu, không bịa kiến thức. Tạo câu hỏi chính xác bằng tiếng Việt, mỗi câu có đúng 4 lựa chọn khác nhau và chỉ một đáp án đúng. Chỉ trả JSON theo schema.",
+      "Bạn là trợ lý giáo dục chuyên tạo câu hỏi trắc nghiệm. Chỉ kiểm tra dữ kiện được nêu rõ trong tài liệu, không bịa kiến thức. Mỗi lựa chọn chỉ chứa nội dung, không thêm tiền tố A/B/C/D; answer phải là nguyên văn một lựa chọn, không phải chữ cái. Bốn lựa chọn phải khác nhau về nội dung. Chỉ trả JSON theo schema.",
       getQuizPrompt(count, sourceText, selectedTopic, validationErrors),
       quizSchema,
       Math.min(4_096, 400 + count * 350),
     );
     try {
-      const quiz = JSON.parse(content);
+      const quiz = normalizeGeneratedQuiz(JSON.parse(content));
       validationErrors = getQuizValidationErrors(quiz, count);
       if (!validationErrors.length) return quiz;
     } catch {
@@ -239,25 +518,81 @@ async function generateQuizWithOllama(ollama, count, sourceText, selectedTopic) 
   throw new Error(`Ollama không tạo được bộ câu hỏi hợp lệ: ${validationErrors.join("; ")}`);
 }
 
-function isValidAnalysis(analysis) {
-  return analysis
-    && typeof analysis.summary === "string"
-    && Array.isArray(analysis.weaknesses)
-    && analysis.weaknesses.every((item) =>
-      item
-      && typeof item.topic === "string"
-      && typeof item.reason === "string"
-      && typeof item.knowledgeToReview === "string"
-    )
-    && Array.isArray(analysis.studyPlan)
-    && analysis.studyPlan.every((item) =>
-      item
-      && Number.isInteger(item.step)
-      && typeof item.title === "string"
-      && typeof item.activity === "string"
-    )
-    && Array.isArray(analysis.practiceTips)
-    && analysis.practiceTips.every((item) => typeof item === "string");
+function createImmediateQuizAnalysis({ correctAnswers, totalQuestions, incorrectAnswers, topicTitle }) {
+  const groupedErrors = new Map();
+  for (const item of incorrectAnswers) {
+    const topic = item.topic.trim() || topicTitle || "Kiến thức trong bài";
+    const errors = groupedErrors.get(topic) || [];
+    errors.push(item);
+    groupedErrors.set(topic, errors);
+  }
+  const weaknesses = [...groupedErrors.entries()]
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([topic, errors]) => ({
+      topic,
+      reason: `Bạn trả lời sai ${errors.length} câu ở phần này; cần xem lại các câu: ${errors
+        .slice(0, 3)
+        .map((item) => `“${item.question}”`)
+        .join(", ")}.`,
+      knowledgeToReview: [...new Set(errors.map((item) => item.explanation.trim()).filter(Boolean))]
+        .slice(0, 3)
+        .join(" "),
+    }));
+  const missedQuestions = incorrectAnswers.slice(0, 5).map((item) => item.question);
+  const focusTopics = weaknesses.slice(0, 3).map((item) => item.topic);
+  const topic = topicTitle || "chủ đề vừa học";
+  const summary = incorrectAnswers.length
+    ? `Bạn trả lời đúng ${correctAnswers}/${totalQuestions} câu. Hãy ưu tiên ôn ${focusTopics.join(", ") || topic}, là phần có câu trả lời sai trong bài.`
+    : `Bạn trả lời đúng ${correctAnswers}/${totalQuestions} câu trong chủ đề ${topic}.`;
+  const analysis = {
+    summary,
+    weaknesses,
+    studyPlan: incorrectAnswers.length
+      ? [
+        {
+          step: 1,
+          title: `Ôn lại ${focusTopics[0] || topic}`,
+          activity: weaknesses[0]?.knowledgeToReview || "Đọc lại lời giải của các câu trả lời sai trong bài.",
+        },
+        {
+          step: 2,
+          title: "Làm lại câu đã sai",
+          activity: `Tự trả lời lại các câu: ${missedQuestions.slice(0, 3).map((question) => `“${question}”`).join(", ")}. Sau mỗi câu, giải thích vì sao đáp án đúng phù hợp.`,
+        },
+        {
+          step: 3,
+          title: "Tự kiểm tra mức độ nắm bài",
+          activity: `Ôn ${focusTopics.join(", ") || topic}, rồi tự đặt một câu hỏi ngắn cho mỗi phần và trả lời mà không nhìn tài liệu.`,
+        },
+      ]
+      : [
+        {
+          step: 1,
+          title: "Tóm tắt kiến thức trọng tâm",
+          activity: `Tự tóm tắt các ý chính của ${topic} bằng lời của bạn.`,
+        },
+        {
+          step: 2,
+          title: "Giải thích và vận dụng",
+          activity: `Chọn một nội dung trong ${topic}, giải thích lại và đưa ra một ví dụ.`,
+        },
+        {
+          step: 3,
+          title: "Tự kiểm tra và mở rộng",
+          activity: `Tạo ba câu hỏi mới về ${topic} và tự trả lời để củng cố kiến thức.`,
+        },
+      ],
+    practiceTips: incorrectAnswers.length
+      ? [
+        "Đọc lời giải của từng câu sai và tự nói lại ý chính trước khi xem đáp án.",
+        "Ôn phần có nhiều câu sai trước, sau đó làm lại các câu đó.",
+      ]
+      : [
+        "Tiếp tục luyện câu hỏi vận dụng để kiểm tra khả năng áp dụng kiến thức.",
+        "Tự giải thích đáp án bằng lời của bạn để ghi nhớ sâu hơn.",
+      ],
+  };
+  return adaptPerfectScoreAnalysis(analysis, correctAnswers, totalQuestions, topicTitle);
 }
 
 export function adaptPerfectScoreAnalysis(analysis, correctAnswers, totalQuestions, topicTitle) {
@@ -358,7 +693,7 @@ function ollamaErrorResponse(res, error, model) {
   console.error("Ollama quiz request failed:", error.message);
   if (error.code === "OLLAMA_UNAVAILABLE") {
     return res.status(503).json({
-      error: "Chưa kết nối được Ollama. Hãy cài và mở Ollama, sau đó tải model bằng lệnh: ollama pull qwen2.5:3b.",
+      error: "Không kết nối được Ollama. Nếu ứng dụng chạy bằng Docker, hãy dùng OLLAMA_BASE_URL=http://host.docker.internal:11434; nếu chạy trực tiếp trên Windows, dùng http://localhost:11434. Sau khi đổi cấu hình, hãy khởi động lại ứng dụng.",
     });
   }
   if (error.code === "OLLAMA_TIMEOUT") {
@@ -401,18 +736,331 @@ function getStudyEvidence(material, topic) {
     .split(/[^\p{L}\p{N}]+/u)
     .filter((word) => word.length > 2);
   const paragraphs = material.split(/\n\s*\n/).map((paragraph) => paragraph.trim()).filter(Boolean);
-  const ranked = paragraphs
+  const contentParagraphs = paragraphs.filter((paragraph) => !paragraph.startsWith("Chủ đề:"));
+  const ranked = contentParagraphs
     .map((paragraph, index) => ({
       paragraph,
       index,
       score: topicWords.reduce((score, word) =>
-        score + (paragraph.toLocaleLowerCase("vi").includes(word) ? 1 : 0), 0),
+        score + Math.min(3, paragraph.toLocaleLowerCase("vi").split(word).length - 1), 0),
     }))
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score || a.index - b.index)
     .slice(0, 1)
     .sort((a, b) => a.index - b.index);
-  return ranked.map((item) => item.paragraph).join("\n\n") || paragraphs.slice(1, 3).join("\n\n");
+  if (/điện biên phủ/i.test(topic)) {
+    const eventEvidence = paragraphs.filter((paragraph) => /điện biên phủ/i.test(paragraph)).join("\n\n");
+    const evidence = eventEvidence || ranked.map((item) => item.paragraph).join("\n\n");
+    return `${evidence}\n\nNguồn tham khảo: History.com, “Battle of Dien Bien Phu” (https://www.history.com/articles/battle-of-dien-bien-phu).`;
+  }
+  if (material === quizTopics.antiUsWar.material) {
+    const historySections = getHistoryStudySections(topic);
+    if (historySections) {
+      return historySections.map(({ title, content }) => `${title}\n${content}`).join("\n\n");
+    }
+  }
+  if (material === quizTopics.cProgramming.material) {
+    const cSections = getCStudySections(topic);
+    if (cSections) {
+      return cSections.map((section) => [
+        section.title,
+        section.content,
+        section.code,
+        ...(section.codeNotes || []),
+        section.codeOutput ? `Kết quả mong đợi:\n${section.codeOutput}` : "",
+      ].filter(Boolean).join("\n")).join("\n\n");
+    }
+  }
+  const evidence = ranked.map((item) => item.paragraph).join("\n\n") || paragraphs.slice(1, 3).join("\n\n");
+  return evidence;
+}
+
+function getCStudySections(topic) {
+  const topicText = topic.toLocaleLowerCase("vi");
+  if (/thư viện chuẩn|standard librar/.test(topicText)) {
+    return [
+      {
+        title: "Thư viện chuẩn cung cấp gì?",
+        content: "Thư viện chuẩn C cung cấp các hàm đã được định nghĩa cho những việc phổ biến như nhập/xuất, xử lý chuỗi và cấp phát bộ nhớ. Mỗi header như stdio.h, string.h hoặc stdlib.h khai báo giao diện cần dùng; chỉ thị #include giúp trình biên dịch biết cách gọi hàm. Phần cài đặt hàm được cung cấp bởi thư viện khi liên kết chương trình, không phải do #include tự chạy.",
+      },
+      {
+        title: "Ví dụ chạy được: chọn đúng header và gọi hàm",
+        content: "Ví dụ dùng strlen từ string.h, abs từ stdlib.h và printf từ stdio.h. Mỗi hàm được khai báo bởi header tương ứng; kết quả được in ra sau khi các hàm trả về.",
+        code: `#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+int main(void) {
+    const char course[] = "C";
+    size_t length = strlen(course);
+    int difference = abs(7 - 10);
+
+    printf("Mon %s co %zu ky tu; |7-10| = %d\\n",
+           course, length, difference);
+    return 0;
+}`,
+        codeNotes: [
+          "#include <stdio.h> khai báo printf; string.h khai báo strlen; stdlib.h khai báo abs.",
+          "strlen đếm ký tự trước '\\0' và trả về size_t; biến length dùng đúng kiểu cho độ dài.",
+          "abs(7 - 10) tính trị tuyệt đối của hiệu số nguyên, cho kết quả 3.",
+          "Header cung cấp khai báo để biên dịch kiểm tra cách gọi; linker kết nối phần cài đặt thư viện khi tạo chương trình.",
+        ],
+        codeOutput: "Mon C co 1 ky tu; |7-10| = 3",
+      },
+      {
+        title: "Cách chọn thư viện và lỗi thường gặp",
+        content: "Hãy tìm hàm cần dùng, tra header chuẩn khai báo hàm đó, thêm header tương ứng rồi kiểm tra kiểu tham số và giá trị trả về. Thiếu header có thể khiến lời gọi hàm không được khai báo đúng; dùng sai định dạng printf hoặc bỏ qua giá trị trả về có thể gây lỗi. Không nhầm header với toàn bộ phần cài đặt của thư viện.",
+      },
+    ];
+  }
+  if (/cấu trúc chương trình/.test(topicText)) {
+    return [
+      {
+        title: "Một chương trình C bắt đầu và kết thúc ra sao?",
+        content: "Mã nguồn C được biên dịch thành chương trình thực thi. Khi chạy, chương trình bắt đầu từ hàm main; các lệnh trong main chạy theo thứ tự từ trên xuống, trừ khi rẽ nhánh hoặc gọi hàm khác. Dấu ngoặc nhọn tạo khối lệnh, còn dấu chấm phẩy kết thúc phần lớn câu lệnh.",
+      },
+      {
+        title: "Ví dụ C hoàn chỉnh: từ thư viện đến kết quả",
+        content: "Đây là chương trình tối thiểu có thể biên dịch. Hãy lần theo thứ tự: khai báo thư viện, vào main, tạo dữ liệu, gọi printf, rồi trả mã kết thúc.",
+        code: `#include <stdio.h>
+
+int main(void) {
+    int first = 4;
+    int second = 7;
+    int sum = first + second;
+
+    printf("Tong = %d\\n", sum);
+    return 0;
+}`,
+        codeNotes: [
+          "#include <stdio.h> cho phép dùng printf để xuất ra màn hình.",
+          "int main(void) là điểm bắt đầu của chương trình; int là kiểu giá trị kết thúc mà main trả về.",
+          "Các lệnh tạo biến và tính tổng chạy theo thứ tự; mỗi lệnh kết thúc bằng dấu chấm phẩy.",
+          "printf hiển thị kết quả; return 0 báo chương trình kết thúc bình thường.",
+        ],
+        codeOutput: "Tong = 11",
+      },
+      {
+        title: "Sơ đồ đọc mã và lỗi người mới hay gặp",
+        content: "Hãy nhìn chương trình như một luồng: nạp khai báo cần thiết → bắt đầu tại main → thực hiện câu lệnh → trả kết quả/kết thúc. Thiếu dấu chấm phẩy hoặc ngoặc nhọn cân bằng thường là lỗi cú pháp; đặt phép tính sai nhưng chương trình vẫn biên dịch là lỗi logic. #include không phải lệnh chạy trong main mà là chỉ thị xử lý trước khi biên dịch.",
+      },
+    ];
+  }
+  if (/struct|cấu trúc dữ liệu/.test(topicText)) {
+    return [
+      {
+        title: "Struct là gì, và vì sao cần dùng?",
+        content: "Một biến int chỉ giữ một giá trị, nhưng một hồ sơ học sinh gồm tên, tuổi và điểm. Nếu tách thành nhiều mảng song song, rất dễ ghép nhầm tên của người này với điểm của người khác. struct định nghĩa một kiểu mới gom các trường có liên quan thành một bản ghi; bản thân định nghĩa là khuôn mẫu, còn biến struct là một hồ sơ cụ thể.",
+      },
+      {
+        title: "Ví dụ C hoàn chỉnh: tạo và đọc một hồ sơ",
+        content: "Chương trình tạo một học sinh, in các trường trực tiếp bằng dấu chấm, rồi đọc trường qua con trỏ bằng mũi tên. Đây là ví dụ C11/C17, không cần nhập dữ liệu từ bàn phím.",
+        code: `#include <stdio.h>
+
+typedef struct {
+    char name[32];
+    int age;
+    float score;
+} Student;
+
+int main(void) {
+    Student student = { .name = "An", .age = 18, .score = 8.5f };
+    const Student *record = &student;
+
+    printf("%s, %d tuoi\\n", student.name, student.age);
+    printf("Diem: %.1f\\n", record->score);
+    return 0;
+}`,
+        codeNotes: [
+          "typedef struct { ... } Student; định nghĩa một kiểu Student gồm ba trường; typedef cho phép viết Student thay vì struct Student.",
+          "Student student = { ... }; tạo một đối tượng cụ thể và khởi tạo các trường ngay từ đầu.",
+          "student.name dùng dấu chấm vì student là biến struct; record->score dùng mũi tên vì record là con trỏ tới struct.",
+          "const Student *record chỉ cho phép đọc hồ sơ qua con trỏ; record trỏ tới cùng đối tượng student, không tạo bản sao.",
+        ],
+        codeOutput: "An, 18 tuoi\nDiem: 8.5",
+      },
+      {
+        title: "Ý nghĩa thực tế và điều cần nhớ",
+        content: "Trong chương trình thật, struct hữu ích để biểu diễn một thực thể có nhiều thuộc tính: sản phẩm (mã, tên, giá), điểm số (môn, điểm), hoặc một điểm tọa độ (x, y). Khi cần quản lý nhiều bản ghi cùng dạng, có thể tạo mảng Student students[30]; mỗi phần tử là một hồ sơ riêng. struct giúp dữ liệu đi cùng nhau và dễ truyền cho hàm, nhưng không tự kiểm tra dữ liệu hợp lệ; chương trình vẫn phải kiểm tra điểm, tuổi và giới hạn mảng.",
+      },
+    ];
+  }
+  if (/con trỏ|pointer/.test(topicText)) {
+    return [
+      { title: "Con trỏ giữ địa chỉ, không phải giá trị thay thế", content: "Một biến int score giữ điểm số. Con trỏ int *pointer giữ địa chỉ của biến đó. Toán tử & lấy địa chỉ; toán tử * truy cập giá trị ở địa chỉ ấy. Chỉ giải tham chiếu con trỏ đã được gán tới một đối tượng còn tồn tại." },
+      {
+        title: "Ví dụ chạy được: đọc và sửa qua con trỏ",
+        content: "Ví dụ cho thấy biến gốc đổi giá trị khi ta ghi vào *pointer.",
+        code: `#include <stdio.h>
+
+int main(void) {
+    int score = 8;
+    int *pointer = &score;
+    *pointer = 9;
+    printf("score = %d\\n", score);
+    return 0;
+}`,
+        codeNotes: ["&score lấy địa chỉ của score.", "pointer nhận địa chỉ đó; *pointer là chính giá trị score tại địa chỉ ấy.", "Gán *pointer = 9 thay đổi score, nên kết quả in ra là 9."],
+        codeOutput: "score = 9",
+      },
+      { title: "Dùng khi nào?", content: "Con trỏ thường được dùng để cho hàm sửa dữ liệu của nơi gọi, duyệt mảng và quản lý bộ nhớ động. Không dùng con trỏ chưa khởi tạo, đã free, hoặc trỏ tới biến cục bộ đã hết vòng đời." },
+    ];
+  }
+  if (/hàm/.test(topicText)) {
+    return [
+      { title: "Hàm giải quyết vấn đề gì?", content: "Hàm đóng gói một nhiệm vụ có tên và ranh giới rõ ràng. Thay vì chép phép tính ở nhiều nơi, ta viết một lần, gọi lại khi cần và kiểm thử riêng." },
+      {
+        title: "Ví dụ chạy được: nhận đầu vào và trả kết quả",
+        content: "Hàm add nhận hai số nguyên, tính tổng và trả kết quả cho main.",
+        code: `#include <stdio.h>
+
+int add(int left, int right) {
+    return left + right;
+}
+
+int main(void) {
+    int total = add(4, 7);
+    printf("Tong = %d\\n", total);
+    return 0;
+}`,
+        codeNotes: ["int add(int left, int right) khai báo kiểu trả về và kiểu của từng tham số.", "return left + right trả kết quả về nơi gọi; C truyền đối số theo giá trị.", "main lưu giá trị trả về vào total rồi mới in."],
+        codeOutput: "Tong = 11",
+      },
+      { title: "Ý nghĩa khi tổ chức chương trình", content: "Tách hàm theo nhiệm vụ giúp chương trình dễ đọc, kiểm thử và sửa đổi. Hàm chỉ thay đổi biến của bên gọi khi ta truyền địa chỉ qua con trỏ; truyền một int thông thường chỉ tạo bản sao cho tham số." },
+    ];
+  }
+  if (/mảng|chuỗi/.test(topicText)) {
+    return [
+      { title: "Mảng là dãy phần tử cùng kiểu", content: "Mảng giữ nhiều giá trị cùng kiểu dưới một tên. Chỉ số bắt đầu từ 0, nên mảng có 3 phần tử có chỉ số hợp lệ 0, 1, 2; C không tự kiểm tra biên khi truy cập." },
+      {
+        title: "Ví dụ chạy được: tính tổng bằng vòng lặp",
+        content: "Biến count cho biết số phần tử; vòng lặp chỉ đọc chỉ số nhỏ hơn count.",
+        code: `#include <stdio.h>
+
+int main(void) {
+    int scores[] = {7, 8, 10};
+    int count = (int)(sizeof scores / sizeof scores[0]);
+    int total = 0;
+
+    for (int i = 0; i < count; i++) {
+        total += scores[i];
+    }
+    printf("Tong = %d\\n", total);
+    return 0;
+}`,
+        codeNotes: ["scores[0] là 7; phần tử đầu tiên có chỉ số 0.", "sizeof scores / sizeof scores[0] tính số phần tử khi scores vẫn là mảng trong phạm vi này.", "Điều kiện i < count giữ chỉ số trong khoảng hợp lệ."],
+        codeOutput: "Tong = 25",
+      },
+      { title: "Chuỗi trong C", content: "Chuỗi C là mảng char kết thúc bằng ký tự '\\0'. Bộ đệm phải có chỗ cho ký tự kết thúc; luôn giới hạn số ký tự được ghi/đọc và không truy cập vượt kích thước mảng." },
+    ];
+  }
+  if (/cấu trúc điều khiển|vòng lặp|rẽ nhánh/.test(topicText)) {
+    return [
+      { title: "Điều khiển đường đi của chương trình", content: "if/else chọn nhánh theo điều kiện; vòng lặp thực hiện lại một khối lệnh. Trước khi chạy, xác định điều kiện đúng/sai và biến nào thay đổi để vòng lặp có thể dừng." },
+      {
+        title: "Ví dụ chạy được: phân loại và lặp qua các số",
+        content: "Chương trình quyết định kết quả theo điểm, sau đó dùng for để cộng các số từ 1 đến 4.",
+        code: `#include <stdio.h>
+
+int main(void) {
+    int score = 8;
+    if (score >= 5) {
+        puts("Dat");
+    } else {
+        puts("Can hoc them");
+    }
+
+    int sum = 0;
+    for (int i = 1; i <= 4; i++) {
+        sum += i;
+    }
+    printf("Tong = %d\\n", sum);
+    return 0;
+}`,
+        codeNotes: ["if chọn đúng một nhánh; với score = 8, điều kiện score >= 5 đúng.", "for khởi tạo i một lần, kiểm tra điều kiện trước mỗi lượt, rồi tăng i.", "Khi i thành 5, điều kiện i <= 4 sai nên vòng lặp dừng."],
+        codeOutput: "Dat\nTong = 10",
+      },
+      { title: "Lỗi thường gặp", content: "Quên cập nhật biến điều khiển có thể tạo vòng lặp vô hạn. Dùng = thay cho == trong điều kiện cũng làm đổi giá trị ngoài ý muốn; hãy kiểm tra điều kiện, cập nhật và điểm dừng cùng nhau." },
+    ];
+  }
+  if (/biến|kiểu dữ liệu/.test(topicText)) {
+    return [
+      { title: "Kiểu dữ liệu quyết định cách hiểu giá trị", content: "Biến có tên, kiểu và giá trị. int phù hợp với số nguyên; float/double biểu diễn số thực; char lưu ký tự. Chọn kiểu theo dữ liệu cần biểu diễn và kiểm tra giới hạn trước khi tính toán." },
+      {
+        title: "Ví dụ chạy được: khai báo và tính toán",
+        content: "Phép chia hai số nguyên cho kết quả nguyên; đổi một toán hạng sang double nếu cần phần thập phân.",
+        code: `#include <stdio.h>
+
+int main(void) {
+    int completed = 7;
+    int total = 2;
+    double average = (double)completed / total;
+    printf("Trung binh = %.2f\\n", average);
+    return 0;
+}`,
+        codeNotes: ["completed và total là int nên lưu số nguyên.", "(double)completed chuyển phép tính sang số thực trước khi chia.", "%.2f in hai chữ số sau dấu thập phân."],
+        codeOutput: "Trung binh = 3.50",
+      },
+      { title: "Ý nghĩa thực tế", content: "Chọn sai kiểu có thể làm mất phần thập phân hoặc vượt giới hạn biểu diễn. Không giả định kích thước mọi kiểu giống nhau trên mọi môi trường; dùng sizeof khi chương trình cần biết kích thước thực tế." },
+    ];
+  }
+  if (/bộ nhớ động|malloc|calloc/.test(topicText)) {
+    return [
+      { title: "Khi nào cần bộ nhớ động?", content: "Dùng bộ nhớ động khi kích thước dữ liệu chỉ biết lúc chạy hoặc cần sống ngoài phạm vi khai báo cục bộ. malloc trả về địa chỉ vùng nhớ hoặc NULL nếu cấp phát thất bại." },
+      {
+        title: "Ví dụ chạy được: cấp phát, dùng rồi giải phóng",
+        content: "Ví dụ kiểm tra malloc trước khi ghi và gọi free đúng một lần khi dùng xong.",
+        code: `#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    int *values = malloc(3 * sizeof *values);
+    if (values == NULL) {
+        return 1;
+    }
+
+    values[0] = 4;
+    values[1] = 5;
+    values[2] = 6;
+    printf("Tong = %d\\n", values[0] + values[1] + values[2]);
+    free(values);
+    return 0;
+}`,
+        codeNotes: ["malloc cấp phát đủ chỗ cho ba int; sizeof *values bám theo kiểu con trỏ.", "Phải kiểm tra NULL trước khi sử dụng vùng nhớ.", "Sau free(values), không được đọc/ghi values; giải phóng hai lần cũng là lỗi."],
+        codeOutput: "Tong = 15",
+      },
+      { title: "Quy tắc an toàn", content: "Mỗi vùng nhớ cấp phát cần có một đường giải phóng rõ ràng. Tránh rò rỉ bộ nhớ, dùng sau khi giải phóng và mất con trỏ duy nhất tới vùng nhớ." },
+    ];
+  }
+  if (/tệp|file/.test(topicText)) {
+    return [
+      { title: "Tệp giúp dữ liệu tồn tại sau khi chương trình kết thúc", content: "FILE* đại diện cho luồng tệp. fopen mở tệp theo chế độ; luôn kiểm tra kết quả khác NULL, xử lý lỗi và đóng tệp bằng fclose." },
+      {
+        title: "Ví dụ chạy được: ghi một dòng vào tệp",
+        content: "Chế độ w tạo tệp mới hoặc ghi đè nội dung cũ, vì vậy chỉ dùng khi hành vi đó đúng mong muốn.",
+        code: `#include <stdio.h>
+
+int main(void) {
+    FILE *file = fopen("result.txt", "w");
+    if (file == NULL) {
+        perror("Khong mo duoc tep");
+        return 1;
+    }
+
+    fprintf(file, "Diem: %d\\n", 9);
+    if (fclose(file) != 0) {
+        perror("Khong dong duoc tep");
+        return 1;
+    }
+    return 0;
+}`,
+        codeNotes: ["fopen trả NULL nếu mở tệp thất bại; không gọi fprintf khi file là NULL.", "fprintf ghi nội dung theo định dạng vào tệp, không phải ra màn hình.", "fclose hoàn tất ghi và giải phóng tài nguyên hệ điều hành."],
+        codeOutput: "Tạo result.txt với nội dung: Diem: 9",
+      },
+      { title: "Lưu ý khi chọn chế độ", content: "w ghi đè, a nối thêm và r đọc tệp đã có. Chọn sai chế độ có thể làm mất dữ liệu; kiểm tra lỗi khi mở, đọc/ghi và đóng tệp." },
+    ];
+  }
+  return null;
 }
 
 function getStudyAnalogy(topic) {
@@ -432,17 +1080,53 @@ function getStudyAnalogy(topic) {
   return "Hãy tưởng tượng mình đang giải một tình huống thật: xác định dữ kiện, chọn quy tắc phù hợp, làm từng bước rồi tự kiểm tra kết quả.";
 }
 
-function createStudyLesson({ topic, material, results, stage }) {
+function createStudyLesson({
+  topic,
+  material,
+  results,
+  stage,
+  remediationIndex = 0,
+  remediationContent = "",
+}) {
   const relatedResults = results.filter((item) => item.topic === topic);
   const incorrectResult = relatedResults.find((item) => !item.correct);
   const correctResult = relatedResults.find((item) => item.correct);
-  const evidence = getStudyEvidence(material, topic);
+  const evidence = remediationContent || getStudyEvidence(material, topic);
+  let sections = evidence
+    .split(/(?<=[.!?])\s+/u)
+    .filter(Boolean)
+    .reduce((groups, sentence) => {
+      const lastGroup = groups.at(-1);
+      if (!lastGroup || lastGroup.sentences.length >= 3) {
+        groups.push({ sentences: [sentence] });
+      } else {
+        lastGroup.sentences.push(sentence);
+      }
+      return groups;
+    }, [])
+    .map((group, index) => ({
+      title: index === 0 ? "Nội dung trọng tâm" : `Chi tiết cần nhớ ${index}`,
+      content: group.sentences.join(" "),
+    }));
+  if (material === quizTopics.cProgramming.material && !remediationContent) {
+    sections = getCStudySections(topic) || sections;
+  } else if (material === quizTopics.antiUsWar.material && !remediationContent) {
+    sections = getHistoryStudySections(topic) || sections;
+  }
+  const retryPrompt = remediationIndex === 0
+    ? ""
+    : remediationIndex % 2 === 1
+      ? ` Hãy thử lại bằng một câu hỏi tình huống mới về "${topic}", yêu cầu người học giải thích mối liên hệ giữa các dữ kiện thay vì lặp lại câu hỏi trước.`
+      : ` Hãy đổi cách kiểm tra: yêu cầu người học so sánh hai ý quan trọng của "${topic}" và nêu bằng chứng trong phần học để bảo vệ lựa chọn.`;
 
   if (stage.phase === "foundation") {
     return {
       title: `Củng cố nền tảng: ${topic}`,
-      theory: `Mình cùng trò chuyện và ôn từng ý nhé. Bạn hãy trả lời câu hỏi bằng lời của mình; nếu còn nhầm, mình sẽ giải thích chỗ cần xem lại và gợi ý để bạn tự suy luận tiếp.\n\nÝ chính cần nhớ:\n\n${evidence}\n\n${getStudyAnalogy(topic)}`,
-      practiceQuestion: incorrectResult
+      theory: `Mình cùng học từng phần theo đúng thứ tự nhé. Trước hết hãy nắm nội dung trọng tâm, sau đó nối dữ kiện với kết quả. Nếu có chỗ chưa rõ, bạn có thể hỏi riêng trong phạm vi bài này.\n\n${evidence}\n\n${getStudyAnalogy(topic)}`,
+      sections,
+      practiceQuestion: remediationIndex > 0
+        ? `Câu hỏi ôn lại ${remediationIndex}: ${topic} — ${getStudyAnalogy(topic)} Hãy giải thích bằng lời của bạn một nguyên tắc quan trọng và nêu dữ kiện trong bài làm căn cứ.${retryPrompt}`
+        : incorrectResult
         ? `Không nhìn lại câu trả lời cũ: hãy giải thích nguyên tắc cần dùng cho câu “${incorrectResult.question}” bằng lời của bạn, rồi tự nêu một ví dụ khác để minh họa.`
         : `Hãy trình bày ${topic} bằng lời của bạn, nêu một đặc điểm hoặc quy tắc quan trọng và tự đưa ra một ví dụ để minh họa.`,
     };
@@ -452,7 +1136,10 @@ function createStudyLesson({ topic, material, results, stage }) {
     return {
       title: `Luyện tập vận dụng: ${topic}`,
       theory: `Mình sẽ cùng bạn vận dụng kiến thức vào tình huống mới. Hãy giải thích cách suy nghĩ của bạn từng bước; mình sẽ phản hồi cụ thể vào lập luận đó.\n\nÝ cần vận dụng: ${evidence}\n\nTình huống để hình dung: ${getStudyAnalogy(topic)}`,
-      practiceQuestion: incorrectResult
+      sections,
+      practiceQuestion: remediationIndex > 0
+        ? `Câu hỏi ôn lại ${remediationIndex}: hãy tự tạo một tình huống mới về "${topic}", giải quyết theo từng bước và chỉ rõ dữ kiện nào trong phần học hỗ trợ kết luận.${retryPrompt}`
+        : incorrectResult
         ? `Hãy tự tạo một tình huống hoặc ví dụ mới về “${topic}” có liên quan đến câu “${incorrectResult.question}”, giải quyết tình huống đó theo từng bước và giải thích vì sao cách làm của bạn đúng.`
         : `Hãy áp dụng kiến thức về “${topic}” vào một tình huống hoặc ví dụ mới. Trình bày từng bước và giải thích vì sao cách làm của bạn hợp lý.`,
     };
@@ -461,7 +1148,10 @@ function createStudyLesson({ topic, material, results, stage }) {
   return {
     title: `Thử thách nâng cao: ${topic}`,
     theory: `${correctResult ? `Bạn đã làm tốt câu “${correctResult.question}”, vì vậy mình sẽ bỏ qua phần nhập môn và tăng độ thử thách nhé.` : "Mình sẽ cùng bạn kết nối kiến thức và xử lý một tình huống mới."} Hãy xem nguyên tắc bạn đã nắm như công cụ để suy luận:\n\n${evidence}\n\nMục tiêu là giải thích được vì sao cách áp dụng hiệu quả.`,
-    practiceQuestion: correctResult
+    sections,
+    practiceQuestion: remediationIndex > 0
+      ? `Câu hỏi ôn lại ${remediationIndex}: liên hệ "${topic}" với một ý khác trong bài. Nêu một trường hợp có thể làm thay đổi kết luận và dùng dữ kiện đã học để giải thích.${retryPrompt}`
+      : correctResult
       ? `Ở mức nâng cao, hãy giải thích câu “${correctResult.question}” bằng cách liên hệ với một khái niệm khác trong chủ đề “${topic}”. Nêu một trường hợp biên hoặc điều kiện có thể làm thay đổi cách áp dụng, rồi dùng tài liệu để bảo vệ lập luận của bạn.`
       : `Ở mức nâng cao, hãy liên hệ “${topic}” với một khái niệm liên quan. Nêu một trường hợp đặc biệt có thể làm thay đổi cách giải thích và bảo vệ lập luận bằng các dữ kiện đã học.`,
   };
@@ -504,11 +1194,35 @@ function getStudyQuiz(topicId, topic, phase) {
       { question: "Phong trào Đồng Khởi diễn ra chủ yếu ở miền nào?", options: ["Miền Nam", "Miền Bắc", "Tây Bắc", "Toàn Đông Dương cùng lúc"], answerIndex: 0 },
       { question: "Khi học về Đồng Khởi, mốc nào cần gắn với sự kiện tiêu biểu ở Bến Tre?", options: ["Năm 1960", "Năm 1954", "Năm 1968", "Năm 1973"], answerIndex: 0 },
     ];
-  } else if (topicId === "antiUsWar") {
+  } else if (topicId === "antiUsWar" && /gen[eèê]ve/.test(topicText)) {
+    questions = [
+      { question: "Hiệp định Genève về Đông Dương được ký vào năm nào?", options: ["1954", "1960", "1968", "1973"], answerIndex: 0 },
+      { question: "Giới tuyến quân sự gần vĩ tuyến 17 theo Hiệp định Genève có ý nghĩa gì?", options: ["Phân chia vùng tập kết quân sự tạm thời, không phải biên giới quốc gia vĩnh viễn", "Biên giới quốc gia vĩnh viễn của Việt Nam", "Ranh giới giữa Việt Nam và Lào", "Tuyến đường rút quân Hoa Kỳ năm 1973"], answerIndex: 0 },
+      { question: "Hiệp định Genève dự kiến điều gì để thống nhất Việt Nam?", options: ["Tổng tuyển cử năm 1956", "Tổng tuyển cử năm 1976", "Ký Hiệp định Paris năm 1954", "Chiến dịch Hồ Chí Minh năm 1956"], answerIndex: 0 },
+    ];
+  } else if (topicId === "antiUsWar" && /tết 1968|mậu thân|tổng tiến công.*tết/.test(topicText)) {
+    questions = [
+      { question: "Tổng tiến công và nổi dậy Tết Mậu Thân diễn ra vào năm nào?", options: ["1968", "1954", "1973", "1975"], answerIndex: 0 },
+      { question: "Đặc điểm nổi bật về phạm vi của cuộc Tổng tiến công Tết Mậu Thân là gì?", options: ["Diễn ra ở nhiều đô thị và địa bàn tại miền Nam", "Chỉ diễn ra tại Điện Biên Phủ", "Chỉ là một cuộc đàm phán ở Paris", "Diễn ra sau ngày chiến tranh kết thúc"], answerIndex: 0 },
+      { question: "Nhận định nào phân biệt đúng kết quả và tác động của Tết Mậu Thân?", options: ["Không đạt mọi mục tiêu quân sự dự kiến nhưng tạo tác động chính trị, truyền thông sâu rộng", "Đạt mọi mục tiêu quân sự và kết thúc chiến tranh ngay năm 1968", "Chỉ có tác động ở một địa phương, không ảnh hưởng tranh luận", "Là hiệp định quy định quân đội Hoa Kỳ rút năm 1973"], answerIndex: 0 },
+    ];
+  } else if (topicId === "antiUsWar" && /hiệp định paris|paris/.test(topicText)) {
     questions = [
       { question: "Hiệp định Paris về Việt Nam được ký vào ngày nào?", options: ["27/1/1973", "7/5/1954", "30/4/1975", "2/9/1945"], answerIndex: 0 },
-      { question: "Điều gì đúng về hệ quả của Hiệp định Paris?", options: ["Quân đội Hoa Kỳ rút khỏi Việt Nam, nhưng xung đột chưa chấm dứt ngay", "Chiến tranh kết thúc ngay trong ngày ký", "Việt Nam thống nhất nhà nước ngay năm 1973", "Hiệp định được ký sau ngày 30/4/1975"], answerIndex: 0 },
-      { question: "Mốc nào đánh dấu chiến tranh kết thúc tại miền Nam Việt Nam?", options: ["30/4/1975", "27/1/1973", "7/5/1954", "1960"], answerIndex: 0 },
+      { question: "Điều gì đúng về hệ quả của Hiệp định Paris?", options: ["Quân đội Hoa Kỳ rút khỏi Việt Nam, nhưng xung đột giữa các lực lượng Việt Nam còn tiếp diễn", "Chiến tranh tại miền Nam kết thúc ngay trong ngày ký", "Việt Nam thống nhất nhà nước ngay năm 1973", "Hiệp định được ký sau ngày 30/4/1975"], answerIndex: 0 },
+      { question: "Sau khi quân đội Hoa Kỳ rút theo Hiệp định Paris, điều gì tiếp tục diễn ra?", options: ["Xung đột giữa các lực lượng Việt Nam", "Chiến tranh tại miền Nam kết thúc ngay", "Tổng tuyển cử năm 1956 được tổ chức", "Chiến dịch Điện Biên Phủ bắt đầu"], answerIndex: 0 },
+    ];
+  } else if (topicId === "antiUsWar" && getHistoryEventKey(topic) === "endWar") {
+    questions = [
+      { question: "Chiến dịch Hồ Chí Minh bắt đầu vào ngày nào?", options: ["26/4/1975", "27/1/1973", "7/5/1954", "10/3/1968"], answerIndex: 0 },
+      { question: "Sự kiện nào gắn với ngày 30/4/1975?", options: ["Lực lượng tiến công tiến vào Sài Gòn và Tổng thống Dương Văn Minh tuyên bố đầu hàng", "Hiệp định Paris được ký", "Phong trào Đồng Khởi bùng lên ở Bến Tre", "Hiệp định Genève được ký"], answerIndex: 0 },
+      { question: "Việc thống nhất nhà nước Việt Nam được thực hiện vào năm nào?", options: ["1976", "1973", "1968", "1954"], answerIndex: 0 },
+    ];
+  } else if (topicId === "antiUsWar") {
+    questions = [
+      { question: "Mốc nào gắn với việc Hiệp định Genève được ký?", options: ["Năm 1954", "Năm 1960", "Năm 1968", "Năm 1975"], answerIndex: 0 },
+      { question: "Mốc nào đánh dấu chiến tranh kết thúc tại miền Nam Việt Nam?", options: ["30/4/1975", "27/1/1973", "7/5/1954", "Năm 1960"], answerIndex: 0 },
+      { question: "Nhận định nào phân biệt đúng Hiệp định Paris và mốc kết thúc chiến tranh?", options: ["Paris ký năm 1973, chiến tranh tại miền Nam kết thúc năm 1975", "Paris ký ngày 30/4/1975 và kết thúc chiến tranh", "Paris ký năm 1954, trước Hiệp định Genève", "Hai mốc cùng diễn ra vào năm 1968"], answerIndex: 0 },
     ];
   } else if (topicId === "geography" && /khí hậu/.test(topicText)) {
     questions = [
@@ -527,6 +1241,24 @@ function getStudyQuiz(topicId, topic, phase) {
       { question: "Địa hình Việt Nam có đặc điểm nổi bật nào?", options: ["Đồi núi chiếm phần lớn diện tích, chủ yếu là đồi núi thấp", "Toàn bộ lãnh thổ là đồng bằng", "Không có đồng bằng ven biển", "Chỉ có núi cao phủ băng"], answerIndex: 0 },
       { question: "Hai đồng bằng châu thổ lớn của Việt Nam là gì?", options: ["Đồng bằng sông Hồng và đồng bằng sông Cửu Long", "Đồng bằng Tây Nguyên và Đông Bắc", "Đồng bằng Hoàng Liên Sơn và Trường Sơn", "Đồng bằng sông Đà và sông Mã"], answerIndex: 0 },
       { question: "Khi phân tích một vấn đề địa lý, cách làm nào phù hợp?", options: ["Xác định vị trí, đặc điểm và mối liên hệ giữa các yếu tố", "Nêu kết luận mà không xem xét vị trí", "Khái quát mọi vùng giống hệt nhau", "Chỉ kể tên địa danh"], answerIndex: 0 },
+    ];
+  } else if (topicId === "cProgramming" && /cấu trúc chương trình/.test(topicText)) {
+    questions = [
+      { question: "Hàm nào là điểm bắt đầu thực thi của một chương trình C thông thường?", options: ["main", "printf", "include", "sizeof"], answerIndex: 0 },
+      { question: "Vai trò của #include <stdio.h> trong ví dụ dùng printf là gì?", options: ["Khai báo giao diện thư viện nhập/xuất chuẩn", "Bắt đầu vòng lặp", "Cấp phát bộ nhớ cho sum", "Kết thúc hàm main"], answerIndex: 0 },
+      { question: "Trong chương trình mẫu, return 0 thường biểu thị điều gì?", options: ["Chương trình kết thúc bình thường", "Phép cộng cho kết quả bằng 0", "Bắt đầu đọc đầu vào", "Khai báo biến kiểu int"], answerIndex: 0 },
+    ];
+  } else if (topicId === "cProgramming" && /thư viện chuẩn|standard librar/.test(topicText)) {
+    questions = [
+      { question: "Header nào khai báo printf trong C?", options: ["stdio.h", "string.h", "stdlib.h", "ctype.h"], answerIndex: 0 },
+      { question: "Header string.h thường khai báo hàm nào trong ví dụ bài học?", options: ["strlen", "malloc", "printf", "fopen"], answerIndex: 0 },
+      { question: "Vai trò chính của header khi gọi hàm thư viện là gì?", options: ["Cung cấp khai báo để trình biên dịch kiểm tra cách gọi hàm", "Tự chạy hàm ngay khi chương trình bắt đầu", "Thay thế hoàn toàn bước liên kết", "Tạo giá trị trả về mà không cần gọi hàm"], answerIndex: 0 },
+    ];
+  } else if (topicId === "cProgramming" && /biến|kiểu dữ liệu/.test(topicText)) {
+    questions = [
+      { question: "Kiểu int thường dùng để biểu diễn loại giá trị nào?", options: ["Số nguyên", "Chuỗi ký tự C", "Địa chỉ web", "Tệp đang mở"], answerIndex: 0 },
+      { question: "Nếu chia hai int và cần kết quả có phần thập phân, cần làm gì?", options: ["Chuyển ít nhất một toán hạng sang kiểu số thực trước khi chia", "Dùng thêm dấu chấm phẩy", "Đổi tên biến", "Dùng toán tử địa chỉ &"], answerIndex: 0 },
+      { question: "sizeof cho biết điều gì?", options: ["Kích thước tính bằng byte trên môi trường đang chạy", "Giá trị lớn nhất mọi kiểu trên mọi hệ thống", "Số dòng của chương trình", "Địa chỉ tệp thực thi"], answerIndex: 0 },
     ];
   } else if (topicId === "cProgramming" && /con trỏ|pointer/.test(topicText)) {
     questions = [
@@ -552,6 +1284,24 @@ function getStudyQuiz(topicId, topic, phase) {
       { question: "C có tự kiểm tra biên mảng khi truy cập không?", options: ["Không, chương trình phải tự bảo đảm chỉ số hợp lệ", "Có, luôn tự sửa mọi chỉ số sai", "Có, nhưng chỉ với mảng char", "Chỉ kiểm tra khi dùng printf"], answerIndex: 0 },
       { question: "Chuỗi kiểu C kết thúc bằng ký tự nào?", options: ["Ký tự null '\\0'", "Dấu cách", "Dấu phẩy", "Ký tự xuống dòng bắt buộc"], answerIndex: 0 },
     ];
+  } else if (topicId === "cProgramming" && /struct|cấu trúc dữ liệu/.test(topicText)) {
+    questions = [
+      { question: "struct hữu ích nhất khi nào?", options: ["Khi cần gom các trường có liên quan, có thể khác kiểu, thành một bản ghi", "Khi cần tự động kiểm tra biên mảng", "Khi muốn mọi biến có cùng một giá trị", "Khi cần thay thế mọi hàm"], answerIndex: 0 },
+      { question: "Với biến Student student, cách nào truy cập trường age?", options: ["student.age", "student->age", "student&age", "student*age"], answerIndex: 0 },
+      { question: "Nếu Student *record là con trỏ hợp lệ tới struct, cách nào truy cập score?", options: ["record->score", "record.score", "record&score", "record*score"], answerIndex: 0 },
+    ];
+  } else if (topicId === "cProgramming" && /bộ nhớ động|malloc|calloc/.test(topicText)) {
+    questions = [
+      { question: "malloc có thể trả về giá trị nào khi cấp phát thất bại?", options: ["NULL", "Luôn trả về địa chỉ hợp lệ", "Số byte đã cấp phát", "Ký tự '\\0'"], answerIndex: 0 },
+      { question: "Cần làm gì trước khi dùng vùng nhớ trả về từ malloc?", options: ["Kiểm tra con trỏ khác NULL", "Gọi free hai lần", "Ép địa chỉ thành int", "Đóng stdin"], answerIndex: 0 },
+      { question: "Sau khi gọi free(pointer), điều nào đúng?", options: ["Không được tiếp tục truy cập vùng nhớ đó", "Có thể đọc mãi không giới hạn", "Vùng nhớ tự biến thành mảng", "Phải gọi free lần hai"], answerIndex: 0 },
+    ];
+  } else if (topicId === "cProgramming" && /tệp|file/.test(topicText)) {
+    questions = [
+      { question: "Nếu fopen thất bại, giá trị trả về cần kiểm tra là gì?", options: ["NULL", "EOF luôn luôn", "0 ký tự trong tệp", "Một chuỗi rỗng"], answerIndex: 0 },
+      { question: "Chế độ fopen \"a\" thường có nghĩa gì?", options: ["Nối thêm dữ liệu vào cuối tệp", "Ghi đè nội dung cũ", "Xóa tệp và chỉ đọc", "Đóng tệp ngay lập tức"], answerIndex: 0 },
+      { question: "Sau khi thao tác xong với FILE*, nên gọi hàm nào?", options: ["fclose", "free", "sizeof", "continue"], answerIndex: 0 },
+    ];
   } else {
     questions = [
       { question: `Ý nào mô tả đúng nhất về ${topic}?`, options: ["Dựa vào khái niệm và dữ kiện trong tài liệu để giải thích", "Đoán theo từ ngữ nghe quen", "Bỏ qua điều kiện của câu hỏi", "Chọn kết luận không liên quan"], answerIndex: 0 },
@@ -570,11 +1320,47 @@ function getStudyQuiz(topicId, topic, phase) {
     ...selected,
     options,
     answerIndex: correctIndex,
-    explanation: topicId === "antiUsWar" && /điện biên phủ/.test(topicText)
+    explanation: topicId === "cProgramming" && /thư viện chuẩn|standard librar/.test(topicText)
+      ? "Mỗi header chuẩn khai báo giao diện các hàm liên quan: stdio.h khai báo printf, string.h khai báo strlen và stdlib.h khai báo abs. #include giúp biên dịch biết cách gọi; phần cài đặt được thư viện cung cấp khi liên kết."
+      : topicId === "cProgramming" && /cấu trúc chương trình/.test(topicText)
+      ? "Chương trình bắt đầu thực thi từ main. #include <stdio.h> khai báo giao diện printf; câu lệnh trong main chạy theo thứ tự, dấu chấm phẩy kết thúc câu lệnh và return 0 báo kết thúc bình thường."
+      : topicId === "cProgramming" && /struct|cấu trúc dữ liệu/.test(topicText)
+      ? "struct định nghĩa một kiểu bản ghi gồm các trường có liên quan. Biến struct truy cập trường bằng dấu chấm; con trỏ struct dùng mũi tên, tương đương (*record).field. Kiểu này giúp dữ liệu cùng một thực thể được quản lý và truyền đi cùng nhau."
+      : topicId === "antiUsWar" && /gen[eèê]ve/.test(topicText)
+      ? "Hiệp định Genève được ký năm 1954; giới tuyến gần vĩ tuyến 17 là ranh giới tập kết quân sự tạm thời, không phải biên giới quốc gia vĩnh viễn. Hiệp định dự kiến tổng tuyển cử năm 1956 nhưng cuộc bầu cử không diễn ra như dự kiến."
+      : topicId === "antiUsWar" && /đồng khởi|bến tre/.test(topicText)
+      ? "Đồng Khởi tiêu biểu ở Bến Tre năm 1960, là phong trào đấu tranh rộng ở miền Nam với sự kết hợp đấu tranh chính trị và lực lượng vũ trang, không phải một trận đánh riêng lẻ."
+      : topicId === "antiUsWar" && /tết 1968|mậu thân|tổng tiến công.*tết/.test(topicText)
+      ? "Tết Mậu Thân diễn ra đầu năm 1968 trên nhiều đô thị và địa bàn ở miền Nam. Cuộc tiến công không đạt mọi mục tiêu quân sự dự kiến nhưng tạo tác động chính trị và truyền thông sâu rộng."
+      : topicId === "antiUsWar" && /hiệp định paris|paris/.test(topicText)
+      ? "Hiệp định Paris được ký ngày 27/1/1973 và quy định việc quân đội Hoa Kỳ rút khỏi Việt Nam. Xung đột giữa các lực lượng Việt Nam vẫn tiếp diễn, nên không thể coi đây là mốc kết thúc chiến tranh."
+      : topicId === "antiUsWar" && getHistoryEventKey(topic) === "endWar"
+      ? "Chiến dịch Hồ Chí Minh bắt đầu ngày 26/4/1975; ngày 30/4, lực lượng tiến công tiến vào Sài Gòn và Tổng thống Dương Văn Minh tuyên bố đầu hàng. Chiến tranh kết thúc tại miền Nam năm 1975; thống nhất nhà nước thực hiện năm 1976."
+      : topicId === "antiUsWar" && /điện biên phủ/.test(topicText)
       ? `Điện Biên Phủ là chiến dịch lớn trong kháng chiến chống Pháp, diễn ra từ 13/3 đến 7/5/1954. Pháp xây dựng tập đoàn cứ điểm ở lòng chảo để giữ Tây Bắc và buộc Việt Minh giao chiến theo cách họ kỳ vọng có lợi. Phía Việt Minh tổ chức bao vây, bảo đảm vận chuyển hậu cần qua địa hình núi rừng, đưa pháo vào trận địa và tiến công theo từng đợt. Giao tranh mở màn ở các cứ điểm phía bắc, tiếp diễn quanh các cao điểm phía đông, rồi bước vào tổng công kích từ 1/5 đến 7/5. Ngày 7/5, sở chỉ huy tập đoàn cứ điểm bị đánh chiếm. Thất bại của Pháp tại đây góp phần quyết định vào bối cảnh dẫn tới đàm phán và Hiệp định Genève tháng 7/1954.`
+      : topicId === "antiUsWar"
+      ? "Gắn từng sự kiện với mốc riêng: Genève năm 1954, Đồng Khởi năm 1960, Tết Mậu Thân năm 1968, Paris năm 1973 và chiến tranh kết thúc tại miền Nam năm 1975. Không chuyển kết quả hay ngày tháng của sự kiện này sang sự kiện khác."
       : `Đáp án được xác định bằng cách đối chiếu câu hỏi với tài liệu về ${topic}. Hãy chú ý dữ kiện then chốt, điều kiện và mối liên hệ giữa các ý; đó là cơ sở để chọn phương án thay vì đoán.`,
-    example: topicId === "antiUsWar" && /điện biên phủ/.test(topicText)
+    example: topicId === "cProgramming" && /thư viện chuẩn|standard librar/.test(topicText)
+      ? "Trong ví dụ, strlen(course) trả về độ dài chuỗi, abs(7 - 10) trả về 3, rồi printf in kết quả. Mỗi hàm được khai báo bởi header chuẩn tương ứng."
+      : topicId === "cProgramming" && /cấu trúc chương trình/.test(topicText)
+      ? "Trong ví dụ cộng hai số, CPU bắt đầu tại main, lần lượt tạo first và second, tính sum, gọi printf để in 11 rồi trả 0. Nếu thiếu #include <stdio.h>, trình biên dịch không có khai báo chuẩn cho printf."
+      : topicId === "cProgramming" && /struct|cấu trúc dữ liệu/.test(topicText)
+      ? "Ví dụ hồ sơ Student có thể chứa name, age và score. Với một biến student, viết student.score; nếu record là Student * trỏ tới hồ sơ đó, viết record->score. Có thể đặt nhiều hồ sơ trong Student students[30] để quản lý cả lớp."
+      : topicId === "antiUsWar" && /gen[eèê]ve/.test(topicText)
+      ? "Kể đúng trình tự: chiến tranh chống Pháp kết thúc năm 1954 → Hiệp định Genève được ký tháng 7/1954 → dự kiến tổng tuyển cử năm 1956 không diễn ra như dự kiến. Giới tuyến quân sự lúc đó chỉ mang tính tạm thời."
+      : topicId === "antiUsWar" && /đồng khởi|bến tre/.test(topicText)
+      ? "Khi trình bày Đồng Khởi, nêu Bến Tre năm 1960 là nơi tiêu biểu, sau đó giải thích phong trào lan rộng ở miền Nam và kết hợp đấu tranh chính trị với lực lượng vũ trang."
+      : topicId === "antiUsWar" && /tết 1968|mậu thân|tổng tiến công.*tết/.test(topicText)
+      ? "Khi đánh giá Tết Mậu Thân, tách hai ý: kết quả quân sự không đạt mọi mục tiêu dự kiến; tác động chính trị và truyền thông lại rất rộng, ảnh hưởng tới tranh luận và tiến trình đàm phán."
+      : topicId === "antiUsWar" && /hiệp định paris|paris/.test(topicText)
+      ? "Lập dòng thời gian: ký Hiệp định Paris 27/1/1973 → quân đội Hoa Kỳ rút theo tiến trình hiệp định → xung đột ở Việt Nam tiếp tục → chiến tranh tại miền Nam kết thúc năm 1975."
+      : topicId === "antiUsWar" && getHistoryEventKey(topic) === "endWar"
+      ? "Tóm tắt theo thứ tự chiến dịch Tây Nguyên → Huế–Đà Nẵng → Hồ Chí Minh (bắt đầu 26/4/1975) → ngày 30/4 tiến vào Sài Gòn và tuyên bố đầu hàng → thống nhất nhà nước năm 1976."
+      : topicId === "antiUsWar" && /điện biên phủ/.test(topicText)
       ? "Ví dụ khi kể lại chiến dịch, hãy phân biệt ba lớp thông tin: mục tiêu phía Pháp (giữ tập đoàn cứ điểm và chủ động chọn nơi giao chiến), cách đánh của phía Việt Minh (bao vây, bảo đảm hậu cần, tiến công từng đợt), và kết quả ngày 7/5/1954 (sở chỉ huy bị đánh chiếm). Sau đó mới liên hệ kết quả này với sức ép đàm phán dẫn tới Hiệp định Genève tháng 7/1954."
+      : topicId === "antiUsWar"
+      ? "Lập một dòng thời gian gồm Genève 1954 → Đồng Khởi 1960 → Tết Mậu Thân 1968 → Paris 1973 → chiến tranh kết thúc tại miền Nam năm 1975; nêu điểm khác nhau giữa mỗi mốc."
       : `Ví dụ: khi gặp một câu hỏi mới về ${topic}, gạch dưới từ khóa, tìm dữ kiện liên quan trong tài liệu, loại phương án trái với dữ kiện rồi giải thích vì sao lựa chọn còn lại phù hợp.`,
   };
 }
@@ -667,9 +1453,10 @@ export function createQuizRouter({
   router.get("/api/quiz-provider/status", async (_req, res) => {
     const ollamaStatus = await ollama.status();
     res.json({
-      generator: "Groq/Qwen",
-      fallbackGenerator: "Ollama",
+      generator: "Ngân hàng câu hỏi đã biên soạn",
+      fallbackGenerator: "Groq/Qwen và Ollama",
       storage: "QuizAPI.io",
+      prewrittenTopics: Object.keys(quizTopics),
       geminiConfigured: geminiApiKeys.length > 0,
       geminiKeyCount: geminiApiKeys.length,
       groqConfigured: groqApiKeys.length > 0,
@@ -678,7 +1465,7 @@ export function createQuizRouter({
       ollamaAvailable: ollamaStatus.available && ollamaStatus.modelInstalled,
       ollamaModel: ollama.model,
       cloudCreationForbidden: quizApiCreationForbidden,
-      ready: Boolean(groqApiKeys.length > 0 || (ollamaStatus.available && ollamaStatus.modelInstalled)),
+      ready: true,
     });
   });
 
@@ -687,7 +1474,14 @@ export function createQuizRouter({
   });
 
   router.post("/api/study-roadmap/lesson", async (req, res) => {
-    const { topicId, quizResults, stepIndex, focusTopic } = req.body || {};
+    const {
+      topicId,
+      quizResults,
+      stepIndex,
+      focusTopic,
+      remediationIndex = 0,
+      missedQuestionPhases = [],
+    } = req.body || {};
     const selectedTopic = getQuizTopic(topicId);
     if (!selectedTopic) return res.status(400).json({ error: "Chủ đề lộ trình không hợp lệ." });
     const isDirectLesson = typeof focusTopic === "string"
@@ -695,7 +1489,10 @@ export function createQuizRouter({
     if (focusTopic !== undefined && !isDirectLesson) {
       return res.status(400).json({ error: "Bài học đã chọn không hợp lệ." });
     }
-    if (!Array.isArray(quizResults) || (!isDirectLesson && quizResults.length < 1) || quizResults.length > 20
+    if (!Number.isInteger(remediationIndex) || remediationIndex < 0 || remediationIndex > 20
+      || !Array.isArray(missedQuestionPhases) || missedQuestionPhases.length > 3
+      || missedQuestionPhases.some((phase) => !["foundation", "practice", "advanced"].includes(phase))
+      || !Array.isArray(quizResults) || (!isDirectLesson && quizResults.length < 1) || quizResults.length > 20
       || quizResults.some((item) =>
         !item
         || typeof item.correct !== "boolean"
@@ -712,11 +1509,22 @@ export function createQuizRouter({
       return res.status(400).json({ error: "Bước lộ trình không hợp lệ hoặc đã hoàn thành." });
     }
     const stage = stages[stepIndex];
+    const remediationTopic = isDirectLesson ? focusTopic : stage.topic;
+    const canCreateFocusedRemediation = typeof remediationTopic === "string"
+      && studyFocusTopics[topicId]?.includes(remediationTopic);
+    const remediationContent = missedQuestionPhases.length && canCreateFocusedRemediation
+      ? [...new Set(missedQuestionPhases)].map((phase) => {
+        const missedQuestion = getStudyQuiz(topicId, remediationTopic, phase);
+        return `Câu cần ôn: ${missedQuestion.question}\nÝ đúng: ${missedQuestion.options[missedQuestion.answerIndex]}\nGiải thích: ${missedQuestion.explanation}`;
+      }).join("\n\n")
+      : "";
     const lesson = createStudyLesson({
       topic: stage.topic,
       material: selectedTopic.material,
       results: quizResults,
       stage,
+      remediationIndex,
+      remediationContent,
     });
     if (isDirectLesson) {
       const subjectTitle = {
@@ -728,14 +1536,55 @@ export function createQuizRouter({
         ? `${subjectTitle}: Tìm hiểu về ${focusTopic}`
         : `${subjectTitle}: ${focusTopic}`;
     }
+    lesson.assessmentQuestions = ["foundation", "practice", "advanced"].map((phase) => {
+      const question = getStudyQuiz(topicId, stage.topic, phase);
+      return {
+        phase,
+        question: question.question,
+        options: question.options,
+      };
+    });
     return res.json({
       ...lesson,
       stepIndex,
       totalSteps: stages.length,
       phase: stage.phase,
       focusTopic: stage.topic,
+      remediationIndex,
+      missedQuestionPhases: [...new Set(missedQuestionPhases)],
       generator: "Lụa AI · mở bài tức thì",
     });
+  });
+
+  router.post("/api/study-roadmap/clarify", async (req, res) => {
+    const { topicId, focusTopic, question } = req.body || {};
+    const selectedTopic = getQuizTopic(topicId);
+    if (!selectedTopic) return res.status(400).json({ error: "Chủ đề lộ trình không hợp lệ." });
+    if (typeof focusTopic !== "string" || !studyFocusTopics[topicId]?.includes(focusTopic)
+      || typeof question !== "string" || !question.trim() || question.length > 2_000) {
+      return res.status(400).json({ error: "Câu hỏi hoặc nội dung bài học không hợp lệ." });
+    }
+
+    try {
+      const lessonText = getStudyEvidence(selectedTopic.material, focusTopic);
+      const generated = await generateStudyJson({
+        system: "Bạn là gia sư đang giải đáp thắc mắc chỉ trong phạm vi một chặng học. Chỉ dùng nội dung bài học được cung cấp. Nếu câu hỏi cần kiến thức ngoài nội dung đó, không suy đoán và đặt inScope=false; answer khi đó phải hướng người học sang Chat với Lụa để tìm hiểu sâu hơn. Trả JSON tiếng Việt với inScope (boolean) và answer (tối đa 1600 ký tự).",
+        prompt: `<NOI_DUNG_CHANG_HOC>\n${lessonText}\n</NOI_DUNG_CHANG_HOC>\n\nCâu hỏi của người học: ${question.trim()}\n\nChỉ đánh dấu inScope=true khi có thể trả lời trực tiếp bằng thông tin trong nội dung chặng học. Không tự bổ sung sự kiện, con số, thời điểm hoặc giả định không có trong nội dung. Nếu ngoài phạm vi hoặc thiếu căn cứ, đặt inScope=false.`,
+        schema: studyClarificationSchema,
+        isValid: (value) => value
+          && typeof value.inScope === "boolean"
+          && typeof value.answer === "string" && value.answer.trim() && value.answer.length <= 1_600,
+        numPredict: 800,
+      });
+      return res.json({
+        ...generated.content,
+        generator: generated.generator,
+        chatUrl: generated.content.inScope ? undefined : "/chat",
+      });
+    } catch (error) {
+      console.error("Interactive study clarification failed:", error.message);
+      return res.status(502).json({ error: "Chưa giải đáp được câu hỏi lúc này. Bạn có thể thử lại hoặc mở Chat với Lụa." });
+    }
   });
 
   router.post("/api/study-roadmap/answer", async (req, res) => {
@@ -755,6 +1604,9 @@ export function createQuizRouter({
     if (!selectedTopic) return res.status(400).json({ error: "Chủ đề lộ trình không hợp lệ." });
     const isMultipleChoice = Number.isInteger(selectedOptionIndex);
     const isValidFocusTopic = typeof focusTopic === "string" && studyFocusTopics[topicId]?.includes(focusTopic);
+    const studyMaterial = isValidFocusTopic
+      ? getStudyEvidence(selectedTopic.material, focusTopic)
+      : selectedTopic.material;
     const studyQuiz = isMultipleChoice && isValidFocusTopic
       ? getStudyQuiz(topicId, focusTopic, phase)
       : undefined;
@@ -801,7 +1653,7 @@ export function createQuizRouter({
         const correctAnswer = studyQuiz.options[studyQuiz.answerIndex];
         const generated = await generateStudyJson({
           system: "Bạn là gia sư kiên nhẫn. Người học vừa chọn SAI. Bắt buộc chỉ rõ vì sao chính lựa chọn của người học sai: họ đang nhầm sự kiện, mốc thời gian, khái niệm hay quy tắc nào; không được trả lời chung chung kiểu 'hãy đọc kỹ đề'. Dùng tài liệu và đáp án tham chiếu để chẩn đoán chính xác, nhưng tuyệt đối không nêu hoặc chép đáp án đúng, không nói chữ cái đáp án đúng và không tiết lộ kết luận để người học còn cơ hội tự sửa. Trả JSON tiếng Việt gồm feedback (động viên ngắn), whyWrong (chẩn đoán cụ thể dựa trên lựa chọn sai), focus (kiến thức cần ôn), hint (một gợi ý giúp tự sửa, chưa lộ đáp án).",
-          prompt: `Lần thử ${attemptNumber}/3 trong chặng "${phase}". Hãy đối chiếu tài liệu và đáp án tham chiếu để xác định chính xác lỗi trong lựa chọn sai. Không tiết lộ đáp án tham chiếu trong bất kỳ trường nào.\n\n<TAI_LIEU>\n${selectedTopic.material}\n</TAI_LIEU>\n\nCâu hỏi: ${studyQuiz.question}\nLựa chọn sai của người học: ${selectedAnswer}\nĐáp án tham chiếu chỉ để bạn chẩn đoán lỗi, KHÔNG ĐƯỢC NÊU LẠI: ${correctAnswer}\nCách suy luận người học tự ghi/nói (nếu có): ${reasoning.trim() || "(không có)"}\n\nwhyWrong phải nêu cụ thể lựa chọn sai đang nhầm điều gì và vì sao không khớp câu hỏi, dựa trên tài liệu. Không đưa ra đáp án đúng dưới dạng diễn đạt lại.`,
+          prompt: `Lần thử ${attemptNumber}/3 trong chặng "${phase}". Hãy đối chiếu tài liệu và đáp án tham chiếu để xác định chính xác lỗi trong lựa chọn sai. Không tiết lộ đáp án tham chiếu trong bất kỳ trường nào.\n\n          <TAI_LIEU>\n${studyMaterial}\n</TAI_LIEU>\n\nCâu hỏi: ${studyQuiz.question}\nLựa chọn sai của người học: ${selectedAnswer}\nĐáp án tham chiếu chỉ để bạn chẩn đoán lỗi, KHÔNG ĐƯỢC NÊU LẠI: ${correctAnswer}\nCách suy luận người học tự ghi/nói (nếu có): ${reasoning.trim() || "(không có)"}\n\nwhyWrong phải nêu cụ thể lựa chọn sai đang nhầm điều gì và vì sao không khớp câu hỏi, dựa trên tài liệu. Không đưa ra đáp án đúng dưới dạng diễn đạt lại.`,
           schema: studyWrongAnswerSchema,
           isValid: (value) => value
             && typeof value.feedback === "string" && value.feedback.trim() && value.feedback.length <= 1_000
@@ -838,7 +1690,7 @@ export function createQuizRouter({
         prompt: `Đánh giá câu trả lời tự luận của học sinh trong chặng "${phase}". Mức gợi ý hiện tại là ${hintLevel} trên 3. Nếu chưa đúng, không lặp lại/diễn đạt lại đáp án tham chiếu và không tiết lộ kết luận. whyWrong phải chỉ rõ chính xác phần sai hoặc còn thiếu trong câu trả lời, không nhận xét chung chung. focus nêu kiến thức cần ôn. hint hướng dẫn cách suy luận tiếp. Nếu đúng, explanation trình bày đầy đủ kiến thức cần học và example đưa ví dụ cụ thể gắn với câu hỏi.
 
 <TAI_LIEU>
-${selectedTopic.material}
+${studyMaterial}
 </TAI_LIEU>
 
 Câu hỏi: ${question.trim()}
@@ -873,7 +1725,7 @@ Chỉ trả JSON đúng schema: {"correct":true,"feedback":"...","whyWrong":"...
           prompt: `Đưa lời giải mẫu cho câu hỏi sau sau khi người học đã thử sai ${attemptNumber} lần. Câu trả lời cần trực tiếp giải quyết đúng yêu cầu, kèm giải thích dễ hiểu. Sơ đồ phải minh họa trực tiếp câu hỏi và lời giải, không dùng sơ đồ chung kiểu Dữ kiện → Suy luận → Kết quả.
 
 <TAI_LIEU>
-${selectedTopic.material}
+${studyMaterial}
 </TAI_LIEU>
 
 Câu hỏi: ${question.trim()}
@@ -929,14 +1781,25 @@ Chọn loại sơ đồ phù hợp nhất với chính câu hỏi. Ví dụ: n�
     }
 
     const count = numQuestions === undefined ? 5 : Number(numQuestions);
-    if (!Number.isInteger(count) || count < 1 || count > 20) {
-      return res.status(400).json({ error: "Số câu hỏi phải là số nguyên từ 1 đến 20." });
+    if (!Number.isInteger(count) || count < 1 || count > 50) {
+      return res.status(400).json({ error: "Số câu hỏi phải là số nguyên từ 1 đến 50." });
     }
 
     let quiz;
     let generator;
     let generationWarning;
-    if (groqApiKeys.length > 0) {
+    let questionBankSize;
+    if (selectedTopic) {
+      const questionPool = getPrewrittenQuizPool(topicId);
+      questionBankSize = questionPool.length;
+      if (count > questionPool.length) {
+        return res.status(422).json({
+          error: `Chủ đề này hiện có ${questionPool.length} câu đã biên soạn; chưa thể tạo bài ${count} câu mà không lặp câu hỏi.`,
+        });
+      }
+      quiz = shuffleQuizQuestions(questionPool).slice(0, count);
+      generator = "Ngân hàng câu hỏi đã biên soạn";
+    } else if (groqApiKeys.length > 0) {
       let validationErrors = [];
       for (let attempt = 0; attempt < 2; attempt += 1) {
         try {
@@ -971,7 +1834,7 @@ Chọn loại sơ đồ phù hợp nhất với chính câu hỏi. Ví dụ: n�
       generationWarning = "GROQ_API_KEY chưa được cấu hình.";
     }
 
-    if (!quiz) {
+    if (!quiz && !selectedTopic) {
       try {
         quiz = await generateQuizWithOllama(ollama, count, sourceText, selectedTopic);
         generator = `Ollama (${ollama.model})`;
@@ -981,19 +1844,23 @@ Chọn loại sơ đồ phù hợp nhất với chính câu hỏi. Ví dụ: n�
           return ollamaErrorResponse(res, error, ollama.model);
         }
         return res.status(502).json({
-          error: `${generationWarning || "Groq không tạo được câu hỏi."} Ollama dự phòng cũng không tạo được bộ câu hỏi hợp lệ.`,
+          error: generationWarning
+            ? `${generationWarning} Ollama dự phòng thất bại: ${error.message}`
+            : `Ollama không tạo được bộ câu hỏi hợp lệ: ${error.message}`,
         });
       }
     }
 
     let storage = "local";
-    let storageWarning = !quizApiKey
-      ? "Quiz chỉ được lưu trong phiên làm bài hiện tại; chưa cấu hình QuizAPI.io để lưu lên cloud."
+    let storageWarning = selectedTopic
+      ? "Bộ câu hỏi dùng ngân hàng nội bộ; chưa được lưu lên QuizAPI.io."
+      : !quizApiKey
+        ? "Quiz chỉ được lưu trong phiên làm bài hiện tại; chưa cấu hình QuizAPI.io để lưu lên cloud."
       : quizApiCreationForbidden
         ? "QuizAPI.io từ chối quyền tạo Quiz trên gói hiện tại; đề vẫn dùng được nhưng chưa lưu lên cloud."
         : "";
     let quizId;
-    if (quizApiKey && !quizApiCreationForbidden) {
+    if (!selectedTopic && quizApiKey && !quizApiCreationForbidden) {
       try {
         const quizApiResult = await createQuizOnQuizApi({
           apiKey: quizApiKey,
@@ -1034,6 +1901,7 @@ Chọn loại sơ đồ phù hợp nhất với chính câu hỏi. Ví dụ: n�
         ...(generationWarning ? { generationWarning } : {}),
         ...(storageWarning ? { storageWarning } : {}),
         total_questions: quiz.length,
+        ...(questionBankSize === undefined ? {} : { question_bank_size: questionBankSize }),
         topic: selectedTopic ? { id: selectedTopic.id, title: selectedTopic.title, period: selectedTopic.period } : null,
         studyMaterial: selectedTopic?.material,
         quiz,
@@ -1063,121 +1931,18 @@ Chọn loại sơ đồ phù hợp nhất với chính câu hỏi. Ví dụ: n�
       return res.status(400).json({ error: "Thông tin câu trả lời sai không hợp lệ." });
     }
 
-    let geminiAnalysisFailure;
-    if (geminiApiKeys.length > 0) {
-      const prompt = `Phân tích bài kiểm tra${selectedTopic ? ` về chủ đề "${selectedTopic.title}"` : ""} dựa trên tài liệu và câu trả lời sai. Người học trả lời đúng ${correctAnswers}/${totalQuestions} câu. Không suy diễn kiến thức ngoài tài liệu. Với mỗi điểm yếu, nêu chủ đề, lý do dựa trên câu sai và phần kiến thức cụ thể cần ôn. Tạo lộ trình học tuần tự, ngắn gọn, có hoạt động thực hành. Nếu người học không sai câu nào, ghi nhận điểm mạnh, để weaknesses rỗng và đưa ra lộ trình củng cố/nâng cao phù hợp. Chỉ trả JSON đúng cấu trúc: {"summary":"...","weaknesses":[{"topic":"...","reason":"...","knowledgeToReview":"..."}],"studyPlan":[{"step":1,"title":"...","activity":"..."}],"practiceTips":["..."]}.\n\n<TAI_LIEU>\n${sourceText.trim()}\n</TAI_LIEU>\n\n<CAU_TRA_LOI_SAI>\n${JSON.stringify(incorrectAnswers)}\n</CAU_TRA_LOI_SAI>`;
-      try {
-        const { response } = await fetchWithGeminiKeyFallback({
-          apiKeys: geminiApiKeys,
-          url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
-          init: {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              systemInstruction: {
-                parts: [{
-                  text: "Bạn là trợ lý giáo dục, đánh giá thân thiện và khích lệ, không phán xét. Chỉ căn cứ tài liệu, chủ đề, kết quả bài làm; không bịa kiến thức. Tạo lộ trình thực tế phù hợp với lỗi sai.",
-                }],
-              },
-              contents: [{ role: "user", parts: [{ text: prompt }] }],
-              generationConfig: { responseMimeType: "application/json", maxOutputTokens: 2_500 },
-            }),
-          },
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          console.error("Gemini quiz analysis failed", { status: response.status });
-          geminiAnalysisFailure = response.status === 401 || response.status === 403
-            ? `Gemini từ chối API key (HTTP ${response.status}).`
-            : response.status === 429
-              ? "Gemini đang giới hạn lượt gọi (HTTP 429)."
-              : `Gemini không gọi được (HTTP ${response.status}).`;
-        } else {
-          const content = data.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
-          let analysis;
-          try {
-            analysis = JSON.parse(content);
-          } catch {
-            const finishReason = data.candidates?.[0]?.finishReason || "không rõ nguyên nhân";
-            console.error("Gemini returned invalid quiz analysis JSON:", finishReason);
-            geminiAnalysisFailure = `Gemini không tạo được phần đánh giá hợp lệ (${finishReason}).`;
-          }
-          if (analysis && !isValidAnalysis(analysis)) {
-            console.error("Gemini returned quiz analysis that did not match the required schema.");
-            geminiAnalysisFailure = "Gemini trả phần đánh giá không đúng cấu trúc.";
-          }
-          if (analysis && isValidAnalysis(analysis)) {
-            analysis = adaptPerfectScoreAnalysis(analysis, correctAnswers, totalQuestions, selectedTopic?.title);
-            let verification;
-            try {
-              verification = await reviewWithGroq({
-                apiKeys: groqApiKeys,
-                model: groqModel,
-                task: "Rà soát phần đánh giá bài làm và lộ trình học: kiểm tra tính nhất quán với số câu đúng/sai, tài liệu, độ phù hợp và tính khả thi của lộ trình.",
-                question: `Kết quả: ${correctAnswers}/${totalQuestions}. Câu trả lời sai: ${JSON.stringify(incorrectAnswers)}`,
-                answer: JSON.stringify(analysis),
-                context: sourceText,
-              });
-            } catch (error) {
-              console.error("Groq quiz-analysis review failed:", error.message);
-              verification = { status: "unavailable", model: groqModel, issues: [] };
-            }
-            return res.json({ success: true, analysis, verification, generator: "Gemini" });
-          }
-        }
-      } catch (error) {
-        console.error("Gemini quiz analysis request failed:", error.message);
-        geminiAnalysisFailure = error.name === "TimeoutError"
-          ? "Gemini hết thời gian chờ."
-          : "Không kết nối được Gemini.";
-      }
-    }
-
-    try {
-      let analysis;
-      try {
-        const content = await ollama.chat(
-          "Bạn là Quiz AI, chuyên gia đánh giá kết quả học tập. Đánh giá thân thiện, cụ thể và khích lệ; không phán xét người học. Chỉ dựa trên tài liệu, chủ đề và câu trả lời được cung cấp. Lộ trình phải thực tế, theo thứ tự từ củng cố nền tảng đến luyện tập. Trả về đúng JSON theo schema yêu cầu, không dùng markdown.",
-          `Phân tích bài kiểm tra${selectedTopic ? ` về chủ đề "${selectedTopic.title}"` : ""} dựa trên tài liệu và các câu trả lời sai sau đây. Người học trả lời đúng ${correctAnswers}/${totalQuestions} câu. Không suy diễn kiến thức ngoài tài liệu. Với mỗi điểm yếu, nêu chủ đề, lý do dựa trên câu sai và phần kiến thức cụ thể cần ôn. Tạo lộ trình học tuần tự, ngắn gọn, có hoạt động thực hành. Nếu người học không sai câu nào, ghi nhận điểm mạnh, để weaknesses rỗng và đưa ra lộ trình củng cố/nâng cao phù hợp.\n\n<TAI_LIEU>\n${sourceText.trim()}\n</TAI_LIEU>\n\n<CAU_TRA_LOI_SAI>\n${JSON.stringify(incorrectAnswers)}\n</CAU_TRA_LOI_SAI>`,
-          analysisSchema,
-        );
-        analysis = JSON.parse(content);
-      } catch (error) {
-        if (error.code || error.status) return ollamaErrorResponse(res, error, ollama.model);
-        console.error("Ollama returned invalid quiz analysis JSON.");
-        return res.status(502).json({ error: "AI trả về phần đánh giá không đúng định dạng. Hãy thử lại." });
-      }
-
-      if (!isValidAnalysis(analysis)) {
-        console.error("Ollama returned quiz analysis that did not match the required schema.");
-        return res.status(502).json({ error: "Phần đánh giá chưa đúng cấu trúc yêu cầu. Hãy thử lại." });
-      }
-      analysis = adaptPerfectScoreAnalysis(analysis, correctAnswers, totalQuestions, selectedTopic?.title);
-
-      let verification;
-      try {
-        verification = await reviewWithGroq({
-          apiKeys: groqApiKeys,
-          model: groqModel,
-          task: "Rà soát phần đánh giá bài làm và lộ trình học: kiểm tra tính nhất quán với số câu đúng/sai, tài liệu, độ phù hợp và tính khả thi của lộ trình.",
-          question: `Kết quả: ${correctAnswers}/${totalQuestions}. Câu trả lời sai: ${JSON.stringify(incorrectAnswers)}`,
-          answer: JSON.stringify(analysis),
-          context: sourceText,
-        });
-      } catch (error) {
-        console.error("Groq quiz-analysis review failed:", error.message);
-        verification = { status: "unavailable", model: groqModel, issues: [] };
-      }
-      return res.json({
-        success: true,
-        analysis,
-        verification,
-        generator: "Ollama",
-        ...(geminiAnalysisFailure ? { fallbackReason: geminiAnalysisFailure } : {}),
-      });
-    } catch (error) {
-      return ollamaErrorResponse(res, error, ollama.model);
-    }
+    const analysis = createImmediateQuizAnalysis({
+      correctAnswers,
+      totalQuestions,
+      incorrectAnswers,
+      topicTitle: selectedTopic?.title,
+    });
+    return res.json({
+      success: true,
+      analysis,
+      verification: { status: "instant", model: "Kết quả bài làm", issues: [] },
+      generator: "Quiz AI tức thì",
+    });
   });
 
   return router;
