@@ -2377,7 +2377,7 @@ export function createQuizRouter({
       focusTopic: stage.topic,
       remediationIndex,
       missedQuestionPhases: [...new Set(missedQuestionPhases)],
-      generator: "Lụa AI · mở bài tức thì",
+      generator: "Luna AI · mở bài tức thì",
     });
   });
 
@@ -2393,7 +2393,7 @@ export function createQuizRouter({
     try {
       const lessonText = getStudyEvidence(selectedTopic.material, focusTopic);
       const generated = await generateStudyJson({
-        system: "Bạn là gia sư đang giải đáp thắc mắc chỉ trong phạm vi một chặng học. Chỉ dùng nội dung bài học được cung cấp. Nếu câu hỏi cần kiến thức ngoài nội dung đó, không suy đoán và đặt inScope=false; answer khi đó phải hướng người học sang Chat với Lụa để tìm hiểu sâu hơn. Trả JSON tiếng Việt với inScope (boolean) và answer (tối đa 1600 ký tự).",
+        system: "Bạn là gia sư đang giải đáp thắc mắc chỉ trong phạm vi một chặng học. Chỉ dùng nội dung bài học được cung cấp. Nếu câu hỏi cần kiến thức ngoài nội dung đó, không suy đoán và đặt inScope=false; answer khi đó phải hướng người học sang Chat với Luna để tìm hiểu sâu hơn. Trả JSON tiếng Việt với inScope (boolean) và answer (tối đa 1600 ký tự).",
         prompt: `<NOI_DUNG_CHANG_HOC>\n${lessonText}\n</NOI_DUNG_CHANG_HOC>\n\nCâu hỏi của người học: ${question.trim()}\n\nChỉ đánh dấu inScope=true khi có thể trả lời trực tiếp bằng thông tin trong nội dung chặng học. Không tự bổ sung sự kiện, con số, thời điểm hoặc giả định không có trong nội dung. Nếu ngoài phạm vi hoặc thiếu căn cứ, đặt inScope=false.`,
         schema: studyClarificationSchema,
         isValid: (value) => value
@@ -2408,7 +2408,7 @@ export function createQuizRouter({
       });
     } catch (error) {
       console.error("Interactive study clarification failed:", error.message);
-      return res.status(502).json({ error: "Chưa giải đáp được câu hỏi lúc này. Bạn có thể thử lại hoặc mở Chat với Lụa." });
+      return res.status(502).json({ error: "Chưa giải đáp được câu hỏi lúc này. Bạn có thể thử lại hoặc mở Chat với Luna." });
     }
   });
 
@@ -2456,7 +2456,7 @@ export function createQuizRouter({
             focus: "Hãy nối mục tiêu, diễn biến và kết quả để nhớ chắc kiến thức.",
             explanation: studyQuiz.explanation,
             example: studyQuiz.example,
-            generator: "Lụa AI · giải thích theo tài liệu",
+            generator: "Luna AI · giải thích theo tài liệu",
           });
         }
 
@@ -2470,7 +2470,7 @@ export function createQuizRouter({
               explanation: studyQuiz.explanation,
               example: studyQuiz.example,
             },
-            generator: "Lụa AI · lời giải theo tài liệu",
+            generator: "Luna AI · lời giải theo tài liệu",
           });
         }
 
@@ -2511,7 +2511,7 @@ export function createQuizRouter({
       }
 
       const generated = await generateStudyJson({
-        system: "Bạn là gia sư Lụa, trò chuyện tự nhiên và đánh giá câu trả lời dựa trên tài liệu. Đánh giá nội dung, không đòi hỏi cách diễn đạt y hệt. Khi câu trả lời sai hoặc thiếu, chỉ rõ cụ thể ý nào sai/thiếu, giải thích vì sao dựa trên tài liệu, nêu kiến thức cần tập trung và gợi ý để học sinh tự suy luận tiếp; tuyệt đối chưa tiết lộ đáp án mẫu. Khi đúng, xác nhận và đưa giải thích chi tiết cùng ví dụ cụ thể. Trả đúng JSON tiếng Việt gồm correct, feedback, whyWrong, focus, hint, explanation, example.",
+        system: "Bạn là gia sư Luna, trò chuyện tự nhiên và đánh giá câu trả lời dựa trên tài liệu. Đánh giá nội dung, không đòi hỏi cách diễn đạt y hệt. Khi câu trả lời sai hoặc thiếu, chỉ rõ cụ thể ý nào sai/thiếu, giải thích vì sao dựa trên tài liệu, nêu kiến thức cần tập trung và gợi ý để học sinh tự suy luận tiếp; tuyệt đối chưa tiết lộ đáp án mẫu. Khi đúng, xác nhận và đưa giải thích chi tiết cùng ví dụ cụ thể. Trả đúng JSON tiếng Việt gồm correct, feedback, whyWrong, focus, hint, explanation, example.",
         prompt: `Đánh giá câu trả lời tự luận của học sinh trong chặng "${phase}". Mức gợi ý hiện tại là ${hintLevel} trên 3. Nếu chưa đúng, không lặp lại/diễn đạt lại đáp án tham chiếu và không tiết lộ kết luận. whyWrong phải chỉ rõ chính xác phần sai hoặc còn thiếu trong câu trả lời, không nhận xét chung chung. focus nêu kiến thức cần ôn. hint hướng dẫn cách suy luận tiếp. Nếu đúng, explanation trình bày đầy đủ kiến thức cần học và example đưa ví dụ cụ thể gắn với câu hỏi.
 
 <TAI_LIEU>

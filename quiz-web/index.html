@@ -606,7 +606,7 @@
 </head>
 <body>
   <header>
-    <a class="quiz-brand" href="/"><span class="brand-mark" aria-hidden="true">🦊</span><span>Lụa AI</span></a>
+    <a class="quiz-brand" href="/"><span class="brand-mark" aria-hidden="true">🦊</span><span>Luna AI</span></a>
     <nav class="quiz-nav" aria-label="Điều hướng chính">
       <a href="/chat">Trò chuyện</a>
       <a class="active" href="/quiz">Quiz</a>
@@ -620,7 +620,7 @@
         <div class="quiz-hero-copy">
           <div class="eyebrow">Không gian Quiz học tập riêng</div>
           <h1 id="quiz-hero-title">Học chắc từng chủ đề, tiến bộ sau mỗi lượt chơi.</h1>
-          <p class="hero-copy">Chọn môn học, làm bộ câu hỏi mới và xem kết quả của riêng bạn. Gia sư Lụa nằm trong lộ trình riêng — chỉ mở khi bạn muốn học tiếp.</p>
+          <p class="hero-copy">Chọn môn học, làm bộ câu hỏi mới và xem kết quả của riêng bạn. Gia sư Luna nằm trong lộ trình riêng — chỉ mở khi bạn muốn học tiếp.</p>
           <div class="quiz-hero-tags" aria-label="Điểm nổi bật">
             <span>✦ Câu hỏi theo chủ đề</span>
             <span>✓ Chấm điểm tức thì</span>
@@ -658,7 +658,7 @@
         </div>
       </div>
       <div id="topic-list" class="apps" aria-label="Danh sách chủ đề"></div>
-      <p class="quiz-mode-note"><strong>Quiz và Gia sư Lụa là hai không gian riêng.</strong> Hoàn thành Quiz để xem kết quả; bạn có thể tự chọn mở lộ trình gia sư sau đó.</p>
+      <p class="quiz-mode-note"><strong>Quiz và Gia sư Luna là hai không gian riêng.</strong> Hoàn thành Quiz để xem kết quả; bạn có thể tự chọn mở lộ trình gia sư sau đó.</p>
     </section>
     <section id="quiz-screen" hidden>
       <button id="back-to-topics" class="back-button" type="button">← Chọn chủ đề khác</button>
@@ -962,8 +962,8 @@
       stopTutorListening();
       studyScreen.replaceChildren();
       status.textContent = activeRoadmap.isDirectLesson
-        ? "Lụa đang chuẩn bị bài học bạn đã chọn..."
-        : "Lụa đang chuẩn bị bài học theo kết quả Quiz của bạn...";
+        ? "Luna đang chuẩn bị bài học bạn đã chọn..."
+        : "Luna đang chuẩn bị bài học theo kết quả Quiz của bạn...";
       try {
         const response = await fetch("/api/study-roadmap/lesson", {
           method: "POST",
@@ -1026,7 +1026,7 @@
 
     function resetTutorReadButtons() {
       document.querySelectorAll(".tutor-message-tools button").forEach((button) => {
-        if (button.textContent !== "🔊 Nghe Lụa đọc") button.textContent = "🔊 Nghe Lụa đọc";
+        if (button.textContent !== "🔊 Nghe Luna đọc") button.textContent = "🔊 Nghe Luna đọc";
         button.disabled = false;
       });
     }
@@ -1064,14 +1064,14 @@
         const audio = commentaryAudio;
         button.textContent = "⏸ Đang đọc tiếng Việt";
         await audio.play();
-        status.textContent = "Lụa đang đọc lời giải thích cho bạn.";
+        status.textContent = "Luna đang đọc lời giải thích cho bạn.";
         await new Promise((resolve, reject) => {
           audio.addEventListener("ended", resolve, { once: true });
           audio.addEventListener("pause", resolve, { once: true });
           audio.addEventListener("error", () => reject(new Error("Không phát được tệp giọng đọc tiếng Việt.")), { once: true });
         });
         if (requestToken === tutorSpeechToken) {
-          button.textContent = "🔊 Nghe Lụa đọc";
+          button.textContent = "🔊 Nghe Luna đọc";
           status.textContent = "Đã đọc xong lời giải thích.";
         }
       } catch (error) {
@@ -1096,7 +1096,7 @@
       avatar.className = `fox-avatar ${emotion}${compact ? " tutor-mini-avatar" : ""}`;
       const image = document.createElement("img");
       image.src = foxAvatarImage(emotion);
-      image.alt = compact ? "" : "Lụa, gia sư cáo";
+      image.alt = compact ? "" : "Luna, gia sư cáo";
       image.setAttribute("aria-hidden", compact ? "true" : "false");
       image.addEventListener("error", () => {
         if (image.src.endsWith("/images/lua-fox-sad.png")) {
@@ -1104,7 +1104,7 @@
           return;
         }
         image.removeAttribute("src");
-        image.alt = compact ? "" : "Không tải được ảnh đại diện Lụa";
+        image.alt = compact ? "" : "Không tải được ảnh đại diện Luna";
       });
       const expression = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       expression.setAttribute("class", "fox-expression");
@@ -1148,8 +1148,8 @@
       tools.className = "tutor-message-tools";
       const read = document.createElement("button");
       read.type = "button";
-      read.textContent = "🔊 Nghe Lụa đọc";
-      read.setAttribute("aria-label", "Nghe Lụa đọc tin nhắn này");
+      read.textContent = "🔊 Nghe Luna đọc";
+      read.setAttribute("aria-label", "Nghe Luna đọc tin nhắn này");
       read.addEventListener("click", () => speakTutorText(text, read));
       tools.append(read);
       content.append(tools);
@@ -2329,12 +2329,12 @@
 
       const tutorPanel = document.createElement("section");
       tutorPanel.className = "tutor-avatar-stage";
-      tutorPanel.setAttribute("aria-label", "Gia sư AI Lụa");
+      tutorPanel.setAttribute("aria-label", "Gia sư AI Luna");
       const fox = createFoxAvatar("happy");
       const identity = document.createElement("div");
       identity.className = "tutor-identity";
       const tutorName = document.createElement("strong");
-      tutorName.textContent = "Lụa";
+      tutorName.textContent = "Luna";
       const tutorRole = document.createElement("span");
       tutorRole.textContent = "Gia sư AI đồng hành cùng bạn";
       identity.append(tutorName, tutorRole);
@@ -2343,7 +2343,7 @@
       const listenButton = document.createElement("button");
       listenButton.type = "button";
       listenButton.className = "primary";
-      listenButton.textContent = "🎙 Nói với Lụa";
+      listenButton.textContent = "🎙 Nói với Luna";
       const replayButton = document.createElement("button");
       replayButton.type = "button";
       replayButton.textContent = "🔊 Nghe lại";
@@ -2359,7 +2359,7 @@
 
       const dialogue = document.createElement("section");
       dialogue.className = "tutor-dialogue";
-      dialogue.setAttribute("aria-label", "Trò chuyện với gia sư Lụa");
+      dialogue.setAttribute("aria-label", "Trò chuyện với gia sư Luna");
       const dialogueHead = document.createElement("div");
       dialogueHead.className = "tutor-dialogue-head";
       dialogueHead.textContent = `${lesson.focusTopic} · ${lesson.phase === "foundation" ? "Củng cố nền tảng" : lesson.phase === "practice" ? "Luyện tập vận dụng" : "Thử thách nâng cao"}`;
@@ -2386,7 +2386,7 @@
       composer.append(answer, sendButton);
       const hint = document.createElement("p");
       hint.className = "tutor-hint";
-      hint.textContent = "Cần trả lời đúng để đạt 100% (vượt ngưỡng 90%). Nếu chưa đạt sau ba lượt, Lụa sẽ ôn đúng phần còn nhầm bằng câu hỏi mới.";
+      hint.textContent = "Cần trả lời đúng để đạt 100% (vượt ngưỡng 90%). Nếu chưa đạt sau ba lượt, Luna sẽ ôn đúng phần còn nhầm bằng câu hỏi mới.";
       composer.hidden = true;
       hint.hidden = true;
       dialogue.append(dialogueHead, log, quickActions, composer, hint);
@@ -2613,7 +2613,7 @@
       understoodButton.type = "button";
       const clarifyButton = document.createElement("button");
       clarifyButton.type = "button";
-      clarifyButton.textContent = "Chưa hiểu, mình muốn hỏi Lụa";
+      clarifyButton.textContent = "Chưa hiểu, mình muốn hỏi Luna";
       comprehensionActions.append(understoodButton, clarifyButton);
       const clarification = document.createElement("form");
       clarification.className = "study-clarification";
@@ -2624,7 +2624,7 @@
       clarificationQuestion.placeholder = "Bạn đang vướng ý nào trong bước này?";
       const clarificationSubmit = document.createElement("button");
       clarificationSubmit.type = "submit";
-      clarificationSubmit.textContent = "Hỏi Lụa về bài này";
+      clarificationSubmit.textContent = "Hỏi Luna về bài này";
       clarification.append(clarificationQuestion, clarificationSubmit);
       comprehension.append(comprehensionQuestion, comprehensionActions, clarification);
 
@@ -2737,13 +2737,13 @@
             }),
           });
           const data = await response.json();
-          if (!response.ok) throw new Error(data.error || "Lụa chưa giải đáp được câu hỏi.");
+          if (!response.ok) throw new Error(data.error || "Luna chưa giải đáp được câu hỏi.");
           say(data.answer, data.inScope ? "happy" : "sad", true);
           if (!data.inScope) {
-            const linkMessage = appendTutorMessage(log, "Câu hỏi này nằm ngoài chặng hiện tại. Bạn có thể tìm hiểu sâu hơn tại Chat với Lụa.", { autoRead: false });
+            const linkMessage = appendTutorMessage(log, "Câu hỏi này nằm ngoài chặng hiện tại. Bạn có thể tìm hiểu sâu hơn tại Chat với Luna.", { autoRead: false });
             const link = document.createElement("a");
             link.href = data.chatUrl || "/chat";
-            link.textContent = "Mở Chat với Lụa";
+            link.textContent = "Mở Chat với Luna";
             linkMessage.querySelector(".tutor-bubble")?.append(document.createElement("br"), link);
           }
           clarificationQuestion.value = "";
@@ -2776,7 +2776,7 @@
             const doneTitle = document.createElement("h2");
             doneTitle.textContent = "Bạn đã hoàn thành lộ trình!";
             const doneText = document.createElement("p");
-            doneText.textContent = `Bạn đã cùng Lụa học xong ${roadmap.title}. Hãy quay lại bất cứ lúc nào để ôn tập.`;
+            doneText.textContent = `Bạn đã cùng Luna học xong ${roadmap.title}. Hãy quay lại bất cứ lúc nào để ôn tập.`;
             const review = document.createElement("button");
             review.type = "button";
             review.textContent = "Quay lại nhận xét";
@@ -2865,7 +2865,7 @@
             }),
           });
           const data = await response.json();
-          if (!response.ok) throw new Error(data.error || "Lụa chưa kiểm tra được đáp án.");
+          if (!response.ok) throw new Error(data.error || "Luna chưa kiểm tra được đáp án.");
           assessmentAttempts += 1;
           if (data.correct) {
             assessmentScore += 1;
@@ -2943,7 +2943,7 @@
         }
         if (activeSpeechRecognition) {
           stopTutorListening();
-          listenButton.textContent = "🎙 Nói với Lụa";
+          listenButton.textContent = "🎙 Nói với Luna";
           tutorStatus.textContent = "Bạn có thể nhập hoặc trả lời bằng giọng nói.";
           return;
         }
@@ -2965,7 +2965,7 @@
         };
         recognition.onend = () => {
           if (activeSpeechRecognition === recognition) activeSpeechRecognition = null;
-          listenButton.textContent = "🎙 Nói với Lụa";
+          listenButton.textContent = "🎙 Nói với Luna";
           tutorStatus.textContent = "Bạn có thể nhập hoặc trả lời bằng giọng nói.";
         };
         try {
@@ -2983,7 +2983,7 @@
         sendButton.disabled = true;
         appendLearnerMessage(log, learnerAnswer);
         answer.value = "";
-        tutorStatus.textContent = "Lụa đang đọc câu trả lời của bạn…";
+        tutorStatus.textContent = "Luna đang đọc câu trả lời của bạn…";
         try {
           const response = await fetch("/api/study-roadmap/answer", {
             method: "POST",
@@ -2999,7 +2999,7 @@
             }),
           });
           const data = await response.json();
-          if (!response.ok) throw new Error(data.error || "Lụa chưa kiểm tra được câu trả lời.");
+          if (!response.ok) throw new Error(data.error || "Luna chưa kiểm tra được câu trả lời.");
           attempts += 1;
           hintLevel = Math.min(hintLevel + 1, 3);
           if (data.correct) {
@@ -3013,7 +3013,7 @@
             addNextStepButton();
             progress.children[lesson.stepIndex]?.classList.add("active");
             celebrateTutor(card, fox);
-            status.textContent = "Đạt 100% (yêu cầu tối thiểu 90%). Lụa đã giải thích kỹ; bạn chủ động sang bước tiếp theo khi sẵn sàng.";
+            status.textContent = "Đạt 100% (yêu cầu tối thiểu 90%). Luna đã giải thích kỹ; bạn chủ động sang bước tiếp theo khi sẵn sàng.";
           } else if (data.solution) {
                 say(`Bạn chưa đạt ngưỡng 90% ở câu này. Mình đưa lời giải để bạn hiểu phần còn nhầm, sau đó sẽ kiểm tra lại bằng một câu hỏi mới.\n\nLời giải: ${data.solution.answer}\n\nGiải thích: ${data.solution.explanation}`, "happy", true);
                 if (data.solution.diagram) appendSolutionDiagram(log, data.solution.diagram, lesson.focusTopic);
@@ -3029,7 +3029,7 @@
             ].filter(Boolean).join("\n\n");
             say(feedback, "sad", true);
             tutorStatus.textContent = `Mình sẽ cùng bạn xem lại — lượt ${attempts}/3.`;
-            status.textContent = `Lụa đã phản hồi vào câu trả lời của bạn (${attempts}/3 lượt).`;
+            status.textContent = `Luna đã phản hồi vào câu trả lời của bạn (${attempts}/3 lượt).`;
           }
         } catch (error) {
           say(`${error.message} Câu trả lời chưa được chấm; bạn có thể gửi lại.`, "sad", false);
@@ -3119,11 +3119,11 @@
       layout.className = "study-ui-grid";
       const tutorPanel = document.createElement("section");
       tutorPanel.className = "study-ui-card study-ui-tutor";
-      tutorPanel.setAttribute("aria-label", "Gia sư Lụa");
+      tutorPanel.setAttribute("aria-label", "Gia sư Luna");
       const fox = createFoxAvatar("happy");
       const tutorName = document.createElement("h2");
       tutorName.className = "study-ui-tutor-name";
-      tutorName.textContent = "Lụa";
+      tutorName.textContent = "Luna";
       const tutorRole = document.createElement("p");
       tutorRole.className = "study-ui-role";
       tutorRole.textContent = "Gia sư AI đồng hành cùng bạn";
@@ -3251,7 +3251,7 @@
       const target = roadmap.quizResults.find((item) => item.topic === lesson.focusTopic && !item.correct);
       const known = roadmap.quizResults.find((item) => item.topic === lesson.focusTopic && item.correct);
       const opening = [
-        `Chào bạn! Mình là Lụa, hôm nay mình sẽ làm gia sư cùng bạn về ${lesson.focusTopic}. Mình sẽ giải thích bằng ví dụ và hình minh họa; nếu bạn chưa đúng, mình chỉ gợi ý để bạn tự tìm ra nhé.`,
+        `Chào bạn! Mình là Luna, hôm nay mình sẽ làm gia sư cùng bạn về ${lesson.focusTopic}. Mình sẽ giải thích bằng ví dụ và hình minh họa; nếu bạn chưa đúng, mình chỉ gợi ý để bạn tự tìm ra nhé.`,
       ];
       if (lesson.phase !== "advanced" && target) {
         opening.push(`Mình nhớ ở câu “${target.question}”, bạn đã chọn “${target.selectedAnswer}”. Không sao cả, mình sẽ cùng bạn tìm xem ý nào khiến câu này dễ nhầm.`);
@@ -3361,7 +3361,7 @@
         const learnerAnswer = answer.value.trim();
         const submittedOptionIndex = selectedOptionIndex;
         checkButton.disabled = true;
-        status.textContent = "Lụa đang xem lựa chọn và chuẩn bị gợi ý...";
+        status.textContent = "Luna đang xem lựa chọn và chuẩn bị gợi ý...";
         try {
           const response = await fetch("/api/study-roadmap/answer", {
             method: "POST",
@@ -3407,7 +3407,7 @@
               const solutionMessage = `Mình đã cùng bạn thử lại ${studyWrongAttempts + 1} lần. Giờ mình đưa lời giải mẫu để bạn đối chiếu.\n\n${solutionLines.map(([label, text]) => `${label} ${text || ""}`).join("\n\n")}`;
               finishQuestion("incorrect", solutionLines, solutionMessage, "sad");
               attemptLabel.textContent = `Đã dùng ${studyWrongAttempts + 1}/3 lượt`;
-              status.textContent = "Lụa đã mở lời giải mẫu kèm hình minh họa. Bạn có thể sang bước tiếp theo.";
+              status.textContent = "Luna đã mở lời giải mẫu kèm hình minh họa. Bạn có thể sang bước tiếp theo.";
             }
           } else {
             studyWrongAttempts += 1;
@@ -3450,7 +3450,7 @@
         }
         if (activeSpeechRecognition) {
           stopTutorListening();
-          listenButton.textContent = "🎙 Nói với Lụa";
+          listenButton.textContent = "🎙 Nói với Luna";
           tutorRole.textContent = "Gia sư AI đồng hành cùng bạn";
           return;
         }
@@ -3475,7 +3475,7 @@
         };
         recognition.onend = () => {
           if (activeSpeechRecognition === recognition) activeSpeechRecognition = null;
-          listenButton.textContent = "🎙 Nói với Lụa";
+          listenButton.textContent = "🎙 Nói với Luna";
           tutorRole.textContent = "Gia sư AI đồng hành cùng bạn";
         };
         try {

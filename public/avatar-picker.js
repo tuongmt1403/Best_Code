@@ -21,7 +21,7 @@ if (avatarPicker) {
         <span class="avatar-picker-current" data-avatar-current></span>
       </header>
       <div class="avatar-picker-options">
-        <button type="button" class="avatar-choice" data-avatar-choice="fox" aria-pressed="false" aria-label="Chọn avatar Cáo Lụa">
+        <button type="button" class="avatar-choice" data-avatar-choice="fox" aria-pressed="false" aria-label="Chọn avatar Cáo Luna">
           <span class="avatar-choice-check" aria-hidden="true">✓</span>
           <span class="avatar-choice-image"><img src="/images/lua-fox.png" alt=""></span>
           <strong>Cáo</strong><small data-avatar-choice-status></small>
@@ -93,7 +93,7 @@ if (avatarPicker) {
     document.querySelectorAll("[data-player-avatar]").forEach((image) => {
       image.src = avatarSources[selectedAvatarId];
       image.dataset.avatarId = selectedAvatarId;
-      image.alt = `Avatar của bạn: ${selectedAvatarId === "knight" ? "Hiệp sĩ" : "Cáo Lụa"}`;
+      image.alt = `Avatar của bạn: ${selectedAvatarId === "knight" ? "Hiệp sĩ" : "Cáo Luna"}`;
     });
     localStorage.setItem("player-avatar", selectedAvatarId);
     updateStatus();
@@ -148,7 +148,7 @@ if (avatarPicker) {
       const avatarId = button.dataset.avatarChoice;
       if (avatarId === selectedAvatarId) return;
       preview.src = avatarSources[avatarId];
-      preview.alt = `Avatar mới: ${avatarId === "knight" ? "Hiệp sĩ" : "Cáo Lụa"}`;
+      preview.alt = `Avatar mới: ${avatarId === "knight" ? "Hiệp sĩ" : "Cáo Luna"}`;
       dialog.showModal();
       confirmButton.onclick = () => saveAvatar(avatarId);
     });

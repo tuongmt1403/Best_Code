@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lụa - bạn trò chuyện AI</title>
+<title>Luna - bạn trò chuyện AI</title>
 <link rel="stylesheet" href="/dangKy_dangNhap/auth.css">
 <script src="/app-shell.js?v=avatar-picker-v4" defer></script>
 <script src="/avatar-picker.js?v=avatar-picker-v4" defer></script>
@@ -136,7 +136,7 @@
   }
   @media (prefers-reduced-motion:reduce) { button { transition:none; } }
 
-  /* ---- Cáo Lụa: trạng thái trò chuyện ---- */
+  /* ---- Cáo Luna: trạng thái trò chuyện ---- */
   #stage { position:relative; isolation:isolate; aspect-ratio:1; }
   .fox-avatar { position:relative; z-index:1; display:block; width:100%; height:100%; object-fit:contain;
     filter:drop-shadow(0 16px 18px #3d34732e); transform-origin:50% 82%; }
@@ -187,9 +187,9 @@
 <body class="chat-mode">
 <div class="chat-shell">
 <header class="chat-header">
-  <a class="chat-brand" href="/" aria-label="Lụa AI - về trang chính">
+  <a class="chat-brand" href="/" aria-label="Luna AI - về trang chính">
     <span class="chat-brand-mark" aria-hidden="true">L</span>
-    <span><strong>Lụa AI</strong><small>Trò chuyện và học tập</small></span>
+    <span><strong>Luna AI</strong><small>Trò chuyện và học tập</small></span>
   </a>
   <nav class="chat-nav" aria-label="Điều hướng chính">
     <a class="active" href="/chat">Trò chuyện</a>
@@ -238,7 +238,7 @@
 <h1 id="conversation-heading">Cuộc trò chuyện</h1>
 <div id="status" aria-live="polite">Nhập tin nhắn hoặc chuyển sang chế độ nói chuyện.</div>
 <div id="bubble" aria-hidden="true"></div>
-<div id="answer-display" aria-live="polite">Xin chào! Hôm nay bạn muốn cùng Lụa tìm hiểu điều gì?</div>
+<div id="answer-display" aria-live="polite">Xin chào! Hôm nay bạn muốn cùng Luna tìm hiểu điều gì?</div>
 <button id="history-toggle" type="button" aria-expanded="false">Hiện lịch sử chat</button>
 <section id="history-panel" hidden aria-label="Lịch sử chat"></section>
 <section id="camera-panel" hidden aria-label="Xem trước camera">
@@ -253,7 +253,7 @@
     <button id="attach-file" type="button">📎 Đính kèm</button>
     <div id="attachment-list" aria-label="Tệp đã chọn"></div>
   </div>
-  <input id="text" placeholder="Nhập tin nhắn và gửi cho Lụa" aria-label="Tin nhắn">
+  <input id="text" placeholder="Nhập tin nhắn và gửi cho Luna" aria-label="Tin nhắn">
   <button id="send" type="button">Gửi</button>
 </div>
 <div id="speech-controls">
@@ -274,12 +274,12 @@ const requestedChatStyle = new URLSearchParams(location.search).get("style");
 let pendingAttachments = [];
 let chatStyle = allowedChatStyles.has(requestedChatStyle)
   ? requestedChatStyle
-  : localStorage.getItem("lụa-chat-style") === "genz" ? "genz" : "normal";
+  : localStorage.getItem("luna-chat-style") === "genz" ? "genz" : "normal";
 chatStyleSelect.value = chatStyle;
-if (allowedChatStyles.has(requestedChatStyle)) localStorage.setItem("lụa-chat-style", chatStyle);
+if (allowedChatStyles.has(requestedChatStyle)) localStorage.setItem("luna-chat-style", chatStyle);
 const speechEngineSelect = $("speech-engine");
 const elevenLabsVoiceSelect = $("elevenlabs-voice");
-const savedSpeechEngine = localStorage.getItem("lụa-speech-engine");
+const savedSpeechEngine = localStorage.getItem("luna-speech-engine");
 let speechEngine = ["elevenlabs", "gtts", "browser"].includes(savedSpeechEngine) ? savedSpeechEngine : "elevenlabs";
 speechEngineSelect.value = speechEngine;
 
@@ -297,7 +297,7 @@ async function loadElevenLabsVoices() {
     }
     if (!voicesResponse.ok) throw new Error(voicesData.error || "Không tải được giọng ElevenLabs.");
     elevenLabsVoiceSelect.replaceChildren();
-    let selectedVoice = localStorage.getItem("lụa-elevenlabs-voice") || status.voiceId;
+    let selectedVoice = localStorage.getItem("luna-elevenlabs-voice") || status.voiceId;
     let hasSelectedVoice = false;
     for (const voice of voicesData.voices || []) {
       elevenLabsVoiceSelect.add(new Option(voice.name || voice.voice_id, voice.voice_id));
@@ -305,7 +305,7 @@ async function loadElevenLabsVoices() {
     }
     if (!hasSelectedVoice && voicesData.voices?.length) selectedVoice = voicesData.voices[0].voice_id;
     if (selectedVoice) elevenLabsVoiceSelect.value = selectedVoice;
-    localStorage.setItem("lụa-elevenlabs-voice", elevenLabsVoiceSelect.value);
+    localStorage.setItem("luna-elevenlabs-voice", elevenLabsVoiceSelect.value);
   } catch (error) {
     elevenLabsVoiceSelect.replaceChildren(new Option("Không tải được giọng ElevenLabs", ""));
     statusEl.textContent = error.message;
@@ -313,11 +313,11 @@ async function loadElevenLabsVoices() {
 }
 speechEngineSelect.addEventListener("change", () => {
   speechEngine = speechEngineSelect.value;
-  localStorage.setItem("lụa-speech-engine", speechEngine);
+  localStorage.setItem("luna-speech-engine", speechEngine);
   elevenLabsVoiceSelect.style.display = speechEngine === "elevenlabs" ? "block" : "none";
 });
 elevenLabsVoiceSelect.addEventListener("change", () => {
-  if (elevenLabsVoiceSelect.value) localStorage.setItem("lụa-elevenlabs-voice", elevenLabsVoiceSelect.value);
+  if (elevenLabsVoiceSelect.value) localStorage.setItem("luna-elevenlabs-voice", elevenLabsVoiceSelect.value);
 });
 elevenLabsVoiceSelect.style.display = speechEngine === "elevenlabs" ? "block" : "none";
 loadElevenLabsVoices();
@@ -361,7 +361,7 @@ function renderHistoryPanel() {
     const entry = document.createElement("div");
     entry.className = `history-entry ${message.role}`;
     const label = document.createElement("strong");
-    label.textContent = message.role === "user" ? "Bạn:" : "Lụa:";
+    label.textContent = message.role === "user" ? "Bạn:" : "Luna:";
     entry.append(label, document.createTextNode(message.content));
     panel.append(entry);
   }
@@ -458,7 +458,7 @@ function playGesture(tag) {
   if (tag === "smile") stage.classList.add("face-smile");
 }
 
-/* ---------- Hiệu ứng cáo khi Lụa nói ---------- */
+/* ---------- Hiệu ứng cáo khi Luna nói ---------- */
 function startMouth() {
   stage.className = "speaking";
 }
@@ -596,7 +596,7 @@ function playAudio(audioBlob, text) {
     };
     audio.onplay = () => {
       speaking = true;
-      statusEl.textContent = "Lụa đang nói";
+      statusEl.textContent = "Luna đang nói";
       revealTextWithAudio(text, audio);
       updateSpeechControls();
       startMouth();
@@ -664,7 +664,7 @@ function speakWithBrowser(text) {
 
 async function speakWithElevenLabs(text) {
   const generation = speechGeneration;
-  const voiceId = elevenLabsVoiceSelect.value || localStorage.getItem("lụa-elevenlabs-voice") || "";
+  const voiceId = elevenLabsVoiceSelect.value || localStorage.getItem("luna-elevenlabs-voice") || "";
   if (!voiceId) throw new Error("Hãy cấu hình ElevenLabs và chọn giọng đọc.");
   statusEl.textContent = "Đang tạo giọng ElevenLabs...";
   const response = await fetch("/api/elevenlabs/speak", {
@@ -724,7 +724,7 @@ async function speak(text) {
     if (error?.code === "ELEVENLABS_QUOTA") {
       speechEngine = "browser";
       speechEngineSelect.value = "browser";
-      localStorage.setItem("lụa-speech-engine", "browser");
+      localStorage.setItem("luna-speech-engine", "browser");
       elevenLabsVoiceSelect.style.display = "none";
       statusEl.textContent = "Tạm chuyển sang giọng đọc dự phòng để tiết kiệm credit ElevenLabs.";
       await speakWithBrowser(text);
@@ -825,8 +825,8 @@ async function send(userText, attachments = pendingAttachments) {
   history.push({ role: "user", content: cleanText });
   saveHistory();
   bubble.textContent = "";
-  answerDisplay.textContent = "Lụa đang suy nghĩ…";
-  statusEl.textContent = "Lụa đang nghĩ"; playGesture("think");
+  answerDisplay.textContent = "Luna đang suy nghĩ…";
+  statusEl.textContent = "Luna đang nghĩ"; playGesture("think");
   try {
     const r = await fetch("/api/chat", { method:"POST", headers:{ "Content-Type":"application/json" },
                                           body: JSON.stringify({
@@ -843,7 +843,7 @@ async function send(userText, attachments = pendingAttachments) {
     saveHistory();
     const verificationStatus = data.verification?.status;
     renderBubbleText(data.reply, data.suggestions);
-    statusEl.textContent = chatSpeechEnabled || interactionMode === "voice" ? "Lụa đang nói" : "";
+    statusEl.textContent = chatSpeechEnabled || interactionMode === "voice" ? "Luna đang nói" : "";
     keepStatus = !(await performReply(data.reply, data.suggestions));
     if (verificationStatus === "verified") {
       statusEl.textContent = data.verification.fallback
@@ -997,11 +997,11 @@ micBtn.onclick = async () => {
       recording = true;
       micBtn.disabled = false;
       micBtn.classList.add("rec"); micBtn.textContent = "Dừng & gửi";
-      statusEl.textContent = "Lụa đang nghe bạn… (tối đa 60 giây)";
+      statusEl.textContent = "Luna đang nghe bạn… (tối đa 60 giây)";
       stage.className = "listening";
       recordingTimer = setTimeout(() => {
         if (recording && mediaRecorder === recorder) {
-          statusEl.textContent = "Đã đạt giới hạn 60 giây; Lụa đang xử lý đoạn ghi âm.";
+          statusEl.textContent = "Đã đạt giới hạn 60 giây; Luna đang xử lý đoạn ghi âm.";
           recorder.stop();
         }
       }, MAX_RECORDING_MS);
@@ -1034,7 +1034,7 @@ micBtn.onclick = async () => {
           statusEl.textContent = "Không ghi được âm thanh. Hãy thử lại.";
           return;
         }
-        statusEl.textContent = "Lụa đang chuyển giọng nói thành chữ…";
+        statusEl.textContent = "Luna đang chuyển giọng nói thành chữ…";
         const blob = new Blob(audioChunks, { type: recorder.mimeType || "audio/webm" });
         if (blob.size > 9_000_000) {
           throw new Error("Audio quá dài hoặc quá lớn. Hãy ghi âm ngắn hơn 60 giây.");
@@ -1052,7 +1052,7 @@ micBtn.onclick = async () => {
           statusEl.textContent = "Không nghe rõ lời nói. Hãy nói gần mic rồi thử lại.";
           return;
         }
-        statusEl.textContent = "Lụa đang suy nghĩ";
+        statusEl.textContent = "Luna đang suy nghĩ";
         await send(data.text.trim());
       } catch (e) {
         statusEl.textContent = e.name === "TimeoutError"
@@ -1096,7 +1096,7 @@ function setInteractionMode(mode) {
       micStarting = false;
       micBtn.disabled = false;
     }
-    statusEl.textContent = "Nhập tin nhắn để chat với Lụa";
+    statusEl.textContent = "Nhập tin nhắn để chat với Luna";
     $("text").focus();
   } else {
     statusEl.textContent = "Bấm Nói chuyện để bắt đầu ghi âm";
@@ -1135,7 +1135,7 @@ $("clear-history").addEventListener("click", async () => {
     // Lịch sử trình duyệt vẫn được xóa ngay cả khi máy chủ không truy cập được.
   }
   bubble.textContent = "";
-  answerDisplay.textContent = "Lụa đang chờ bạn.";
+  answerDisplay.textContent = "Luna đang chờ bạn.";
   statusEl.textContent = "Đã xóa lịch sử chat";
   $("text").value = "";
   $("text").focus();
@@ -1151,7 +1151,7 @@ window.addEventListener("beforeunload", () => {
 
 chatStyleSelect.addEventListener("change", () => {
   chatStyle = allowedChatStyles.has(chatStyleSelect.value) ? chatStyleSelect.value : "normal";
-  localStorage.setItem("lụa-chat-style", chatStyle);
+  localStorage.setItem("luna-chat-style", chatStyle);
   const updatedUrl = new URL(location.href);
   updatedUrl.searchParams.set("style", chatStyle);
   window.history.replaceState(null, "", updatedUrl);

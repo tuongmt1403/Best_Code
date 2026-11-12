@@ -1,5 +1,5 @@
 const appPages = {
-  "/chat": { label: "Chat với Lụa", icon: "🤖" },
+  "/chat": { label: "Chat với Luna", icon: "🤖" },
   "/quiz": { label: "Quiz AI & lộ trình học", icon: "🏆" },
   "/mini-game": { label: "Phòng chơi", icon: "🎮" },
   "/elevenlabs-test": { label: "Voice Lab", icon: "🎙️" },
@@ -22,15 +22,15 @@ if (appPage && !document.querySelector("#auth-form")) {
       <section class="avatar-picker" data-avatar-picker>
         <button type="button" class="avatar-picker-trigger" data-avatar-open>Chọn avatar cho bạn</button>
       </section>
-      <a href="/chat?style=normal" data-app-path="/chat"><span aria-hidden="true">🤖</span>Chat với Lụa</a>
+      <a href="/chat?style=normal" data-app-path="/chat"><span aria-hidden="true">🤖</span>Chat với Luna</a>
       <a href="/quiz#saved-roadmaps" data-app-path="/quiz" data-app-section="saved-roadmaps"><span aria-hidden="true">📖</span>Lộ trình học</a>
       <a href="/quiz" data-app-path="/quiz"><span aria-hidden="true">🏆</span>Quiz AI</a>
       <a href="/mini-game" data-app-path="/mini-game"><span aria-hidden="true">🎮</span>Phòng chơi</a>
       <a href="/elevenlabs-test" data-app-path="/elevenlabs-test"><span aria-hidden="true">🎙️</span>Voice Lab</a>
     </nav>
     <div class="app-sidebar-mentor">
-      <img src="/images/lua-fox.png" alt="Lụa, gia sư AI">
-      <span><strong>Lụa luôn ở đây</strong><small>Cùng bạn học mỗi ngày</small></span>
+      <img src="/images/lua-fox.png" alt="Luna, gia sư AI">
+      <span><strong>Luna luôn ở đây</strong><small>Cùng bạn học mỗi ngày</small></span>
     </div>`;
   const workspace = document.createElement("div");
   workspace.className = "app-workspace";

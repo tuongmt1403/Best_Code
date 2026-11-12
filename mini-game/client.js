@@ -1911,7 +1911,7 @@ function renderFinalResult(snapshot) {
     fox.alt = `${player.username} vui mừng trên bục chiến thắng`;
     const trophy = node("span", "winner-trophy", "🏆");
     trophy.setAttribute("role", "img");
-    trophy.setAttribute("aria-label", "Cúp chiến thắng Lụa đang nâng");
+    trophy.setAttribute("aria-label", "Cúp chiến thắng Luna đang nâng");
     character.append(fox, trophy);
     const step = node("div", "podium-step");
     step.append(
