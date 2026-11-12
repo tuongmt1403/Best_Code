@@ -238,7 +238,7 @@ app.get("/api/history/status", (_req, res) => {
 
 const geminiApiKeys = getGeminiApiKeys();
 const groqApiKeys_server = getGroqApiKeys();
-const groqModel_server = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+const groqModel_server = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 const geminiModel = process.env.GEMINI_MODEL || "gemini-flash-lite-latest";
 const geminiModels = [...new Set([
   geminiModel,

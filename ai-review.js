@@ -2,7 +2,7 @@
 import { fetchWithGeminiKeyFallback, getGeminiApiKeys } from "./gemini-api.js";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const DEFAULT_GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+const DEFAULT_GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-lite-latest";
 
 function isStringArray(value) {
@@ -66,7 +66,7 @@ async function groqChat({ apiKey, apiKeys, model, messages, maxTokens = 500, tim
       body: JSON.stringify({
         model: model || DEFAULT_GROQ_MODEL,
         temperature: 0,
-        max_completion_tokens: maxTokens,
+        max_completion_tokens: Math.max(maxTokens, 2_500),
         response_format: { type: "json_object" },
         messages,
       }),

@@ -1416,7 +1416,7 @@ export function createQuizRouter({
   const router = express.Router();
   const ollama = createOllamaClient(baseUrl, model);
   const resolvedGroqKeys = groqApiKeys ?? claudeApiKeys ?? getGroqApiKeys();
-  const groqModel = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+  const groqModel = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
   const geminiModel = process.env.GEMINI_MODEL || "gemini-flash-lite-latest";
   const quizApiKey = process.env.QUIZAPI_IO_KEY?.includes("paste-your-quizapi")
     ? undefined
@@ -1857,7 +1857,7 @@ Chọn loại sơ đồ phù hợp nhất với chính câu hỏi. Ví dụ: n�
             prompt: `Tạo CHÍNH XÁC ${count} câu hỏi trắc nghiệm tiếng Việt chỉ dựa trên tài liệu. Trả về JSON dạng {"quiz":[{"question":"...","topic":"...","options":["A","B","C","D"],"answer":"A","explanation":"..."}]}. Không lặp câu hỏi.${validationErrors.length ? ` Sửa các lỗi trước: ${validationErrors.join("; ")}.` : ""}\n\n<TAI_LIEU ${selectedTopic ? `CHU_DE="${selectedTopic.title}"` : ""}>\n${sourceText.trim()}\n</TAI_LIEU>`,
             maxTokens: Math.min(4_096, 400 + count * 350),
           });
-          quiz = generated?.quiz;
+          quiz = normalizeGeneratedQuiz(generated?.quiz);
           validationErrors = getQuizValidationErrors(quiz, count);
           if (!validationErrors.length) {
             generator = `Groq (${groqModel})`;
@@ -1888,7 +1888,7 @@ Chọn loại sơ đồ phù hợp nhất với chính câu hỏi. Ví dụ: n�
           prompt: `Tạo CHÍNH XÁC ${count} câu hỏi trắc nghiệm tiếng Việt chỉ dựa trên tài liệu. Trả về JSON dạng {"quiz":[{"question":"...","topic":"...","options":["A","B","C","D"],"answer":"A","explanation":"..."}]}. Không lặp câu hỏi.\n\n<TAI_LIEU ${selectedTopic ? `CHU_DE="${selectedTopic.title}"` : ""}>\n${sourceText.trim()}\n</TAI_LIEU>`,
           maxTokens: Math.min(4_096, 400 + count * 350),
         });
-        const candidateQuiz = Array.isArray(generated) ? generated : generated?.quiz;
+        const candidateQuiz = normalizeGeneratedQuiz(Array.isArray(generated) ? generated : generated?.quiz);
         const validationErrors = getQuizValidationErrors(candidateQuiz, count);
         if (!validationErrors.length) {
           quiz = candidateQuiz;
