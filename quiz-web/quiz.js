@@ -1,8 +1,9 @@
 import express from "express";
-import { generateWithClaude } from "../ai-review.js";
+import { generateWithClaude, generateWithGroq } from "../ai-review.js";
 import { createQuizOnQuizApi, QuizApiError } from "../quiz-api.js";
 import { fetchWithGeminiKeyFallback, getGeminiApiKeys } from "../gemini-api.js";
 import { getClaudeApiKeys } from "../claude-api.js";
+import { getGroqApiKeys } from "../groq-api.js";
 import { questionBanks } from "../mini-game/game.js";
 
 const DEFAULT_OLLAMA_MODEL = "qwen2.5:3b";
@@ -1415,8 +1416,10 @@ export function createQuizRouter({
 } = {}) {
   const router = express.Router();
   const ollama = createOllamaClient(baseUrl, model);
-  const resolvedClaudeKeys = claudeApiKeys ?? groqApiKeys ?? getClaudeApiKeys();
+  const resolvedClaudeKeys = claudeApiKeys ?? getClaudeApiKeys();
+  const resolvedGroqKeys = groqApiKeys ?? (claudeApiKeys !== undefined ? [] : getGroqApiKeys());
   const claudeModel = process.env.CLAUDE_MODEL || process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
+  const groqModel = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
   const geminiModel = process.env.GEMINI_MODEL || "gemini-flash-lite-latest";
   const quizApiKey = process.env.QUIZAPI_IO_KEY?.includes("paste-your-quizapi")
     ? undefined
@@ -1470,6 +1473,22 @@ export function createQuizRouter({
       }
     }
 
+    if (resolvedGroqKeys.length) {
+      try {
+        const generated = await generateWithGroq({
+          apiKeys: resolvedGroqKeys,
+          model: groqModel,
+          system,
+          prompt,
+          maxTokens: numPredict,
+        });
+        if (isValid(generated)) return { content: generated, generator: `Groq (${groqModel})` };
+        throw new Error("Groq returned study content that did not match the required schema.");
+      } catch (error) {
+        console.error("Groq interactive study request failed:", error.message);
+      }
+    }
+
     if (geminiApiKeys.length) {
       try {
         const generated = await generateWithGemini({
@@ -1501,13 +1520,15 @@ export function createQuizRouter({
     const ollamaStatus = await ollama.status();
     res.json({
       generator: "Ngân hàng câu hỏi đã biên soạn",
-      fallbackGenerator: "Claude và Ollama",
+      fallbackGenerator: "Claude, Groq, Gemini và Ollama",
       storage: "QuizAPI.io",
       prewrittenTopics: Object.keys(quizTopics),
       geminiConfigured: geminiApiKeys.length > 0,
       geminiKeyCount: geminiApiKeys.length,
       claudeConfigured: resolvedClaudeKeys.length > 0,
       claudeKeyCount: resolvedClaudeKeys.length,
+      groqConfigured: resolvedGroqKeys.length > 0,
+      groqKeyCount: resolvedGroqKeys.length,
       quizApiConfigured: Boolean(quizApiKey),
       ollamaAvailable: ollamaStatus.available && ollamaStatus.modelInstalled,
       ollamaModel: ollama.model,
@@ -1881,6 +1902,39 @@ Chọn loại sơ đồ phù hợp nhất với chính câu hỏi. Ví dụ: n�
       generationWarning = "CLAUDE_API_KEY chưa được cấu hình.";
     }
 
+    if (!quiz && !selectedTopic && resolvedGroqKeys.length > 0) {
+      let validationErrors = [];
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          const generated = await generateWithGroq({
+            apiKeys: resolvedGroqKeys,
+            model: groqModel,
+            system: "Bạn là Quiz AI, chuyên tạo câu hỏi trắc nghiệm giáo dục bằng tiếng Việt. Chỉ kiểm tra dữ kiện được nêu rõ trong tài liệu; không bịa kiến thức. Mỗi câu có đúng 4 phương án khác nhau và chỉ một đáp án đúng; đáp án khớp chính xác một phương án, lời giải thích căn cứ tài liệu. Chỉ trả JSON object, không markdown.",
+            prompt: `Tạo CHÍNH XÁC ${count} câu hỏi trắc nghiệm tiếng Việt chỉ dựa trên tài liệu. Trả về JSON dạng {"quiz":[{"question":"...","topic":"...","options":["A","B","C","D"],"answer":"A","explanation":"..."}]}. Không lặp câu hỏi.${validationErrors.length ? ` Sửa các lỗi trước: ${validationErrors.join("; ")}.` : ""}\n\n<TAI_LIEU ${selectedTopic ? `CHU_DE="${selectedTopic.title}"` : ""}>\n${sourceText.trim()}\n</TAI_LIEU>`,
+            maxTokens: Math.min(4_096, 400 + count * 350),
+          });
+          quiz = generated?.quiz;
+          validationErrors = getQuizValidationErrors(quiz, count);
+          if (!validationErrors.length) {
+            generator = `Groq (${groqModel})`;
+            generationWarning = undefined;
+            break;
+          }
+        } catch (error) {
+          console.error("Groq quiz generation failed:", error.message);
+          generationWarning = error.status === 401
+            ? "Groq từ chối API key (HTTP 401)."
+            : error.status === 429
+              ? "Groq đang giới hạn lượt gọi (HTTP 429)."
+              : "Groq tạm thời không tạo được câu hỏi.";
+          break;
+        }
+      }
+      if (!quiz || validationErrors.length) {
+        quiz = undefined;
+      }
+    }
+
     if (!quiz && !selectedTopic && geminiApiKeys.length > 0) {
       try {
         const generated = await generateWithGemini({
@@ -1893,6 +1947,7 @@ Chọn loại sơ đồ phù hợp nhất với chính câu hỏi. Ví dụ: n�
         if (!validationErrors.length) {
           quiz = candidateQuiz;
           generator = `Gemini (${geminiModel})`;
+          generationWarning = undefined;
         }
       } catch (error) {
         console.error("Gemini quiz generation failed:", error.message);
