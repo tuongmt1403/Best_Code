@@ -7,7 +7,7 @@ import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createAuth } from "./dangKy_dangNhap/auth.js";
 import { createAvatarProfile } from "./avatar-profile.js";
-import { createMiniGame } from "./mini-game/game.js";
+import { createMiniGame, questionBanks } from "./mini-game/game.js";
 import { generateMiniGameQuizWithOllama } from "./mini-game/ollama.js";
 import { createQuizRouter } from "./quiz-web/quiz.js";
 import { reviewWithGroq } from "./ai-review.js";
@@ -264,7 +264,96 @@ if (elevenLabsApiKeys.length > 0) {
   console.log(`Đã nạp ${elevenLabsApiKeys.length} ElevenLabs API key (tự chuyển khi key hết quota hoặc bị từ chối).`);
 }
 
+function sanitizeObstacleIllustration(raw) {
+  const defaultBg = "#0F172A";
+  const isValidColor = (c) => typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c);
+  const clamp = (val, min, max, dflt) => {
+    const num = Number(val);
+    if (!Number.isFinite(num)) return dflt;
+    return Number(Math.max(min, Math.min(max, num)).toFixed(2));
+  };
+
+  const bg = isValidColor(raw?.background) ? raw.background : defaultBg;
+  const elements = [];
+
+  const defaultElements = [
+    { type: "polygon", points: [[0, 72], [18, 65], [42, 68], [65, 62], [88, 66], [100, 63], [100, 100], [0, 100]], fill: "#1C2541" },
+    { type: "polygon", points: [[0, 80], [25, 75], [52, 78], [78, 73], [100, 77], [100, 100], [0, 100]], fill: "#2D3748" },
+    { type: "rect", x: 30, y: 64, width: 40, height: 20, rx: 4, fill: "#334155" },
+    { type: "ellipse", cx: 50, cy: 64, rx: 22, ry: 7, fill: "#475569" },
+    { type: "rect", x: 42, y: 70, width: 16, height: 14, rx: 2, fill: "#1E293B" },
+    { type: "line", x1: 50, y1: 57, x2: 50, y2: 24, stroke: "#E2E8F0", strokeWidth: 2.5 },
+    { type: "polygon", points: [[50, 24], [72, 28], [74, 40], [50, 44]], fill: "#DC2626" },
+    { type: "polygon", points: [[72, 28], [75, 34], [74, 40], [70, 34]], fill: "#991B1B" },
+    { type: "polygon", points: [[61, 30], [62.5, 33.5], [66, 33.5], [63.2, 35.5], [64.2, 39], [61, 37], [57.8, 39], [58.8, 35.5], [56, 33.5], [59.5, 33.5]], fill: "#FACC15" },
+    { type: "line", x1: 50, y1: 20, x2: 50, y2: 12, stroke: "#FDE047", strokeWidth: 2 },
+    { type: "line", x1: 56, y1: 22, x2: 64, y2: 15, stroke: "#FDE047", strokeWidth: 1.5 },
+    { type: "line", x1: 44, y1: 22, x2: 36, y2: 15, stroke: "#FDE047", strokeWidth: 1.5 },
+    { type: "rect", x: 12, y: 75, width: 22, height: 11, rx: 3, fill: "#166534" },
+    { type: "ellipse", cx: 23, cy: 75, rx: 8, ry: 4, fill: "#14532D" },
+    { type: "line", x1: 23, y1: 75, x2: 38, y2: 67, stroke: "#15803D", strokeWidth: 3 },
+    { type: "circle", cx: 16, cy: 84, r: 2.5, fill: "#0F172A" },
+    { type: "circle", cx: 23, cy: 84, r: 2.5, fill: "#0F172A" },
+    { type: "circle", cx: 30, cy: 84, r: 2.5, fill: "#0F172A" },
+  ];
+
+  if (Array.isArray(raw?.elements)) {
+    for (const shape of raw.elements) {
+      if (!shape || typeof shape !== "object") continue;
+      const fill = isValidColor(shape.fill) ? shape.fill : "#3B82F6";
+      if (shape.type === "circle") {
+        elements.push({
+          type: "circle",
+          cx: clamp(shape.cx, 0, 100, 50),
+          cy: clamp(shape.cy, 0, 100, 50),
+          r: clamp(shape.r, 0.5, 50, 10),
+          fill,
+        });
+      } else if (shape.type === "ellipse") {
+        elements.push({
+          type: "ellipse",
+          cx: clamp(shape.cx, 0, 100, 50),
+          cy: clamp(shape.cy, 0, 100, 50),
+          rx: clamp(shape.rx, 0.5, 50, 10),
+          ry: clamp(shape.ry, 0.5, 50, 8),
+          fill,
+        });
+      } else if (shape.type === "rect") {
+        const x = clamp(shape.x, 0, 95, 10);
+        const y = clamp(shape.y, 0, 95, 10);
+        const width = clamp(shape.width, 0.5, 100 - x, 20);
+        const height = clamp(shape.height, 0.5, 100 - y, 20);
+        const maxRx = Math.min(width, height) / 2;
+        const rx = clamp(shape.rx ?? 0, 0, maxRx, 0);
+        elements.push({ type: "rect", x, y, width, height, rx, fill });
+      } else if (shape.type === "line") {
+        const stroke = isValidColor(shape.stroke) ? shape.stroke : fill;
+        elements.push({
+          type: "line",
+          x1: clamp(shape.x1, 0, 100, 10),
+          y1: clamp(shape.y1, 0, 100, 10),
+          x2: clamp(shape.x2, 0, 100, 90),
+          y2: clamp(shape.y2, 0, 100, 90),
+          stroke,
+          strokeWidth: clamp(shape.strokeWidth, 0.5, 8, 2),
+        });
+      } else if (shape.type === "polygon" && Array.isArray(shape.points) && shape.points.length >= 3 && shape.points.length <= 16) {
+        const points = shape.points.map((p) => [clamp(p[0], 0, 100, 50), clamp(p[1], 0, 100, 50)]);
+        elements.push({ type: "polygon", points, fill });
+      }
+      if (elements.length >= 25) break;
+    }
+  }
+
+  while (elements.length < 10) {
+    elements.push(defaultElements[elements.length % defaultElements.length]);
+  }
+
+  return { background: bg, elements: elements.slice(0, 25) };
+}
+
 async function generateMiniGameQuestions({
+  topicId,
   topic,
   count,
   avoidQuestions,
@@ -272,11 +361,14 @@ async function generateMiniGameQuestions({
   avoidKeywords = [],
   mode = "quiz",
 }) {
+  if ((!referenceQuestions || referenceQuestions.length === 0) && topicId && questionBanks[topicId]?.questions) {
+    referenceQuestions = questionBanks[topicId].questions;
+  }
   const isObstacleMode = mode === "obstacle";
   const isOlympiaMode = mode === "olympia";
   const isStandardQuizMode = mode === "quiz";
   const questionCount = isObstacleMode ? count + 1 : count;
-  const generationTimeoutMs = isObstacleMode ? 10_000 : 3_200;
+  const generationTimeoutMs = isObstacleMode ? 9_000 : isOlympiaMode ? 6_000 : 3_500;
   const prompt = isObstacleMode
     ? [
       `Tạo một bộ Vượt Chướng Ngại Vật mới bằng tiếng Việt theo đúng chủ đề "${topic}".`,
@@ -284,14 +376,14 @@ async function generateMiniGameQuestions({
       `Tạo đúng ${count} câu hàng ngang có độ khó tăng dần, sau đó thêm 1 câu hỏi ô trung tâm ở vị trí cuối cùng (câu số ${count + 1}).`,
       "Mỗi câu phải có prompt, question, đúng 4 options, answer (chỉ số 0-3), explanation ngắn. Chỉ có một đáp án đúng.",
       `Mỗi đáp án đúng của ${count} hàng ngang phải liên hệ rõ ràng, thuyết phục với từ khóa ẩn. Nêu mối liên hệ trong logic.`,
-      "Câu ô trung tâm phải hỏi trực tiếp từ khóa ẩn là gì. Một option phải chứa chính xác từ khóa ẩn (không dấu, viết hoa, không khoảng trắng) và answer phải trỏ đúng option đó; ba option còn lại là từ khóa nhiễu cùng chủ đề. Không dùng câu hỏi trung tâm chung chung.",
-      "Tự thiết kế một tranh minh họa vector vuông, đẹp, dễ nhận ra, gợi ý cho từ khóa nhưng không viết chữ và không để lộ đáp án trực tiếp. Trả illustration gồm background là mã màu #RRGGBB và elements là 10-24 hình theo thứ tự từ sau ra trước. Mỗi hình là một trong các dạng {type:'circle',cx,cy,r,fill}, {type:'ellipse',cx,cy,rx,ry,fill}, {type:'rect',x,y,width,height,fill,rx?}, {type:'line',x1,y1,x2,y2,stroke,strokeWidth}, {type:'polygon',points:[[x,y],...],fill}. Tọa độ nằm trong khung 0-100; dùng màu #RRGGBB. Hãy vẽ thành bố cục có chủ thể, nền và chi tiết, không chỉ vài hình cơ bản.",
+      "Câu ô trung tâm PHẢI là câu hỏi gợi mở, giàu bối cảnh lịch sử, công nghệ, địa lý đặc trưng để người chơi xâu chuỗi tư duy (chứa gợi ý ngữ cảnh kích thích suy luận), TUYỆT ĐỐI KHÔNG dùng câu hỏi ngắn ngủn hoặc chung chung kiểu 'Từ khóa ẩn là gì?'. Một option phải chứa chính xác từ khóa ẩn (không dấu, viết hoa, không khoảng trắng) và answer phải trỏ đúng option đó; ba option còn lại là từ khóa nhiễu cùng chủ đề.",
+      "Tự thiết kế một tranh minh họa vector vuông, đẹp, gợi ý hình ảnh chủ đề rõ ràng (ví dụ: vẽ cờ đỏ sao vàng trên cứ điểm, xe tăng, sách từ điển, ô nhớ bộ nhớ RAM, bản đồ biển đảo). Trả illustration gồm background mã #RRGGBB và elements là 14-24 hình có bố cục cụ thể, TUYỆT ĐỐI không chỉ vẽ các hình tròn hình vuông trừu tượng vô nghĩa. Mỗi hình là một trong các dạng {type:'circle',cx,cy,r,fill}, {type:'ellipse',cx,cy,rx,ry,fill}, {type:'rect',x,y,width,height,fill,rx?}, {type:'line',x1,y1,x2,y2,stroke,strokeWidth}, {type:'polygon',points:[[x,y],...],fill}. Tọa độ nằm trong khung 0-100; dùng màu #RRGGBB.",
       "Dùng kiến thức phổ thông chắc chắn, tránh câu mơ hồ, dữ kiện hành chính hoặc số liệu khó xác minh.",
       "Không lặp hoặc viết lại gần giống các câu và từ khóa cần tránh.",
       `Mã biến thể: ${Date.now()}-${Math.random().toString(36).slice(2)}.`,
       `Câu gần đây cần tránh:\n${JSON.stringify((avoidQuestions || []).slice(-10))}`,
       `Từ khóa gần đây cần tránh:\n${JSON.stringify(avoidKeywords.slice(-10))}`,
-      `Chỉ trả JSON object đúng dạng {"obstacle":{"keyword":"TU_KHOA","logic":"Giải thích liên hệ của từng hàng ngang với từ khóa","illustration":{"background":"#RRGGBB","elements":[{"type":"circle","cx":50,"cy":50,"r":15,"fill":"#RRGGBB"}]}},"questions":[...]} với mảng questions có đúng ${count + 1} phần tử: ${count} câu đầu là HÀNG NGANG 1 đến ${count}, phần tử cuối là Ô TRUNG TÂM. Mỗi câu có prompt, question, options gồm đúng 4 đáp án, answer là chỉ số 0-3, explanation. Câu trung tâm hỏi từ khóa bí ẩn là gì; options phải có đúng obstacle.keyword. Trong illustration, trả 10-24 hình hợp lệ theo cấu trúc; chỉ dùng type circle, ellipse, rect, line, polygon. Không thêm markdown hay văn bản ngoài JSON.`,
+      `Chỉ trả JSON object đúng dạng {"obstacle":{"keyword":"TU_KHOA","logic":"Giải thích liên hệ của từng hàng ngang với từ khóa","illustration":{"background":"#RRGGBB","elements":[{"type":"circle","cx":50,"cy":50,"r":15,"fill":"#RRGGBB"}]}},"questions":[...]} với mảng questions có đúng ${count + 1} phần tử: ${count} câu đầu là HÀNG NGANG 1 đến ${count}, phần tử cuối là Ô TRUNG TÂM. Mỗi câu có prompt, question, options gồm đúng 4 đáp án, answer là chỉ số 0-3, explanation. Câu trung tâm hỏi từ khóa bí ẩn theo bối cảnh; options phải có đúng obstacle.keyword. Trong illustration, trả 14-24 hình vector theo cấu trúc; chỉ dùng type circle, ellipse, rect, line, polygon. Không thêm markdown hay văn bản ngoài JSON.`,
     ].join("\n")
     : isOlympiaMode
       ? [
@@ -343,7 +435,45 @@ async function generateMiniGameQuestions({
         if (text) {
           const parsed = JSON.parse(text);
           if (Array.isArray(parsed?.questions) && parsed.questions.length === questionCount) {
-            generated = parsed;
+            if (isOlympiaMode) {
+              const introQ = parsed.introQuestion || parsed.introSection || parsed.intro || parsed.title || `Khám phá kiến thức: ${topic}`;
+              parsed.introQuestion = String(introQ).slice(0, 500);
+              const introExp = parsed.introExplanation || parsed.explanation || parsed.description || `Tổng quan về chủ đề ${topic}.`;
+              parsed.introExplanation = String(introExp).slice(0, 500);
+              parsed.questions.forEach((q, idx) => {
+                if (!q.prompt) q.prompt = `NHÁNH ${idx + 1}`;
+                if (typeof q.answer !== "string") q.answer = String(q.answer || "").trim();
+                if (!q.explanation) q.explanation = `Đáp án chính xác là ${q.answer}.`;
+                if (!Array.isArray(q.acceptedAnswers) || q.acceptedAnswers.length === 0) {
+                  q.acceptedAnswers = [q.answer];
+                }
+              });
+              generated = parsed;
+            } else if (isObstacleMode) {
+              if (parsed.obstacle && typeof parsed.obstacle.keyword === "string" && parsed.obstacle.keyword.trim()) {
+                parsed.obstacle.keyword = parsed.obstacle.keyword.trim().toUpperCase().replace(/\s+/g, "");
+                const centerIdx = questionCount - 1;
+                const centerQ = parsed.questions[centerIdx];
+                if (centerQ) {
+                  if (!Array.isArray(centerQ.options) || centerQ.options.length !== 4) {
+                    centerQ.options = [parsed.obstacle.keyword, "LỰA CHỌN A", "LỰA CHỌN B", "LỰA CHỌN C"];
+                    centerQ.answer = 0;
+                  } else {
+                    const normKw = parsed.obstacle.keyword;
+                    const optIdx = centerQ.options.findIndex((opt) => opt && opt.toUpperCase().replace(/\s+/g, "") === normKw);
+                    if (optIdx === -1) {
+                      centerQ.options[centerQ.answer ?? 0] = parsed.obstacle.keyword;
+                    } else {
+                      centerQ.answer = optIdx;
+                    }
+                  }
+                }
+                parsed.obstacle.illustration = sanitizeObstacleIllustration(parsed.obstacle.illustration);
+                generated = parsed;
+              }
+            } else {
+              generated = parsed;
+            }
           }
         }
       }
@@ -352,11 +482,185 @@ async function generateMiniGameQuestions({
     }
   }
 
-  // Fast fallback to question bank if AI is unavailable or exceeds 3.2s
+  // Fast fallback to question bank if AI is unavailable or exceeds timeout
   if (!generated && isStandardQuizMode && Array.isArray(referenceQuestions) && referenceQuestions.length >= questionCount) {
     console.log(`[Fast Fallback] Dùng ngân hàng câu hỏi gốc cho phòng "${topic}" để đảm bảo tạo phòng < 1s.`);
     const shuffled = [...referenceQuestions].sort(() => Math.random() - 0.5);
     generated = { questions: shuffled.slice(0, questionCount) };
+  } else if (!generated && isOlympiaMode && Array.isArray(referenceQuestions) && referenceQuestions.length >= questionCount) {
+    console.log(`[Fast Fallback] Dùng ngân hàng câu hỏi gốc cho phòng Olympia "${topic}".`);
+    const shuffled = [...referenceQuestions].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, questionCount);
+    generated = {
+      introQuestion: `Chào mừng bạn đến với thử thách Olympia chủ đề ${topic}.`,
+      introExplanation: `Bộ câu hỏi gồm ${questionCount} câu hỏi nâng cao về chủ đề ${topic}. Hãy nhấn chuông nhanh để ghi điểm!`,
+      questions: selected.map((q, idx) => {
+        const ans = String(q.options?.[q.answer] ?? q.answer ?? "").trim();
+        return {
+          prompt: `NHÁNH ${idx + 1}`,
+          question: q.question,
+          answer: ans,
+          acceptedAnswers: [ans, ans.toLowerCase(), ans.toUpperCase()],
+          explanation: q.explanation || `Đáp án chính xác là ${ans}.`,
+        };
+      }),
+    };
+  } else if (!generated && isObstacleMode && Array.isArray(referenceQuestions) && referenceQuestions.length >= count) {
+    console.log(`[Fast Fallback] Dùng ngân hàng câu hỏi và mẫu chướng ngại vật cho "${topic}".`);
+    const shuffled = [...referenceQuestions].sort(() => Math.random() - 0.5);
+    const clues = shuffled.slice(0, count).map((q, idx) => ({
+      ...q,
+      prompt: `HÀNG NGANG ${idx + 1}`,
+    }));
+    const thematicObstacleTemplates = {
+      history: {
+        kw: "DIENBIENPHU",
+        logic: "Chiến dịch Điện Biên Phủ 1954 - mốc son lừng lẫy năm châu, chấn động địa cầu.",
+        prompt: "CHIẾN DỊCH QUÂN SỰ ĐỈNH CAO NĂM 1954",
+        question: "Chiến dịch quân sự lừng lẫy năm 1954 kéo dài 56 ngày đêm 'khoét núi, ngủ hầm, mưa dầm, cơm vắt', đập tan cứ điểm của thực dân Pháp tại thung lũng Mường Thanh, kết thúc bằng lá cờ Quyết chiến Quyết thắng tung bay trên nóc hầm De Castries?",
+        options: ["DIENBIENPHU", "VIETBAC", "DUONG9NAMLAO", "TAYNGUYEN"],
+        explanation: "Chiến thắng Điện Biên Phủ (07/05/1954) 'lừng lẫy năm châu, chấn động địa cầu' giải phóng hoàn toàn miền Bắc.",
+        illustration: {
+          background: "#0B132B",
+          elements: [
+            { type: "polygon", points: [[0, 72], [18, 65], [42, 68], [65, 62], [88, 66], [100, 63], [100, 100], [0, 100]], fill: "#1C2541" },
+            { type: "polygon", points: [[0, 80], [25, 75], [52, 78], [78, 73], [100, 77], [100, 100], [0, 100]], fill: "#2D3748" },
+            { type: "rect", x: 30, y: 64, width: 40, height: 20, rx: 4, fill: "#334155" },
+            { type: "ellipse", cx: 50, cy: 64, rx: 22, ry: 7, fill: "#475569" },
+            { type: "rect", x: 42, y: 70, width: 16, height: 14, rx: 2, fill: "#1E293B" },
+            { type: "line", x1: 50, y1: 57, x2: 50, y2: 24, stroke: "#E2E8F0", strokeWidth: 2.5 },
+            { type: "polygon", points: [[50, 24], [72, 28], [74, 40], [50, 44]], fill: "#DC2626" },
+            { type: "polygon", points: [[72, 28], [75, 34], [74, 40], [70, 34]], fill: "#991B1B" },
+            { type: "polygon", points: [[61, 30], [62.5, 33.5], [66, 33.5], [63.2, 35.5], [64.2, 39], [61, 37], [57.8, 39], [58.8, 35.5], [56, 33.5], [59.5, 33.5]], fill: "#FACC15" },
+            { type: "line", x1: 50, y1: 20, x2: 50, y2: 12, stroke: "#FDE047", strokeWidth: 2 },
+            { type: "line", x1: 56, y1: 22, x2: 64, y2: 15, stroke: "#FDE047", strokeWidth: 1.5 },
+            { type: "line", x1: 44, y1: 22, x2: 36, y2: 15, stroke: "#FDE047", strokeWidth: 1.5 },
+            { type: "rect", x: 12, y: 75, width: 22, height: 11, rx: 3, fill: "#166534" },
+            { type: "ellipse", cx: 23, cy: 75, rx: 8, ry: 4, fill: "#14532D" },
+            { type: "line", x1: 23, y1: 75, x2: 38, y2: 67, stroke: "#15803D", strokeWidth: 3 },
+            { type: "circle", cx: 16, cy: 84, r: 2.5, fill: "#0F172A" },
+            { type: "circle", cx: 23, cy: 84, r: 2.5, fill: "#0F172A" },
+            { type: "circle", cx: 30, cy: 84, r: 2.5, fill: "#0F172A" },
+          ],
+        },
+      },
+      cProgramming: {
+        kw: "POINTER",
+        logic: "Con trỏ và cơ chế quản lý trực tiếp địa chỉ ô nhớ RAM trong ngôn ngữ C.",
+        prompt: "CƠ CHẾ QUẢN LÝ BỘ NHỚ TRỰC TIẾP TRONG C",
+        question: "Trong lập trình C, đây là biến đặc biệt không lưu giá trị thông thường mà lưu trực tiếp địa chỉ ô nhớ RAM của một biến khác, sử dụng toán tử * và & để thao tác bộ nhớ động?",
+        options: ["POINTER", "VARIABLE", "FUNCTION", "STRUCT"],
+        explanation: "Con trỏ (Pointer) là công cụ mạnh mẽ trong C giúp thao tác và cấp phát bộ nhớ RAM trực tiếp.",
+        illustration: {
+          background: "#0A0F1D",
+          elements: [
+            { type: "line", x1: 8, y1: 20, x2: 92, y2: 20, stroke: "#1E293B", strokeWidth: 1.5 },
+            { type: "line", x1: 8, y1: 50, x2: 92, y2: 50, stroke: "#1E293B", strokeWidth: 1.5 },
+            { type: "line", x1: 8, y1: 80, x2: 92, y2: 80, stroke: "#1E293B", strokeWidth: 1.5 },
+            { type: "rect", x: 10, y: 32, width: 26, height: 36, rx: 4, fill: "#1E293B" },
+            { type: "rect", x: 13, y: 35, width: 20, height: 12, rx: 2, fill: "#0F172A" },
+            { type: "rect", x: 13, y: 51, width: 20, height: 13, rx: 2, fill: "#2563EB" },
+            { type: "circle", cx: 23, cy: 57.5, r: 3.5, fill: "#93C5FD" },
+            { type: "rect", x: 64, y: 32, width: 26, height: 36, rx: 4, fill: "#1E293B" },
+            { type: "rect", x: 67, y: 35, width: 20, height: 12, rx: 2, fill: "#0F172A" },
+            { type: "rect", x: 67, y: 51, width: 20, height: 13, rx: 2, fill: "#059669" },
+            { type: "circle", cx: 77, cy: 57.5, r: 4, fill: "#FACC15" },
+            { type: "line", x1: 34, y1: 57.5, x2: 62, y2: 57.5, stroke: "#38BDF8", strokeWidth: 3 },
+            { type: "line", x1: 56, y1: 52, x2: 63, y2: 57.5, stroke: "#38BDF8", strokeWidth: 3 },
+            { type: "line", x1: 56, y1: 63, x2: 63, y2: 57.5, stroke: "#38BDF8", strokeWidth: 3 },
+            { type: "line", x1: 45, y1: 38, x2: 51, y2: 44, stroke: "#F59E0B", strokeWidth: 2 },
+            { type: "line", x1: 51, y1: 38, x2: 45, y2: 44, stroke: "#F59E0B", strokeWidth: 2 },
+            { type: "line", x1: 48, y1: 37, x2: 48, y2: 45, stroke: "#F59E0B", strokeWidth: 2 },
+            { type: "circle", cx: 15, cy: 15, r: 2.5, fill: "#10B981" },
+            { type: "circle", cx: 85, cy: 15, r: 2.5, fill: "#3B82F6" },
+          ],
+        },
+      },
+      english: {
+        kw: "VOCABULARY",
+        logic: "Vốn từ vựng là nền tảng cốt lõi của việc học và giao tiếp ngôn ngữ Anh.",
+        prompt: "CHÌA KHÓA LÀM CHỦ NGÔN NGỮ TIẾNG ANH",
+        question: "Kho từ vựng trong ngôn ngữ học dùng để chỉ tập hợp tất cả các từ ngữ mà một người tiếp thu, ghi nhớ và sử dụng trong giao tiếp, đọc hiểu và viết văn tiếng Anh?",
+        options: ["VOCABULARY", "GRAMMAR", "PHONETICS", "ALPHABET"],
+        explanation: "Từ vựng (Vocabulary) là kho tàng ngôn ngữ thiết yếu để thành thạo tiếng Anh.",
+        illustration: {
+          background: "#0A1128",
+          elements: [
+            { type: "polygon", points: [[12, 68], [48, 73], [48, 86], [10, 80]], fill: "#7C2D12" },
+            { type: "polygon", points: [[88, 68], [52, 73], [52, 86], [90, 80]], fill: "#7C2D12" },
+            { type: "polygon", points: [[14, 38], [48, 44], [48, 72], [14, 66]], fill: "#F8FAFC" },
+            { type: "polygon", points: [[86, 38], [52, 44], [52, 72], [86, 66]], fill: "#F1F5F9" },
+            { type: "rect", x: 48, y: 44, width: 4, height: 42, rx: 1, fill: "#9A3412" },
+            { type: "polygon", points: [[50, 44], [54, 75], [52, 85], [50, 78]], fill: "#DC2626" },
+            { type: "line", x1: 18, y1: 46, x2: 44, y2: 50, stroke: "#475569", strokeWidth: 1.5 },
+            { type: "line", x1: 18, y1: 52, x2: 42, y2: 56, stroke: "#64748B", strokeWidth: 1.5 },
+            { type: "line", x1: 18, y1: 58, x2: 38, y2: 61, stroke: "#94A3B8", strokeWidth: 1.5 },
+            { type: "line", x1: 56, y1: 50, x2: 82, y2: 46, stroke: "#475569", strokeWidth: 1.5 },
+            { type: "line", x1: 58, y1: 56, x2: 82, y2: 52, stroke: "#64748B", strokeWidth: 1.5 },
+            { type: "line", x1: 62, y1: 61, x2: 82, y2: 58, stroke: "#94A3B8", strokeWidth: 1.5 },
+            { type: "circle", cx: 50, cy: 30, r: 8, fill: "#FEF08A" },
+            { type: "line", x1: 50, y1: 18, x2: 50, y2: 10, stroke: "#FACC15", strokeWidth: 2 },
+            { type: "line", x1: 42, y1: 22, x2: 34, y2: 15, stroke: "#FACC15", strokeWidth: 2 },
+            { type: "line", x1: 58, y1: 22, x2: 66, y2: 15, stroke: "#FACC15", strokeWidth: 2 },
+            { type: "circle", cx: 50, cy: 30, r: 4, fill: "#FFFFFF" },
+          ],
+        },
+      },
+      geography: {
+        kw: "VIETNAM",
+        logic: "Lãnh thổ hình chữ S bên bờ Biển Đông và chủ quyền biển đảo thiêng liêng.",
+        prompt: "ĐẤT NƯỚC HÌNH CHỮ S BÊN BỜ BIỂN ĐÔNG",
+        question: "Quốc gia nằm trên bán đảo Đông Dương với đường bờ biển hình chữ S dài hơn 3.260 km, tiếp giáp vịnh Bắc Bộ, vịnh Thái Lan và Biển Đông cùng hai quần đảo Hoàng Sa và Trường Sa?",
+        options: ["VIETNAM", "THAILAND", "PHILIPPINES", "INDONESIA"],
+        explanation: "Việt Nam có dải đất hình chữ S trải dài dọc biển Đông cùng các hải đảo thiêng liêng.",
+        illustration: {
+          background: "#0C2340",
+          elements: [
+            { type: "polygon", points: [[30, 10], [55, 12], [48, 28], [32, 28]], fill: "#15803D" },
+            { type: "polygon", points: [[32, 28], [48, 28], [45, 52], [35, 52]], fill: "#16A34A" },
+            { type: "polygon", points: [[35, 52], [45, 52], [55, 68], [45, 68]], fill: "#15803D" },
+            { type: "polygon", points: [[45, 68], [55, 68], [52, 85], [38, 85], [32, 75]], fill: "#16A34A" },
+            { type: "circle", cx: 72, cy: 42, r: 2.5, fill: "#FBBF24" },
+            { type: "circle", cx: 76, cy: 44, r: 2, fill: "#F59E0B" },
+            { type: "circle", cx: 74, cy: 47, r: 1.5, fill: "#FBBF24" },
+            { type: "circle", cx: 78, cy: 72, r: 2.5, fill: "#FBBF24" },
+            { type: "circle", cx: 83, cy: 75, r: 2, fill: "#F59E0B" },
+            { type: "circle", cx: 80, cy: 78, r: 2, fill: "#FBBF24" },
+            { type: "ellipse", cx: 28, cy: 82, rx: 3, ry: 4, fill: "#22C55E" },
+            { type: "line", x1: 52, y1: 50, x2: 52, y2: 44, stroke: "#E2E8F0", strokeWidth: 2 },
+            { type: "circle", cx: 52, cy: 43, r: 2, fill: "#FACC15" },
+            { type: "polygon", points: [[62, 58], [67, 54], [67, 62]], fill: "#FFFFFF" },
+          ],
+        },
+      },
+    };
+    const defaultTemplate = thematicObstacleTemplates[topicId] || {
+      kw: "TRITHUC",
+      logic: `Kiến thức tổng hợp về chủ đề ${topic}.`,
+      prompt: `CHÌA KHÓA CHỦ ĐỀ ${String(topic || "").toUpperCase()}`,
+      question: `Khái niệm tổng quát nào là chìa khóa tri thức nền tảng trong toàn bộ chủ đề ${topic}?`,
+      options: ["TRITHUC", "KHOAHOC", "LICHSU", "THEGIOI"],
+      explanation: `Từ khóa bí mật chính là TRITHUC của chủ đề ${topic}.`,
+      illustration: {
+        background: "#0F172A",
+        elements: defaultElements,
+      },
+    };
+    const centralQ = {
+      prompt: defaultTemplate.prompt || "Ô TRUNG TÂM",
+      question: defaultTemplate.question,
+      options: defaultTemplate.options,
+      answer: 0,
+      explanation: defaultTemplate.explanation,
+    };
+    generated = {
+      obstacle: {
+        keyword: defaultTemplate.kw,
+        logic: defaultTemplate.logic,
+        illustration: defaultTemplate.illustration,
+      },
+      questions: [...clues, centralQ],
+    };
   }
 
   if (!generated) {

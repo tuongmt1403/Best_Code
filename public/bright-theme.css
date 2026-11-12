@@ -891,20 +891,22 @@ body:has(.lab-shell) {
 }
 
 body.minigame-page .olympia-caption {
-  border: 3px solid var(--play-ink);
+  border: 3px solid #0f172a;
   border-radius: 14px;
-  color: var(--play-ink);
+  color: #0f172a !important;
   background: #fff8df;
-  box-shadow: 4px 4px 0 var(--play-ink);
+  box-shadow: 4px 4px 0 #0f172a;
 }
 
 body.minigame-page .olympia-caption-label {
-  color: #155a78;
+  color: #0369a1 !important;
+  font-weight: 900;
 }
 
 body.minigame-page .olympia-caption-text {
-  color: var(--play-ink);
-  -webkit-text-fill-color: var(--play-ink);
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  font-weight: 850;
 }
 
 .game-columns.obstacle-mode-active {
@@ -932,11 +934,11 @@ body.minigame-page .obstacle-question-area,
 body.minigame-page .obstacle-result-panel {
   min-width: 0;
   padding: clamp(14px, 2.4vw, 22px);
-  border: 3px solid var(--play-ink);
+  border: 3px solid #0f172a;
   border-radius: 18px;
-  color: var(--play-ink);
-  background: var(--play-paper);
-  box-shadow: 4px 4px 0 var(--play-ink);
+  color: #0f172a !important;
+  background: #ffffff;
+  box-shadow: 4px 4px 0 #0f172a;
 }
 
 body.minigame-page .obstacle-board-heading {
@@ -1058,14 +1060,19 @@ body.minigame-page .obstacle-row-status {
   gap: 8px;
   min-height: 42px;
   padding: 5px 8px;
-  border: 2px solid #d5d8e1;
+  border: 2px solid #cbd5e1;
   border-radius: 10px;
-  color: var(--play-ink);
-  background: #f0f1f5;
+  color: #0f172a !important;
+  background: #f1f5f9;
   font: inherit;
-  font-size: .8rem;
+  font-size: .85rem;
   text-align: left;
   cursor: pointer;
+}
+
+body.minigame-page .obstacle-row-status span {
+  color: #0f172a !important;
+  font-weight: 700;
 }
 
 body.minigame-page .obstacle-row-status:disabled {
@@ -1074,21 +1081,29 @@ body.minigame-page .obstacle-row-status:disabled {
 
 body.minigame-page .obstacle-row-status strong {
   overflow: hidden;
-  color: #626879;
+  color: #475569 !important;
   text-overflow: ellipsis;
+  font-weight: 700;
 }
 
 body.minigame-page .obstacle-row-status.revealed {
-  border-color: #7aaa37;
-  background: #f1f9e7;
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+
+body.minigame-page .obstacle-row-status.revealed span {
+  color: #14532d !important;
+  font-weight: 800;
 }
 
 body.minigame-page .obstacle-row-status.revealed strong {
-  color: #293d14;
+  color: #15803d !important;
+  font-weight: 850;
 }
 
 body.minigame-page .obstacle-row-status.closed {
-  opacity: .65;
+  opacity: .75;
+  background: #e2e8f0;
 }
 
 body.minigame-page .obstacle-question-area {
@@ -1099,23 +1114,26 @@ body.minigame-page .obstacle-question-area {
 
 body.minigame-page .obstacle-question-number {
   margin: 0;
-  color: #155a78;
-  font-size: .8rem;
+  color: #0284c7 !important;
+  font-size: .85rem;
   font-weight: 950;
   letter-spacing: .1em;
 }
 
 body.minigame-page .obstacle-question-title {
   margin: 0;
-  color: var(--play-ink);
+  color: #0f172a !important;
   font-size: clamp(1.15rem, 2.8vw, 1.7rem);
+  font-weight: 850;
 }
 
 body.minigame-page .obstacle-question-help,
 body.minigame-page .obstacle-turn-status {
   margin: 0;
-  color: #475268;
+  color: #334155 !important;
   line-height: 1.55;
+  font-weight: 600;
+}
 }
 
 body.minigame-page .obstacle-buzz-button {
@@ -1160,15 +1178,17 @@ body.minigame-page .obstacle-result-panel {
 
 body.minigame-page .obstacle-result-heading {
   margin: 0;
-  color: var(--play-ink);
+  color: #0f172a !important;
+  font-weight: 850;
 }
 
 body.minigame-page .obstacle-result-copy,
 body.minigame-page .obstacle-result-answer,
 body.minigame-page .obstacle-result-explanation {
   margin: 0;
-  color: #384258;
+  color: #1e293b !important;
   line-height: 1.55;
+  font-weight: 600;
 }
 
 body.minigame-page .obstacle-final {

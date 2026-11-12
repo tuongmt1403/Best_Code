@@ -221,9 +221,15 @@ body.minigame-page {
 .olympia-question-count { color: #d7ddff; font-size: .82rem; font-weight: 850; letter-spacing: .08em; }
 .olympia-image { display: block; width: min(100%, 620px); max-height: 290px; border: 1px solid #8794ee; border-radius: 20px; object-fit: contain; background: #101943; box-shadow: 0 15px 40px #02062288; }
 .olympia-prompt { margin: 4px 0 0; color: #ffe28a; font-size: clamp(1.05rem,2.4vw,1.35rem); }
-.olympia-caption { width: min(100%, 820px); padding: clamp(18px,3vw,30px); border: 2px solid #8e85ff; border-radius: 22px; background: linear-gradient(140deg,#171e59,#0b123d); box-shadow: 0 12px 35px #02062288,inset 0 1px 0 #ffffff20; text-align: left; }
-.olympia-caption-label { display: block; margin-bottom: 10px; color: #7deaff; font-size: .78rem; font-weight: 950; letter-spacing: .12em; }
-.olympia-caption-text { margin: 0; color: #fff; font-size: clamp(1.2rem,3vw,1.85rem); font-weight: 850; line-height: 1.55; overflow-wrap: anywhere; }
+.olympia-caption { width: min(100%, 820px); padding: clamp(18px,3vw,30px); border: 3px solid #0f172a; border-radius: 22px; background: #fff8df; box-shadow: 4px 4px 0 #0f172a; text-align: left; }
+.olympia-caption-label { display: block; margin-bottom: 10px; color: #0369a1 !important; font-size: .78rem; font-weight: 950; letter-spacing: .12em; }
+.olympia-caption-text { margin: 0; color: #0f172a !important; -webkit-text-fill-color: #0f172a !important; font-size: clamp(1.2rem,3vw,1.85rem); font-weight: 850; line-height: 1.55; overflow-wrap: anywhere; }
+.obstacle-row-status { display: grid; grid-template-columns: 31px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 8px 12px; border: 2px solid #0f172a; border-radius: 10px; background: #ffffff; color: #0f172a; font: inherit; cursor: pointer; text-align: left; }
+.obstacle-row-status span { color: #0f172a !important; font-weight: 800 !important; }
+.obstacle-row-status strong { color: #475569 !important; font-weight: 800 !important; }
+.obstacle-row-status.revealed { border-color: #16a34a; background: #f0fdf4; }
+.obstacle-row-status.revealed span { color: #14532d !important; }
+.obstacle-row-status.revealed strong { color: #15803d !important; font-weight: 900; }
 .olympia-reading-status,.olympia-intro-timer,.olympia-round-timer { min-height: 34px; color: #a9efff; font-size: 1rem; font-weight: 850; }
 .olympia-intro-timer { display: grid; min-width: 250px; min-height: 66px; place-items: center; border: 1px solid #8e85ff; border-radius: 18px; padding: 10px 24px; color: #fff; background: linear-gradient(110deg,#5b35d8,#1c9ed3); font-size: clamp(1.25rem,3vw,1.7rem); }
 .olympia-round-timer.urgent { color: #ff9aab; }
@@ -417,6 +423,20 @@ body.minigame-page {
 .qr-modal-img { width: 100%; height: 100%; object-fit: contain; }
 .qr-modal-desc { color: #94a3b8; font-size: .86rem; text-align: center; line-height: 1.5; margin-bottom: 16px; }
 .qr-modal-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.join-modal-intro {
+  color: #cbd5e1;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0 0 16px 0;
+}
+.join-modal-submit {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 800;
+  border-radius: 12px;
+}
 
 /* Guest Identity & Profanity Warning */
 .guest-profile-card {

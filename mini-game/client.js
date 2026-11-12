@@ -495,6 +495,149 @@ function openQrScanner(onCodeDetected) {
   startCamera();
 }
 
+function promptJoinRoomNameModal(targetCode, onJoined) {
+  const existing = document.querySelector(".join-name-modal-overlay");
+  if (existing) existing.remove();
+
+  const overlay = node("div", "qr-modal-overlay join-name-modal-overlay");
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+
+  const card = node("div", "qr-modal-card join-name-modal-card");
+  const head = node("div", "qr-modal-head");
+  head.append(node("h3", "qr-modal-title", `🎮 Vào phòng thi đấu: ${targetCode}`));
+  const closeBtn = node("button", "qr-scanner-close", "✕");
+  closeBtn.type = "button";
+  closeBtn.setAttribute("aria-label", "Đóng");
+  const closeModal = () => {
+    overlay.remove();
+    document.removeEventListener("keydown", onEsc);
+  };
+  function onEsc(e) { if (e.key === "Escape") closeModal(); }
+  document.addEventListener("keydown", onEsc);
+  closeBtn.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+  head.append(closeBtn);
+
+  const intro = node("p", "join-modal-intro", "Chào mừng bạn! Vui lòng đặt tên người chơi và chọn avatar để cùng so tài với bạn bè trong phòng:");
+
+  const inputGroup = node("div", "guest-input-group");
+  const label = node("label", "guest-label", "Tên người chơi của bạn (2 - 20 ký tự):");
+  label.htmlFor = "modal-guest-name-input";
+
+  const inputRow = node("div", "guest-input-row");
+  const nameInput = node("input", "guest-input");
+  nameInput.id = "modal-guest-name-input";
+  nameInput.type = "text";
+  nameInput.maxLength = 20;
+  nameInput.placeholder = "Nhập tên bạn (VD: Minh Tuấn, Lan Anh...)";
+  nameInput.value = (guestName && guestName !== "Bạn Mới") ? guestName : "";
+
+  let selectedAvatar = guestAvatar || "fox";
+  const avatarToggle = node("div", "guest-avatar-toggle");
+  const foxBtn = node("button", `guest-avatar-btn${selectedAvatar === "fox" ? " selected" : ""}`, "🦊");
+  foxBtn.type = "button";
+  foxBtn.title = "Avatar Cáo Lửa";
+  const knightBtn = node("button", `guest-avatar-btn${selectedAvatar === "knight" ? " selected" : ""}`, "⚔️");
+  knightBtn.type = "button";
+  knightBtn.title = "Avatar Hiệp Sĩ AI";
+
+  foxBtn.addEventListener("click", () => {
+    selectedAvatar = "fox";
+    foxBtn.classList.add("selected");
+    knightBtn.classList.remove("selected");
+  });
+  knightBtn.addEventListener("click", () => {
+    selectedAvatar = "knight";
+    knightBtn.classList.add("selected");
+    foxBtn.classList.remove("selected");
+  });
+  avatarToggle.append(foxBtn, knightBtn);
+  inputRow.append(nameInput, avatarToggle);
+
+  const warningBox = node("div", "profanity-warning-box", "");
+  warningBox.hidden = true;
+
+  const joinBtn = node("button", "primary-action join-modal-submit", "🚀 Vào phòng ngay");
+  joinBtn.type = "button";
+
+  const validate = () => {
+    const val = nameInput.value.trim();
+    if (!val) {
+      warningBox.textContent = "Vui lòng nhập tên người chơi để tham gia phòng.";
+      warningBox.hidden = false;
+      nameInput.classList.add("input-invalid");
+      joinBtn.disabled = true;
+      return false;
+    }
+    const check = validateDisplayName(val);
+    if (!check.valid) {
+      warningBox.textContent = check.error;
+      warningBox.hidden = false;
+      nameInput.classList.add("input-invalid");
+      joinBtn.disabled = true;
+      return false;
+    }
+    warningBox.hidden = true;
+    nameInput.classList.remove("input-invalid");
+    joinBtn.disabled = false;
+    return check.cleanName;
+  };
+
+  nameInput.addEventListener("input", validate);
+  nameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      joinBtn.click();
+    }
+  });
+
+  joinBtn.addEventListener("click", async () => {
+    const cleanName = validate();
+    if (!cleanName) {
+      nameInput.focus();
+      return;
+    }
+    guestName = cleanName;
+    guestAvatar = selectedAvatar;
+    localStorage.setItem("minigame_guest_name", guestName);
+    localStorage.setItem("minigame_guest_avatar", guestAvatar);
+
+    const setupNameInput = document.querySelector("#guest-nickname-input");
+    if (setupNameInput) setupNameInput.value = guestName;
+
+    joinBtn.disabled = true;
+    joinBtn.textContent = "Đang vào phòng...";
+    try {
+      await request(`/api/minigame/rooms/${encodeURIComponent(targetCode)}/join`, {
+        method: "POST",
+        body: "{}",
+      });
+      closeModal();
+      enterRoom(targetCode);
+      if (typeof onJoined === "function") onJoined();
+    } catch (err) {
+      joinBtn.disabled = false;
+      joinBtn.textContent = "🚀 Vào phòng ngay";
+      warningBox.textContent = err.message || "Không thể vào phòng này.";
+      warningBox.hidden = false;
+    }
+  });
+
+  inputGroup.append(label, inputRow, warningBox);
+  card.append(head, intro, inputGroup, joinBtn);
+  overlay.append(card);
+  document.body.append(overlay);
+
+  if (nameInput.value.trim()) {
+    validate();
+  } else {
+    joinBtn.disabled = true;
+  }
+
+  window.setTimeout(() => nameInput.focus(), 120);
+}
+
 function renderSetup() {
   stopRoomPolling();
   stopGameMusic();
@@ -596,7 +739,7 @@ function renderSetup() {
     nameInput.type = "text";
     nameInput.maxLength = 20;
     nameInput.placeholder = "Nhập tên bạn (VD: Minh Tuấn, Lan Anh...)";
-    nameInput.value = guestName || "";
+    nameInput.value = (guestName && guestName !== "Bạn Mới") ? guestName : "";
 
     const avatarToggle = node("div", "guest-avatar-toggle");
     const foxBtn = node("button", `guest-avatar-btn${guestAvatar === "fox" ? " selected" : ""}`, "🦊");
@@ -661,7 +804,12 @@ function renderSetup() {
     identityContainer.append(guestCard);
 
     // Initial check on load
-    if (guestName) validateInput();
+    if (nameInput.value.trim()) {
+      validateInput();
+    } else {
+      createButton.disabled = true;
+      joinButton.disabled = true;
+    }
   } else {
     const accountCard = node("div", "guest-profile-card");
     const accountHeader = node("div", "guest-card-header");
@@ -673,19 +821,22 @@ function renderSetup() {
   }
 
   scanQrButton.addEventListener("click", () => {
-    openQrScanner(async (code) => {
+    openQrScanner((code) => {
       codeInput.value = code;
-      joinButton.disabled = true;
-      setError("");
-      try {
-        await request(`/api/minigame/rooms/${encodeURIComponent(code)}/join`, {
+      if (isGuestUser) {
+        promptJoinRoomNameModal(code);
+      } else {
+        joinButton.disabled = true;
+        setError("");
+        request(`/api/minigame/rooms/${encodeURIComponent(code)}/join`, {
           method: "POST",
           body: "{}",
+        }).then(() => {
+          enterRoom(code);
+        }).catch((error) => {
+          setError(error.message);
+          joinButton.disabled = false;
         });
-        enterRoom(code);
-      } catch (error) {
-        setError(error.message);
-        joinButton.disabled = false;
       }
     });
   });
@@ -716,14 +867,20 @@ function renderSetup() {
 
   joinForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    const code = codeInput.value.trim().toUpperCase();
+    if (!code) return;
+    if (isGuestUser && (!guestName || guestName === "Bạn Mới")) {
+      promptJoinRoomNameModal(code);
+      return;
+    }
     joinButton.disabled = true;
     setError("");
     try {
-      await request(`/api/minigame/rooms/${encodeURIComponent(codeInput.value)}/join`, {
+      await request(`/api/minigame/rooms/${encodeURIComponent(code)}/join`, {
         method: "POST",
         body: "{}",
       });
-      enterRoom(codeInput.value);
+      enterRoom(code);
     } catch (error) {
       setError(error.message);
       joinButton.disabled = false;
@@ -782,11 +939,15 @@ function renderLobby(snapshot) {
     openQrScanner(async (code) => {
       try {
         await leaveRoom();
-        await request(`/api/minigame/rooms/${encodeURIComponent(code)}/join`, {
-          method: "POST",
-          body: "{}",
-        });
-        enterRoom(code);
+        if (isGuestUser) {
+          promptJoinRoomNameModal(code);
+        } else {
+          await request(`/api/minigame/rooms/${encodeURIComponent(code)}/join`, {
+            method: "POST",
+            body: "{}",
+          });
+          enterRoom(code);
+        }
       } catch (err) {
         setError(err.message);
       }
@@ -1938,11 +2099,16 @@ async function initialize() {
     renderSetup();
     const inviteCode = query.get("room");
     if (inviteCode) {
-      await request(`/api/minigame/rooms/${encodeURIComponent(inviteCode)}/join`, {
-        method: "POST",
-        body: "{}",
-      });
-      enterRoom(inviteCode);
+      const code = inviteCode.toUpperCase().trim();
+      if (isGuestUser) {
+        promptJoinRoomNameModal(code);
+      } else {
+        await request(`/api/minigame/rooms/${encodeURIComponent(code)}/join`, {
+          method: "POST",
+          body: "{}",
+        });
+        enterRoom(code);
+      }
     }
   } catch (error) {
     content.replaceChildren(node("p", "game-error", `${error.message} Hãy tải lại trang để thử lại.`));
