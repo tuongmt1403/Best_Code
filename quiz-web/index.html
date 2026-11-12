@@ -249,8 +249,17 @@
     .tutor-message.sad .tutor-bubble { border-color:#f0d7d7; background:#fff4f4; }
     .study-lesson-note { flex:none; width:min(100%,900px); margin:4px auto; padding:clamp(16px,2vw,24px);
       border:1px solid #dfe3ef; border-radius:18px; color:#263047; background:#fff; box-shadow:0 6px 20px #272c4b0d; }
-    .study-lesson-note h3 { margin:0 0 14px; color:#252b42; font-size:1.1rem; }
+    .study-lesson-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; padding-bottom:10px; border-bottom:1px dashed #e2e8f0; }
+    .study-lesson-note h3 { margin:0; color:#252b42; font-size:1.08rem; }
+    .study-micro-controls { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+    .study-micro-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:999px; border:1px solid #cbd5e1; color:#64748b; background:#f8fafc; font-size:.76rem; font-weight:700; }
+    .study-micro-pill.active { border-color:#635bda; color:#4338ca; background:#eef2ff; }
+    .study-micro-pill.done { border-color:#34d399; color:#065f46; background:#ecfdf5; }
+    .study-micro-show-all { min-height:28px !important; padding:3px 10px !important; border-radius:999px !important; border:1px solid #cbd5e1 !important; color:#475569 !important; background:#fff !important; font-size:.75rem !important; font-weight:700 !important; cursor:pointer; }
     .study-lesson-section + .study-lesson-section { margin-top:14px; padding-top:13px; border-top:1px solid #e6e8f0; }
+    .study-lesson-section[hidden] { display:none !important; }
+    .study-lesson-section.micro-reveal { animation:micro-fade-in .32s ease-out; }
+    @keyframes micro-fade-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
     .study-lesson-section h4 { margin:0 0 5px; color:#4941ae; font-size:.96rem; }
     .study-lesson-section p { margin:0; color:#30384e; font-size:.94rem; line-height:1.7; white-space:pre-wrap; }
     .study-code-example { margin-top:12px; overflow:hidden; border:1px solid #29334d; border-radius:12px; background:#111827; }
@@ -288,10 +297,46 @@
     .tutor-bubble p + p { margin-top:9px; }
     .tutor-message-tools { display:flex; justify-content:flex-end; margin-top:5px; }
     .study-learning .tutor-message-tools button { min-height:27px; padding:3px 8px; color:#5149c5; background:#f1efff; font-size:.75rem; }
-    .tutor-illustration { margin:0 auto; padding:10px; max-width:100%; border:1px solid var(--tutor-line); border-radius:13px; background:#f8fbfc; }
+    .tutor-illustration { width:min(100%,900px); margin:8px auto; padding:14px; max-width:100%; border:1px solid var(--tutor-line); border-radius:16px; background:#f8fbfc; }
     .tutor-illustration svg { display:block; width:100%; height:auto; }
-    .tutor-illustration .study-history-photo { display:block; width:min(100%,560px); max-height:320px; margin:4px auto 8px; border-radius:10px; object-fit:contain; }
-    .tutor-illustration figcaption { margin-top:6px; color:#526d75; text-align:center; font-size:.8rem; line-height:1.4; }
+    .tutor-illustration .study-history-photo { display:block; width:min(100%,640px); max-height:360px; margin:4px auto 12px; border-radius:12px; object-fit:contain; box-shadow:0 6px 18px #0f172a1f; }
+    .tutor-illustration figcaption { margin-top:8px; color:#526d75; text-align:center; font-size:.82rem; line-height:1.5; }
+    .study-tactics-board { margin-top:6px; padding:14px; border:2px solid #f59e0b; border-radius:16px; color:#f8fafc; background:linear-gradient(145deg,#1e293b,#0f172a); text-align:left; font-family:inherit; }
+    .study-tactics-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 14px; margin-bottom:12px; padding:10px 14px; border-radius:10px; background:linear-gradient(90deg,#dc2626,#b91c1c); }
+    .study-tactics-title { margin:0; color:#fef08a; font-size:.96rem; font-weight:900; line-height:1.35; letter-spacing:.01em; }
+    .study-tactics-badge { display:inline-block; padding:3px 10px; border-radius:999px; color:#fff; background:#00000038; font-size:.78rem; font-weight:700; line-height:1.3; }
+    .study-tactics-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .study-tactics-card { padding:11px 13px; border-radius:12px; border:1.5px solid transparent; }
+    .study-tactics-card.tactics { background:#1e3a5f; border-color:#38bdf8; }
+    .study-tactics-card.sidestory { background:#3b2f1e; border-color:#f59e0b; }
+    .study-tactics-card.loss { background:#3f1d24; border-color:#f87171; }
+    .study-tactics-card.victory { background:#143829; border-color:#34d399; }
+    .study-tactics-card h5 { margin:0 0 7px; font-size:.84rem; font-weight:800; line-height:1.35; }
+    .study-tactics-card.tactics h5 { color:#7dd3fc; }
+    .study-tactics-card.sidestory h5 { color:#fcd34d; }
+    .study-tactics-card.loss h5 { color:#fca5a5; }
+    .study-tactics-card.victory h5 { color:#6ee7b7; }
+    .study-tactics-card ul { margin:0; padding-left:16px; font-size:.83rem; line-height:1.5; }
+    .study-tactics-card li + li { margin-top:4px; }
+    .study-tactics-card.tactics ul { color:#f1f5f9; }
+    .study-tactics-card.sidestory ul { color:#fef3c7; }
+    .study-tactics-card.loss ul { color:#fee2e2; }
+    .study-tactics-card.victory ul { color:#ecfdf5; }
+    .study-atlas-board { display:grid; grid-template-columns:minmax(230px,280px) minmax(0,1fr); gap:14px; align-items:stretch; margin-top:6px; padding:14px; border:2px solid #0284c7; border-radius:16px; background:#f8fafc; text-align:left; font-family:inherit; }
+    .study-atlas-map-wrap { display:flex; flex-direction:column; justify-content:center; padding:8px; border:1.5px solid #38bdf8; border-radius:13px; background:linear-gradient(145deg,#dbeafe,#93c5fd); }
+    .study-atlas-notes { display:flex; flex-direction:column; gap:9px; min-width:0; }
+    .study-atlas-heading { margin:0; padding:9px 13px; border-radius:10px; color:#fff; background:#0284c7; font-size:.9rem; font-weight:900; text-align:center; line-height:1.35; }
+    .study-atlas-card { padding:10px 12px; border-radius:11px; border:1.5px solid #cbd5e1; background:#fff; }
+    .study-atlas-card.concept { background:#eff6ff; border-color:#3b82f6; }
+    .study-atlas-card.cause1 { background:#fefce8; border-color:#eab308; }
+    .study-atlas-card.cause2 { background:#f0fdf4; border-color:#22c55e; }
+    .study-atlas-card h5 { margin:0 0 5px; color:#0f172a; font-size:.85rem; font-weight:800; line-height:1.35; }
+    .study-atlas-card p { margin:0; color:#334155; font-size:.82rem; line-height:1.5; }
+    .study-atlas-card p + p { margin-top:3px; color:#0f172a; font-weight:700; }
+    @media (max-width:720px) {
+      .study-tactics-grid { grid-template-columns:1fr; }
+      .study-atlas-board { grid-template-columns:1fr; }
+    }
     .tutor-illustration.solution-diagram { width:min(100%,680px); }
     .tutor-illustration.solution-diagram svg { min-height:150px; }
     .tutor-quick-actions { display:flex; flex:none; flex-wrap:wrap; gap:6px; padding:8px 12px; }
@@ -653,7 +698,13 @@
         title: "Ngôn ngữ lập trình C",
         topicId: "cProgramming",
         titlePrefix: "Lập trình C",
-        topics: ["Cấu trúc chương trình C", "Thư viện chuẩn", "Biến & Kiểu dữ liệu", "Cấu trúc điều khiển", "Hàm", "Mảng & Chuỗi", "Con trỏ", "Struct", "Bộ nhớ động", "Tệp"],
+        topics: ["Cấu trúc chương trình C", "Thư viện chuẩn", "Biến & Kiểu dữ liệu", "Cấu trúc điều khiển", "Hàm", "Mảng & Chuỗi", "Con trỏ", "Con trỏ và Hàm", "Struct", "Bộ nhớ động", "Tệp"],
+      },
+      {
+        title: "Ngôn ngữ lập trình Python",
+        topicId: "pythonProgramming",
+        titlePrefix: "Lập trình Python",
+        topics: ["Cú pháp & Thụt lề Python", "Biến & Kiểu dữ liệu", "Chuỗi & f-string", "Cấu trúc điều khiển", "List & Tuple", "Dictionary & Set", "Hàm trong Python", "Xử lý ngoại lệ & Tệp", "Lập trình hướng đối tượng (OOP)"],
       },
     ];
     const ROADMAP_STORAGE_KEY = "lua-study-roadmaps";
@@ -1169,19 +1220,47 @@
       const cPointer = `
         <defs><marker id="pointer-arrow" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M0 0 11 5.5 0 11Z" fill="#655bd5"/></marker></defs>
         <rect x="18" y="18" width="604" height="264" rx="22" fill="#f1f3fb"/>
-        <rect x="43" y="53" width="236" height="190" rx="18" fill="#e5e9f5" stroke="#8995b2" stroke-width="3"/>
-        <rect x="56" y="39" width="210" height="38" rx="11" fill="#394766"/><text x="161" y="64" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="16" font-weight="700">STACK</text>
-        <rect x="76" y="105" width="170" height="62" rx="13" fill="#fff" stroke="#756bdb" stroke-width="3"/>
-        <text x="161" y="131" text-anchor="middle" fill="#5149c5" font-family="system-ui" font-size="17" font-weight="700">p</text>
-        <text x="161" y="153" text-anchor="middle" fill="#57617a" font-family="system-ui" font-size="13">0x104</text>
-        <text x="161" y="211" text-anchor="middle" fill="#6d7890" font-family="system-ui" font-size="13">BIẾN CON TRỎ</text>
-        <path d="M254 135 C320 135 335 101 405 101" fill="none" stroke="#655bd5" stroke-width="6" marker-end="url(#pointer-arrow)"/>
-        <rect x="410" y="67" width="172" height="130" rx="18" fill="#e6f4ea" stroke="#4b9b70" stroke-width="3"/>
-        <rect x="425" y="81" width="142" height="34" rx="8" fill="#3b7657"/><text x="496" y="104" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="14" font-weight="700">Ô NHỚ 0x104</text>
-        <text x="496" y="155" text-anchor="middle" fill="#24583d" font-family="system-ui" font-size="28" font-weight="800">42</text>
-        <text x="496" y="181" text-anchor="middle" fill="#4a765d" font-family="system-ui" font-size="12">GIÁ TRỊ ĐƯỢC TRỎ TỚI</text>
-        <circle cx="338" cy="202" r="23" fill="#fff" stroke="#c9cde0" stroke-width="2"/><text x="338" y="209" text-anchor="middle" fill="#655bd5" font-family="system-ui" font-size="22" font-weight="800">*</text>
-        <text x="320" y="262" text-anchor="middle" fill="#68718a" font-family="system-ui" font-size="12">p lưu địa chỉ · *p truy cập giá trị tại địa chỉ đó</text>`;
+        <rect x="36" y="34" width="568" height="34" rx="10" fill="#394766"/>
+        <text x="320" y="56" text-anchor="middle" fill="#fef08a" font-family="system-ui" font-size="14" font-weight="800">ẨN DỤ DÃY TỦ ĐỒ LOCKER (RAM) &amp; TỜ GIẤY GHI SỐ PHÒNG</text>
+        <rect x="40" y="84" width="214" height="150" rx="18" fill="#fef9c3" stroke="#eab308" stroke-width="3"/>
+        <rect x="56" y="96" width="182" height="32" rx="9" fill="#ca8a04"/><text x="147" y="117" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="13" font-weight="800">📝 TỜ GIẤY (int *pointer)</text>
+        <rect x="62" y="140" width="170" height="54" rx="12" fill="#fff" stroke="#facc15" stroke-width="2"/>
+        <text x="147" y="164" text-anchor="middle" fill="#854d0e" font-family="system-ui" font-size="13" font-weight="700">Ghi số phòng của tủ:</text>
+        <text x="147" y="185" text-anchor="middle" fill="#4338ca" font-family="ui-monospace,monospace" font-size="16" font-weight="800">Phòng 104 (&amp;score)</text>
+        <text x="147" y="218" text-anchor="middle" fill="#713f12" font-family="ui-monospace,monospace" font-size="12" font-weight="700">pointer = &amp;score;</text>
+        <path d="M260 158 H374" fill="none" stroke="#655bd5" stroke-width="5" stroke-dasharray="7 5" marker-end="url(#pointer-arrow)"/>
+        <rect x="272" y="106" width="96" height="40" rx="12" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+        <text x="320" y="124" text-anchor="middle" fill="#4338ca" font-family="ui-monospace,monospace" font-size="13" font-weight="800">*pointer = 9</text>
+        <text x="320" y="140" text-anchor="middle" fill="#475569" font-family="system-ui" font-size="10" font-weight="700">🔑 Mở tủ đổi đồ</text>
+        <rect x="386" y="84" width="214" height="150" rx="18" fill="#dcfce7" stroke="#22c55e" stroke-width="3"/>
+        <rect x="402" y="96" width="182" height="32" rx="9" fill="#15803d"/><text x="493" y="117" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="13" font-weight="800">🗄️ TỦ ĐỒ PHÒNG 104</text>
+        <rect x="414" y="140" width="158" height="54" rx="12" fill="#fff" stroke="#4ade80" stroke-width="2"/>
+        <text x="493" y="162" text-anchor="middle" fill="#166534" font-family="system-ui" font-size="12" font-weight="700">Đồ cất trong tủ (score):</text>
+        <text x="493" y="186" text-anchor="middle" fill="#14532d" font-family="ui-monospace,monospace" font-size="22" font-weight="900">8  ➔  9</text>
+        <text x="493" y="218" text-anchor="middle" fill="#166534" font-family="ui-monospace,monospace" font-size="12" font-weight="700">Biển số cửa: &amp;score = 104</text>
+        <text x="320" y="262" text-anchor="middle" fill="#475569" font-family="system-ui" font-size="12" font-weight="700">score = 8 (cất vào tủ) · &amp;score (số phòng 104) · pointer (tờ giấy) · *pointer (cầm giấy mở tủ)</text>`;
+      const cPointerSwap = `
+        <defs><marker id="swap-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#4f46e5"/></marker></defs>
+        <rect x="18" y="18" width="604" height="264" rx="22" fill="#f1f3fb"/>
+        <rect x="36" y="32" width="568" height="34" rx="10" fill="#312e81"/>
+        <text x="320" y="54" text-anchor="middle" fill="#fef08a" font-family="system-ui" font-size="14" font-weight="800">CON TRỎ VÀ HÀM · ĐƯA SỐ PHÒNG (&amp;x, &amp;y) ĐỂ HÀM swap ĐỔI ĐỒ GIỮA 2 TỦ</text>
+        <rect x="38" y="82" width="206" height="152" rx="16" fill="#fef9c3" stroke="#eab308" stroke-width="2.5"/>
+        <text x="141" y="106" text-anchor="middle" fill="#854d0e" font-family="system-ui" font-size="13" font-weight="800">HÀM swap(int *a, int *b)</text>
+        <rect x="52" y="118" width="178" height="44" rx="10" fill="#fff" stroke="#facc15" stroke-width="2"/>
+        <text x="141" y="137" text-anchor="middle" fill="#4338ca" font-family="ui-monospace,monospace" font-size="12" font-weight="800">Tờ giấy a = Phòng 104 (&amp;x)</text>
+        <text x="141" y="154" text-anchor="middle" fill="#0f766e" font-family="ui-monospace,monospace" font-size="12" font-weight="800">Tờ giấy b = Phòng 108 (&amp;y)</text>
+        <rect x="52" y="172" width="178" height="48" rx="10" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+        <text x="141" y="191" text-anchor="middle" fill="#312e81" font-family="ui-monospace,monospace" font-size="11" font-weight="700">temp = *a; *a = *b;</text>
+        <text x="141" y="209" text-anchor="middle" fill="#312e81" font-family="ui-monospace,monospace" font-size="11" font-weight="700">*b = temp; (Mở tủ đổi đồ)</text>
+        <path d="M250 135 H358" fill="none" stroke="#4f46e5" stroke-width="4" marker-end="url(#swap-arrow)"/>
+        <path d="M250 195 H358" fill="none" stroke="#4f46e5" stroke-width="4" marker-end="url(#swap-arrow)"/>
+        <rect x="368" y="82" width="234" height="68" rx="14" fill="#dcfce7" stroke="#22c55e" stroke-width="2.5"/>
+        <text x="485" y="106" text-anchor="middle" fill="#166534" font-family="system-ui" font-size="13" font-weight="800">🗄️ Tủ x (Phòng 104) · *a</text>
+        <text x="485" y="134" text-anchor="middle" fill="#14532d" font-family="ui-monospace,monospace" font-size="19" font-weight="900">5  ➔  9</text>
+        <rect x="368" y="166" width="234" height="68" rx="14" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.5"/>
+        <text x="485" y="190" text-anchor="middle" fill="#075985" font-family="system-ui" font-size="13" font-weight="800">🗄️ Tủ y (Phòng 108) · *b</text>
+        <text x="485" y="218" text-anchor="middle" fill="#0c4a6e" font-family="ui-monospace,monospace" font-size="19" font-weight="900">9  ➔  5</text>
+        <text x="320" y="262" text-anchor="middle" fill="#475569" font-family="system-ui" font-size="12" font-weight="700">Dùng *a và *b mở tận 2 tủ thật ở main để tráo đổi giá trị (không phải chỉ đổi tờ giấy a = b)</text>`;
       const cStruct = `
         <defs><marker id="struct-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#655bd5"/></marker></defs>
         <rect x="18" y="18" width="604" height="264" rx="22" fill="#f1f3fb"/>
@@ -1364,134 +1443,429 @@
       let markup;
       let caption;
       let historyImage;
-      const renderHistoryTimeline = (heading, panels, figureCaption) => {
-        const activePhase = ["foundation", "practice", "advanced"].indexOf(phase);
+      let customBoard = null;
+      const renderHistoryBattleTactics = (heading, badgeText, tactics, sideStory, enemyLoss, victoryResult, figureCaption) => {
+        const board = document.createElement("div");
+        board.className = "study-tactics-board";
+        const header = document.createElement("div");
+        header.className = "study-tactics-header";
+        const titleEl = document.createElement("h4");
+        titleEl.className = "study-tactics-title";
+        titleEl.textContent = `★ ${heading}`;
+        const badgeEl = document.createElement("span");
+        badgeEl.className = "study-tactics-badge";
+        badgeEl.textContent = badgeText;
+        header.append(titleEl, badgeEl);
+
+        const grid = document.createElement("div");
+        grid.className = "study-tactics-grid";
+        const blocks = [
+          { cls: "tactics", title: "⚔ CHIẾN THUẬT CỦA ÔNG CHA TA", items: tactics },
+          { cls: "sidestory", title: "🔥 CHUYỆN CHIẾN TRƯỜNG & HẬU CẦN", items: sideStory },
+          { cls: "loss", title: "💥 THIỆT HẠI CỦA QUÂN ĐỊCH", items: enemyLoss },
+          { cls: "victory", title: "🚩 CHIẾN THẮNG CỦA CHÚNG TA", items: victoryResult },
+        ];
+        blocks.forEach((b) => {
+          const card = document.createElement("div");
+          card.className = `study-tactics-card ${b.cls}`;
+          const h5 = document.createElement("h5");
+          h5.textContent = b.title;
+          const ul = document.createElement("ul");
+          b.items.filter(Boolean).forEach((line) => {
+            const li = document.createElement("li");
+            li.textContent = line.replace(/^[•\-]\s*/, "");
+            ul.append(li);
+          });
+          card.append(h5, ul);
+          grid.append(card);
+        });
+        board.append(header, grid);
+        customBoard = board;
+        caption = figureCaption;
+      };
+      const renderVietnamAtlasMap = (heading, circledRegions, causalChain, figureCaption) => {
+        svg.setAttribute("viewBox", "0 0 264 256");
         markup = `
-          <rect x="18" y="18" width="604" height="264" rx="22" fill="#f3f0e5"/>
-          <text x="320" y="48" text-anchor="middle" fill="#514332" font-family="system-ui" font-size="15" font-weight="800">${heading}</text>
-          ${panels.map((panel, index) => {
-            const x = 30 + index * 194;
-            const selected = index === activePhase;
-            return `<g>
-              <rect x="${x}" y="66" width="180" height="174" rx="16" fill="${selected ? "#fff0d6" : "#fff"}" stroke="${selected ? "#bd4c3a" : "#c8c3b4"}" stroke-width="${selected ? "3" : "1.5"}"/>
-              <text x="${x + 90}" y="94" text-anchor="middle" fill="#514332" font-family="system-ui" font-size="12" font-weight="700">${panel.date}</text>
-              <circle cx="${x + 90}" cy="132" r="20" fill="${selected ? "#f8d7a1" : "#ece9df"}" stroke="#997a54" stroke-width="2"/>
-              <text x="${x + 90}" y="138" text-anchor="middle" fill="#704f3c" font-family="system-ui" font-size="13" font-weight="800">${index + 1}</text>
-              <text x="${x + 90}" y="178" text-anchor="middle" fill="#342e25" font-family="system-ui" font-size="13" font-weight="800">${panel.title}</text>
-              <text x="${x + 90}" y="201" text-anchor="middle" fill="#495063" font-family="system-ui" font-size="11">${panel.detail}</text>
-              <text x="${x + 90}" y="224" text-anchor="middle" fill="#64675e" font-family="system-ui" font-size="10">Mốc lịch sử · sơ đồ khái quát</text>
-            </g>`;
-          }).join("")}
-          <path d="M75 254h490" stroke="#9e8d70" stroke-width="2" stroke-dasharray="5 6"/>`;
+          <defs>
+            <linearGradient id="atlas-sea" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#dbeafe"/><stop offset="1" stop-color="#93c5fd"/></linearGradient>
+            <linearGradient id="atlas-land" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#bbf7d0"/><stop offset=".5" stop-color="#86efac"/><stop offset="1" stop-color="#4ade80"/></linearGradient>
+          </defs>
+          <rect x="2" y="2" width="260" height="252" rx="12" fill="url(#atlas-sea)"/>
+          <text x="132" y="20" text-anchor="middle" fill="#0369a1" font-family="system-ui" font-size="11" font-weight="900">ATLAT VIỆT NAM (KHOANH VÙNG)</text>
+          <!-- Hình chữ S Việt Nam khái quát -->
+          <path d="M80 38 L126 36 L152 52 L142 74 L122 88 L134 114 L162 142 L174 172 L164 202 L134 220 L104 240 L86 230 L100 206 L126 192 L142 170 L130 142 L104 112 L96 84 L70 64 Z" fill="url(#atlas-land)" stroke="#15803d" stroke-width="2.2"/>
+          <!-- Quần đảo Hoàng Sa & Trường Sa -->
+          <circle cx="204" cy="122" r="13" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3 2"/>
+          <circle cx="201" cy="121" r="2.5" fill="#dc2626"/><circle cx="208" cy="124" r="2" fill="#dc2626"/>
+          <text x="204" y="144" text-anchor="middle" fill="#991b1b" font-family="system-ui" font-size="8.5" font-weight="800">Hoàng Sa</text>
+          <circle cx="216" cy="204" r="15" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3 2"/>
+          <circle cx="212" cy="202" r="2.5" fill="#dc2626"/><circle cx="220" cy="207" r="2" fill="#dc2626"/>
+          <text x="216" y="228" text-anchor="middle" fill="#991b1b" font-family="system-ui" font-size="8.5" font-weight="800">Trường Sa</text>
+          <text x="210" y="172" text-anchor="middle" fill="#0369a1" font-family="system-ui" font-size="9.5" font-weight="800">BIỂN ĐÔNG</text>
+          ${circledRegions.map((reg) => `
+            <g>
+              <circle cx="${reg.cx - 12}" cy="${reg.cy - 14}" r="${reg.r}" fill="#ef444426" stroke="#dc2626" stroke-width="2.6" stroke-dasharray="5 3"/>
+              <circle cx="${reg.cx - 12}" cy="${reg.cy - 14}" r="3.5" fill="#dc2626"/>
+              <rect x="${Math.max(6, reg.lx - 18)}" y="${reg.ly - 14}" width="${reg.lw + 10}" height="18" rx="5" fill="#fff" stroke="#dc2626" stroke-width="1.2"/>
+              <text x="${Math.max(6, reg.lx - 18) + (reg.lw + 10) / 2}" y="${reg.ly - 1}" text-anchor="middle" fill="#b91c1c" font-family="system-ui" font-size="9" font-weight="800">${reg.label}</text>
+            </g>
+          `).join("")}`;
+
+        const board = document.createElement("div");
+        board.className = "study-atlas-board";
+        const mapWrap = document.createElement("div");
+        mapWrap.className = "study-atlas-map-wrap";
+        mapWrap.append(svg);
+
+        const notes = document.createElement("div");
+        notes.className = "study-atlas-notes";
+        const headingEl = document.createElement("h4");
+        headingEl.className = "study-atlas-heading";
+        headingEl.textContent = heading;
+        notes.append(headingEl);
+
+        const cardClasses = ["concept", "cause1", "cause2"];
+        causalChain.forEach((item, idx) => {
+          const card = document.createElement("div");
+          card.className = `study-atlas-card ${cardClasses[idx] || "concept"}`;
+          const h5 = document.createElement("h5");
+          h5.textContent = item.title;
+          const p1 = document.createElement("p");
+          p1.textContent = item.line1;
+          const p2 = document.createElement("p");
+          p2.textContent = item.line2;
+          card.append(h5, p1, p2);
+          notes.append(card);
+        });
+        board.append(mapWrap, notes);
+        customBoard = board;
         caption = figureCaption;
       };
       if (topicId === "antiUsWar" && /điện biên phủ/i.test(topic)) {
-        const activePhase = ["foundation", "practice", "advanced"].indexOf(phase);
-        const panels = [
-          { date: "13–14/3/1954", title: "Mở màn", detail: "Pháo đánh cứ điểm vòng ngoài", icon: "💥" },
-          { date: "3–4/1954", title: "Vây lấn", detail: "Đào hào, áp sát, cắt tiếp tế", icon: "↗" },
-          { date: "1–7/5/1954", title: "Tổng công kích", detail: "Tiến công sở chỉ huy", icon: "→" },
-        ];
-        markup = `
-          <rect x="18" y="24" width="604" height="250" rx="20" fill="#f3f0e5"/>
-          ${panels.map((panel, index) => {
-            const x = 30 + index * 194;
-            const selected = index === activePhase;
-            return `<g>
-              <rect x="${x}" y="42" width="180" height="210" rx="16" fill="${selected ? "#fff0d6" : "#fff"}" stroke="${selected ? "#bd4c3a" : "#c8c3b4"}" stroke-width="${selected ? "3" : "1.5"}"/>
-              <text x="${x + 90}" y="70" text-anchor="middle" fill="#514332" font-family="system-ui" font-size="12" font-weight="700">${panel.date}</text>
-              <circle cx="${x + 90}" cy="119" r="29" fill="${selected ? "#f8d7a1" : "#ece9df"}" stroke="#997a54" stroke-width="2"/>
-              <text x="${x + 90}" y="129" text-anchor="middle" font-family="system-ui" font-size="27">${panel.icon}</text>
-              <text x="${x + 90}" y="174" text-anchor="middle" fill="#342e25" font-family="system-ui" font-size="14" font-weight="800">${panel.title}</text>
-              <text x="${x + 90}" y="198" text-anchor="middle" fill="#495063" font-family="system-ui" font-size="11">${panel.detail}</text>
-              <text x="${x + 90}" y="224" text-anchor="middle" fill="#64675e" font-family="system-ui" font-size="10">Sơ đồ khái niệm · không theo tỷ lệ</text>
-            </g>`;
-          }).join("")}
-        `;
+        renderHistoryBattleTactics(
+          "CHIẾN DỊCH ĐIỆN BIÊN PHỦ (13/3 – 7/5/1954)",
+          "56 ngày đêm khoét núi, ngủ hầm",
+          [
+            "• Phương châm: 'Đánh chắc, tiến chắc'",
+            "• Đào hàng trăm km giao thông hào vây lấn",
+            "• Kéo pháo 105mm vào hầm sườn núi, khóa sân bay",
+          ],
+          [
+            "• 20.000+ xe đạp thồ chở 200–300 kg/xe vượt đèo",
+            "• Bếp Hoàng Cầm tản khói nấu cơm sát đồn giặc",
+            "• Tô Vĩnh Diện chèn pháo, Phan Đình Giót lấp lỗ châu mai",
+          ],
+          [
+            "• Tập đoàn cứ điểm 49 cứ điểm bị đập tan hoàn toàn",
+            "• Pháp mất 62 máy bay, 167 máy bay khác bị hư hại",
+            "• Tướng De Castries và Bộ chỉ huy Pháp đầu hàng",
+          ],
+          [
+            "• Chấm dứt ách thống trị của thực dân Pháp",
+            "• Tạo sức ép quyết định trên bàn hội nghị Genève",
+            "• 'Lừng lẫy năm châu, chấn động địa cầu'",
+          ],
+          "Ảnh tư liệu thực tế & Sơ đồ chiến thuật Điện Biên Phủ: kết hợp vòng vây giao thông hào, pháo binh sườn núi và kỳ tích xe đạp thồ.",
+        );
         historyImage = {
           src: "/images/study-history-dien-bien-phu.jpg",
-          alt: "Bộ đội Việt Minh cắm cờ trên sở chỉ huy Pháp tại Điện Biên Phủ năm 1954.",
-          credit: "Hệ thống Bảo tàng Lịch sử Quân sự Việt Nam · phạm vi công cộng",
+          alt: "Bộ đội Việt Minh phất cờ chiến thắng trên nóc hầm tướng De Castries tại Điện Biên Phủ ngày 7/5/1954.",
+          credit: "Bảo tàng Lịch sử Quân sự Việt Nam · phạm vi công cộng",
           source: "https://commons.wikimedia.org/wiki/File:Victory_in_Battle_of_Dien_Bien_Phu.jpg",
         };
-        caption = "Diễn biến Điện Biên Phủ theo ba chặng khái quát. Hình là sơ đồ học tập gốc, không mô tả tọa độ hay hướng tiến quân chính xác.";
       } else if (topicId === "antiUsWar" && /gen[eèê]ve/i.test(topic)) {
-        renderHistoryTimeline("HIỆP ĐỊNH GENÈVE · 1954", [
-          { date: "7/5/1954", title: "Điện Biên Phủ", detail: "Chiến dịch kết thúc" },
-          { date: "7/1954", title: "Ký hiệp định", detail: "Đình chiến, tập kết tạm thời" },
-          { date: "Dự kiến 1956", title: "Tổng tuyển cử", detail: "Không diễn ra như dự kiến" },
-        ], "Lịch sử · Genève 1954: mốc đình chiến, giới tuyến quân sự tạm thời và dự kiến tổng tuyển cử; không phải biên giới vĩnh viễn.");
+        renderHistoryBattleTactics(
+          "HIỆP ĐỊNH GENÈVE VỀ ĐÔNG DƯƠNG (THÁNG 7/1954)",
+          "Đấu tranh ngoại giao sau Điện Biên Phủ",
+          [
+            "• Phối hợp chặt chẽ thắng lợi quân sự & ngoại giao",
+            "• Đấu tranh pháp lý buộc công nhận các quyền dân tộc",
+            "• Tập kết chuyển quân 300 ngày ở hai phía vĩ tuyến 17",
+          ],
+          [
+            "• Vĩ tuyến 17 (sông Bến Hải) chỉ là giới tuyến tạm thời",
+            "• Cán bộ miền Nam tập kết ra Bắc giơ 2 ngón tay hẹn 2 năm",
+            "• Mỹ - Diệm can thiệp, phá hoại tổng tuyển cử năm 1956",
+          ],
+          [
+            "• Pháp buộc phải chấm dứt chiến tranh xâm lược",
+            "• Quân viễn chinh Pháp phải rút hoàn toàn khỏi miền Bắc",
+            "• Thất bại âm mưu kéo dài chế độ thực dân cũ",
+          ],
+          [
+            "• Công nhận độc lập, chủ quyền, thống nhất của Việt Nam",
+            "• Miền Bắc hoàn toàn giải phóng làm hậu phương lớn",
+            "• Tạo cơ sở pháp lý quốc tế cho cuộc đấu tranh thống nhất",
+          ],
+          "Ảnh tư liệu thực tế toàn cảnh Hội nghị Genève năm 1954 & Sơ đồ chiến lược đấu tranh ngoại giao.",
+        );
+        historyImage = {
+          src: "/images/study-history-geneva.jpg",
+          alt: "Toàn cảnh phiên họp tại Hội nghị Genève về Đông Dương năm 1954.",
+          credit: "Tư liệu Hội nghị Genève 1954 · Wikimedia Commons",
+          source: "https://commons.wikimedia.org/wiki/File:1954_Geneva_Conference.jpg",
+        };
       } else if (topicId === "antiUsWar" && /đồng khởi|bến tre/i.test(topic)) {
-        renderHistoryTimeline("PHONG TRÀO ĐỒNG KHỞI · MIỀN NAM", [
-          { date: "Cuối thập niên 1950", title: "Phong trào phát triển", detail: "Đấu tranh lan rộng" },
-          { date: "1960 · Bến Tre", title: "Nổi dậy tiêu biểu", detail: "Quần chúng tham gia" },
-          { date: "Sau năm 1960", title: "Mở rộng địa bàn", detail: "Đấu tranh chính trị, vũ trang" },
-        ], "Lịch sử · Đồng Khởi là phong trào rộng ở miền Nam, Bến Tre năm 1960 là địa bàn tiêu biểu; sơ đồ không mô tả một trận đánh riêng lẻ.");
+        renderHistoryBattleTactics(
+          "PHONG TRÀO ĐỒNG KHỞI · TIÊU BIỂU BẾN TRE (1960)",
+          "Từ thế giữ gìn lực lượng sang thế tiến công",
+          [
+            "• Chiến thuật 'Ba mũi giáp công': Chính trị - Quân sự - Binh vận",
+            "• Kết hợp nổi dậy của quần chúng với lực lượng vũ trang",
+            "• 'Đội quân tóc dài' đấu tranh trực diện cản xe bọc thép",
+          ],
+          [
+            "• Mở đầu tại Mỏ Cày (Bến Tre) ngày 17/1/1960 rồi lan rộng",
+            "• Dùng súng ngựa trời, mỏ lết, gậy tầm vông, mõ dừa",
+            "• Nuôi cả đàn ong vò vẽ đánh trả quân địch đi càn quét",
+          ],
+          [
+            "• Hàng loạt đồn bốt, 'ấp chiến lược' của địch bị phá vỡ",
+            "• Bộ máy kìm kẹp của chính quyền Ngô Đình Diệm ở xã ấp tê liệt",
+            "• Phá sản chiến lược 'Chiến tranh đơn phương'",
+          ],
+          [
+            "• Nhân dân giành quyền làm chủ ở nhiều vùng nông thôn rộng lớn",
+            "• Mặt trận Dân tộc Giải phóng miền Nam ra đời (20/12/1960)",
+            "• Xoay chuyển cục diện cách mạng miền Nam sang thế tiến công",
+          ],
+          "Ảnh tư liệu thực tế lực lượng du kích miền Nam & Sơ đồ chiến thuật 'Ba mũi giáp công' trong phong trào Đồng Khởi.",
+        );
+        historyImage = {
+          src: "/images/study-history-dong-khoi.jpg",
+          alt: "Lực lượng du kích miền Nam trong kháng chiến chống Mỹ.",
+          credit: "Tư liệu lưu trữ Quốc gia Hoa Kỳ (NARA) · phạm vi công cộng",
+          source: "https://commons.wikimedia.org/wiki/File:Vietcong_Guerrilla_Patrols.jpg",
+        };
       } else if (topicId === "antiUsWar" && /tết 1968|mậu thân|tổng tiến công.*tết/i.test(topic)) {
-        renderHistoryTimeline("TỔNG TIẾN CÔNG VÀ NỔI DẬY TẾT MẬU THÂN", [
-          { date: "Đầu năm 1968", title: "Mở đợt tiến công", detail: "Nhiều địa bàn miền Nam" },
-          { date: "Dịp Tết", title: "Nhiều đô thị", detail: "Diễn biến trên phạm vi rộng" },
-          { date: "Sau sự kiện", title: "Tác động chính trị", detail: "Ảnh hưởng tranh luận, đàm phán" },
-        ], "Lịch sử · sơ đồ phạm vi và tác động của Tết Mậu Thân 1968; không phải bản đồ hướng tiến công.");
+        renderHistoryBattleTactics(
+          "TỔNG TIẾN CÔNG VÀ NỔI DẬY TẾT MẬU THÂN (1968)",
+          "Đòn sấm sét giữa sào huyệt đô thị",
+          [
+            "• Đánh đồng loạt vào các đô thị lớn đêm giao thừa Tết",
+            "• Biệt động thành đánh thẳng Tòa Đại sứ Mỹ, Dinh Độc Lập",
+            "• Kết hợp tiến công quân sự bên ngoài & nổi dậy bên trong",
+          ],
+          [
+            "• Đào hầm bí mật giấu hàng tấn vũ khí ngay giữa lòng Sài Gòn",
+            "• Hóa trang tài tình vượt qua hàng rào an ninh dày đặc",
+            "• Làm chủ cố đô Huế suốt 25 ngày đêm kiên cường",
+          ],
+          [
+            "• Hệ thống căn cứ, sân bay, kho tàng Mỹ - Ngụy thiệt hại nặng",
+            "• Chiến lược 'Chiến tranh cục bộ' với hơn 50 vạn quân Mỹ phá sản",
+            "• Tổng thống Johnson phải tuyên bố bỏ tranh cử nhiệm kỳ hai",
+          ],
+          [
+            "• Tạo chấn động chính trị & truyền thông làm rung chuyển nước Mỹ",
+            "• Buộc Mỹ phải xuống thang chiến tranh, hạn chế ném bom miền Bắc",
+            "• Buộc Hoa Kỳ phải chấp nhận ngồi vào bàn đàm phán tại Paris",
+          ],
+          "Ảnh tư liệu thực tế chiến sự tại Sài Gòn dịp Tết Mậu Thân 1968 & Sơ đồ tác chiến Biệt động thành.",
+        );
         historyImage = {
           src: "/images/study-history-tet.jpg",
-          alt: "Một con phố vắng tại Sài Gòn trong chiến sự dịp Tết, ngày 1 tháng 2 năm 1968.",
+          alt: "Chiến sự trên đường phố Sài Gòn trong cuộc Tổng tiến công Tết Mậu Thân năm 1968.",
           credit: "SP5 James Newlin · NARA 111-CCV-529-CC45843 · phạm vi công cộng",
           source: "https://commons.wikimedia.org/wiki/File:A_deserted_street_in_Saigon_during_the_Tet_fighting.jpg",
         };
       } else if (topicId === "antiUsWar" && /hiệp định paris|paris/i.test(topic)) {
-        renderHistoryTimeline("HIỆP ĐỊNH PARIS · 1973", [
-          { date: "27/1/1973", title: "Ký hiệp định", detail: "Thỏa thuận về Việt Nam" },
-          { date: "Theo tiến trình", title: "Quân Hoa Kỳ rút", detail: "Thực hiện điều khoản" },
-          { date: "Sau năm 1973", title: "Xung đột tiếp diễn", detail: "Chiến tranh chưa kết thúc" },
-        ], "Lịch sử · Hiệp định Paris 1973, việc quân đội Hoa Kỳ rút và xung đột tiếp diễn; không nhầm với mốc kết thúc chiến tranh năm 1975.");
+        renderHistoryBattleTactics(
+          "HIỆP ĐỊNH PARIS VỀ VIỆT NAM (27/1/1973)",
+          "Đỉnh cao nghệ thuật 'Vừa đánh vừa đàm'",
+          [
+            "• Chiến lược ngoại giao 'Vừa đánh vừa đàm' kiên định nguyên tắc",
+            "• Lưới lửa phòng không nhân dân 12 ngày đêm cuối năm 1972",
+            "• Tên lửa SAM-2 & MiG-21 vạch nhiễu bắn rơi pháo đài bay B-52",
+          ],
+          [
+            "• Cuộc đàm phán dài gần 5 năm với hơn 200 phiên họp công khai",
+            "• Bản lĩnh của Cố vấn Lê Đức Thọ, Bộ trưởng Xuân Thủy, Nguyễn Thị Bình",
+            "• Lưu ý: Ký Hiệp định năm 1973 nhưng chiến tranh miền Nam chưa kết thúc ngay",
+          ],
+          [
+            "• Mỹ mất 81 máy bay (có 34 siêu pháo đài bay B-52) dịp 12/1972",
+            "• Thần tượng 'không lực Hoa Kỳ bất khả chiến bại' bị đập tan",
+            "• Quân viễn chinh Mỹ buộc phải cuốn cờ rút khỏi miền Nam",
+          ],
+          [
+            "• Hoa Kỳ phải ký Hiệp định Paris ngày 27/1/1973, tôn trọng độc lập VN",
+            "• Hoàn thành mục tiêu chiến lược 'Đánh cho Mỹ cút'",
+            "• Tạo bước ngoặt quyết định để tiến lên 'Đánh cho Ngụy nhào' (1975)",
+          ],
+          "Ảnh tư liệu thực tế lễ ký Hiệp định Paris ngày 27/1/1973 & Sơ đồ phối hợp mặt trận quân sự – ngoại giao.",
+        );
         historyImage = {
           src: "/images/study-history-paris.jpg",
-          alt: "Ngoại trưởng Hoa Kỳ William P. Rogers ký Hiệp định Paris ngày 27 tháng 1 năm 1973.",
-          credit: "Robert LeRoy Knudsen · phạm vi công cộng",
+          alt: "Lễ ký Hiệp định Paris về chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam ngày 27/1/1973.",
+          credit: "Robert LeRoy Knudsen · NARA · phạm vi công cộng",
           source: "https://commons.wikimedia.org/wiki/File:Vietnam_peace_agreement_signing,_27580141,_new.jpg",
         };
       } else if (topicId === "antiUsWar" && /kết thúc chiến tranh|chiến dịch hồ chí minh|mùa xuân 1975|tây nguyên|huế.{0,10}đà nẵng|30\s*\/?\s*4|30 tháng 4|thống nhất.*1976/i.test(topic)) {
-        renderHistoryTimeline("CHIẾN DỊCH MÙA XUÂN 1975", [
-          { date: "10/3/1975", title: "Tây Nguyên", detail: "Buôn Ma Thuột" },
-          { date: "Tháng 3/1975", title: "Huế–Đà Nẵng", detail: "Cục diện chuyển biến nhanh" },
-          { date: "26–30/4/1975", title: "Hồ Chí Minh", detail: "30/4 · chiến tranh kết thúc" },
-        ], "Lịch sử · các chiến dịch nối tiếp trong mùa Xuân 1975; 30/4 là mốc chiến tranh kết thúc tại miền Nam, khác mốc Paris 1973.");
+        renderHistoryBattleTactics(
+          "ĐẠI THẮNG MÙA XUÂN 1975 & THỐNG NHẤT ĐẤT NƯỚC",
+          "Thần tốc · Táo bạo · Bất ngờ · Chắc thắng",
+          [
+            "• Nghi binh chiến lược ở Bắc Tây Nguyên, bất ngờ đánh Buôn Ma Thuột",
+            "• 3 đòn chiến lược nối tiếp: Tây Nguyên → Huế–Đà Nẵng → Hồ Chí Minh",
+            "• Hợp đồng binh chủng 5 quân đoàn chủ lực tiến vào Sài Gòn",
+          ],
+          [
+            "• Mệnh lệnh Đại tướng Võ Nguyên Giáp: 'Thần tốc, thần tốc hơn nữa'",
+            "• Chiến dịch Hồ Chí Minh mở màn 26/4 và toàn thắng trưa 30/4/1975",
+            "• Xe tăng 390 và 843 tiến vào Dinh Độc Lập lúc 11h30 ngày 30/4/1975",
+          ],
+          [
+            "• Hơn 1 triệu quân Việt Nam Cộng hòa tan rã hoàn toàn trong 55 ngày đêm",
+            "• Toàn bộ hệ thống phòng thủ từ Tây Nguyên đến Sài Gòn sụp đổ",
+            "• Tổng thống Dương Văn Minh phải tuyên bố đầu hàng không điều kiện",
+          ],
+          [
+            "• Kết thúc hoàn toàn 21 năm kháng chiến chống Mỹ cứu nước (30/4/1975)",
+            "• Giải phóng hoàn toàn miền Nam, thu non sông về một mối",
+            "• Năm 1976: Tổng tuyển cử hoàn thành thống nhất nhà nước Việt Nam",
+          ],
+          "Ảnh thực tế Xe tăng T-54 số hiệu 390 & Dinh Độc Lập cùng Sơ đồ 3 chiến dịch mùa Xuân 1975.",
+        );
         historyImage = {
-          src: "/images/study-history-1975-location.jpg",
-          alt: "Dinh Độc Lập hiện nay tại Thành phố Hồ Chí Minh; đây là ảnh địa điểm hiện nay, không phải ảnh sự kiện ngày 30 tháng 4 năm 1975.",
-          credit: "David Stanley · CC BY 4.0",
-          source: "https://commons.wikimedia.org/wiki/File:Independence_Palace.jpg",
-          note: "Ảnh địa điểm hiện nay, không phải ảnh tư liệu sự kiện năm 1975.",
+          src: "/images/study-history-1975-tank.jpg",
+          alt: "Dinh Độc Lập (Hội trường Thống Nhất) tại TP. Hồ Chí Minh — nơi ghi dấu thời khắc lịch sử trưa 30/4/1975.",
+          credit: "Tư liệu di tích Dinh Độc Lập · CC BY 2.0",
+          source: "https://commons.wikimedia.org/wiki/File:Independence_Palace_or_Reunification_Palace_(12110275425).jpg",
         };
       } else if (topicId === "antiUsWar") {
-        renderHistoryTimeline("DÒNG THỜI GIAN CHIẾN TRANH VIỆT NAM", [
-          { date: "1954", title: "Genève", detail: "Đình chiến, tập kết tạm thời" },
-          { date: "1968–1973", title: "Mậu Thân · Paris", detail: "Đàm phán, rút quân Hoa Kỳ" },
-          { date: "1975–1976", title: "Kết thúc · thống nhất", detail: "Hai mốc khác nhau" },
-        ], "Lịch sử · dòng thời gian khái quát các mốc chính; mỗi sự kiện có sơ đồ riêng khi được chọn.");
+        renderHistoryBattleTactics(
+          "TOÀN CẢNH KHÁNG CHIẾN CHỐNG PHÁP & CHỐNG MỸ (1954–1975)",
+          "Chiến tranh nhân dân Việt Nam",
+          [
+            "• Điện Biên Phủ (1954): Đánh chắc tiến chắc, đào hào vây lấn",
+            "• Đồng Khởi (1960) & Mậu Thân (1968): Ba mũi giáp công, Biệt động",
+            "• Mùa Xuân 1975: Hợp đồng binh chủng thần tốc giải phóng miền Nam",
+          ],
+          [
+            "• Hậu cần toàn dân: Xe đạp thồ Điện Biên, đường Trường Sơn huyền thoại",
+            "• Đội quân tóc dài Bến Tre, hầm vũ khí bí mật giữa lòng đô thị",
+            "• Kết hợp chặt chẽ 3 mặt trận: Quân sự – Chính trị – Ngoại giao",
+          ],
+          [
+            "• Đập tan 4 chiến lược chiến tranh của Mỹ tại miền Nam",
+            "• Bắn rơi 34 pháo đài bay B-52 trong trận Điện Biên Phủ trên không",
+            "• Làm tan rã toàn bộ quân đội và chính quyền Sài Gòn năm 1975",
+          ],
+          [
+            "• Genève 1954 giải phóng miền Bắc; Paris 1973 buộc Mỹ rút quân",
+            "• Đại thắng 30/4/1975 giải phóng hoàn toàn miền Nam",
+            "• Năm 1976 hoàn thành thống nhất đất nước về mặt nhà nước",
+          ],
+          "Ảnh tư liệu lịch sử & Sơ đồ tổng hợp chiến thuật, hậu cần và thắng lợi giai đoạn 1954–1975.",
+        );
+        historyImage = {
+          src: "/images/study-history-dien-bien-phu.jpg",
+          alt: "Cờ chiến thắng tung bay tại Điện Biên Phủ năm 1954.",
+          credit: "Bảo tàng Lịch sử Quân sự Việt Nam · phạm vi công cộng",
+          source: "https://commons.wikimedia.org/wiki/File:Victory_in_Battle_of_Dien_Bien_Phu.jpg",
+        };
       } else if (topicId === "geography") {
         const normalizedTopic = topic.toLocaleLowerCase("vi");
         if (/khí hậu/.test(normalizedTopic)) {
-          markup = geographyMap.replace(
-            '<path d="M88 206Q118 187 144 202T199 199T254 203T321 213T391 211" fill="none" stroke="#438b69" stroke-width="12" opacity=".85"/>',
-            `<path d="M88 206Q118 187 144 202T199 199T254 203T321 213T391 211" fill="none" stroke="#438b69" stroke-width="12" opacity=".85"/>
-             <path d="M74 98h344M66 144h366M61 185h387" stroke="#ffffff" stroke-width="2" stroke-dasharray="7 7" opacity=".85"/>
-             <rect x="470" y="113" width="30" height="35" rx="12" fill="#f6c95d" opacity=".8"/><rect x="470" y="151" width="30" height="39" rx="12" fill="#74bfd0" opacity=".8"/>
-             <g fill="#e88758"><circle cx="485" cy="119" r="4"/><circle cx="485" cy="132" r="4"/></g>
-             <g fill="#4a8ba9"><circle cx="485" cy="161" r="4"/><circle cx="485" cy="176" r="4"/></g>`,
+          renderVietnamAtlasMap(
+            "KHÍ HẬU: KHÁI NIỆM & TƯ DUY NHÂN – QUẢ",
+            [
+              { cx: 128, cy: 76, r: 26, lx: 30, ly: 56, lw: 92, label: "Bắc: Đông lạnh" },
+              { cx: 158, cy: 150, r: 22, lx: 32, ly: 138, lw: 100, label: "Trung: Gió phơn/Bão" },
+              { cx: 126, cy: 232, r: 26, lx: 30, ly: 222, lw: 92, label: "Nam: Cận xích đạo" },
+            ],
+            [
+              {
+                title: "🔑 Từ khóa nắm 70% bài: Nhiệt đới ẩm gió mùa & Biên độ nhiệt",
+                line1: "• Nhiệt đới (>20°C) + Ẩm (mưa 1500–2000mm) + 2 mùa gió (Đông Bắc, Tây Nam)",
+                line2: "• Biên độ nhiệt năm = Nhiệt độ tháng nóng nhất trừ tháng lạnh nhất",
+              },
+              {
+                title: "❓ Tại sao miền Bắc có mùa đông lạnh còn miền Nam nóng quanh năm?",
+                line1: "• Do miền Bắc gần chí tuyến đón trực tiếp gió mùa Đông Bắc lạnh từ phương Bắc",
+                line2: "• Dãy Bạch Mã (16°B) chặn gió lạnh → Miền Nam nóng quanh năm (2 mùa mưa - khô)",
+              },
+              {
+                title: "❓ Tại sao miền Trung có gió Lào khô nóng và mưa bão thu – đông?",
+                line1: "• Đầu hạ: Gió Tây Nam vượt Trường Sơn gây hiệu ứng phơn khô nóng sườn Đông",
+                line2: "• Thu - Đông: Gió Đông Bắc qua biển + dải hội tụ nhiệt đới gây mưa lớn, lũ lụt",
+              },
+            ],
+            "Ảnh thực tế khí hậu nhiệt đới gió mùa & Bản đồ Atlat khoanh vùng 3 miền khí hậu Việt Nam.",
           );
-          caption = "Địa lý · dải khí hậu và biểu tượng nhiệt độ/mưa mang tính khái quát, không phải số liệu dự báo.";
+          historyImage = {
+            src: "/images/study-geo-climate.jpg",
+            alt: "Mưa lớn trong mùa gió mùa nhiệt đới ẩm tại Việt Nam.",
+            credit: "Wikimedia Commons · CC BY 3.0",
+            source: "https://commons.wikimedia.org/wiki/File:Heavy_Rain_(192095367).jpeg",
+          };
         } else if (/dân cư/.test(normalizedTopic)) {
-          markup = geographyMap.replace(
-            '<g fill="#347e66"><circle cx="161" cy="190" r="4"/><circle cx="171" cy="196" r="4"/><circle cx="180" cy="188" r="4"/><circle cx="213" cy="201" r="4"/><circle cx="221" cy="194" r="4"/><circle cx="229" cy="203" r="4"/><circle cx="395" cy="207" r="4"/><circle cx="402" cy="214" r="4"/></g>',
-            `<g fill="#e65d4f" opacity=".2"><circle cx="168" cy="194" r="26"/><circle cx="220" cy="199" r="22"/><circle cx="398" cy="210" r="16"/></g>
-             <g fill="#c94c43"><circle cx="161" cy="190" r="5"/><circle cx="171" cy="196" r="5"/><circle cx="180" cy="188" r="5"/><circle cx="213" cy="201" r="5"/><circle cx="221" cy="194" r="5"/><circle cx="229" cy="203" r="5"/><circle cx="395" cy="207" r="5"/><circle cx="402" cy="214" r="5"/></g>`,
+          renderVietnamAtlasMap(
+            "DÂN CƯ: KHÁI NIỆM & TƯ DUY NHÂN – QUẢ",
+            [
+              { cx: 138, cy: 82, r: 24, lx: 30, ly: 70, lw: 98, label: "ĐB Sông Hồng (Đông)" },
+              { cx: 102, cy: 66, r: 18, lx: 30, ly: 44, lw: 86, label: "Tây Bắc (Thưa)" },
+              { cx: 132, cy: 230, r: 28, lx: 28, ly: 222, lw: 102, label: "Đông Nam Bộ & ĐBSCL" },
+            ],
+            [
+              {
+                title: "🔑 Từ khóa nắm 70% bài: Mật độ dân số & Gia tăng Tự nhiên vs. Cơ học",
+                line1: "• Mật độ dân số = Số dân / diện tích (người/km²). VN phân bố KHÔNG ĐỒNG ĐỀU",
+                line2: "• Gia tăng tự nhiên (Sinh - Tử) khác với Gia tăng cơ học (Nhập cư - Xuất cư)",
+              },
+              {
+                title: "❓ Tại sao dân cư tập trung dày đặc ở Đồng bằng & Đô thị?",
+                line1: "• Tự nhiên: Địa hình bằng phẳng, đất phù sa màu mỡ, nguồn nước thuận lợi canh tác",
+                line2: "• Kinh tế - Xã hội: Nhiều khu công nghiệp, dịch vụ, việc làm thu hút lao động nhập cư",
+              },
+              {
+                title: "❓ Hệ quả Nhân – Quả của quy mô dân số đông là gì?",
+                line1: "• Thuận lợi: Nguồn nhân lực dồi dào, cơ cấu dân số vàng, thị trường tiêu thụ lớn",
+                line2: "• Sức ép: Giải quyết việc làm, hạ tầng đô thị, y tế, giáo dục và bảo vệ môi trường",
+              },
+            ],
+            "Ảnh thực tế đô thị đông dân cư & Bản đồ Atlat khoanh tròn hai vùng tập trung dân cư lớn nhất Việt Nam.",
           );
-          caption = "Địa lý · chấm màu biểu thị mật độ dân cư tương đối trong sơ đồ khái quát, không phải bản đồ thống kê.";
+          historyImage = {
+            src: "/images/study-geo-population.jpg",
+            alt: "Không ảnh mật độ đô thị hóa và dân cư tập trung cao tại Thành phố Hồ Chí Minh.",
+            credit: "Diego Delso · Wikimedia Commons · CC BY-SA 3.0",
+            source: "https://commons.wikimedia.org/wiki/File:Vista_a%C3%A9rea_de_Ciudad_Ho_Chi_Minh,_Vietnam,_2013-08-13,_DD_06.JPG",
+          };
         } else {
-          markup = geographyMap;
-          caption = "Địa lý · mô hình địa hình, sông, đồng bằng và các yếu tố khí hậu; hình không theo tỷ lệ bản đồ.";
+          renderVietnamAtlasMap(
+            "ĐỊA LÝ TỰ NHIÊN: KHÁI NIỆM & TƯ DUY NHÂN – QUẢ",
+            [
+              { cx: 112, cy: 68, r: 24, lx: 28, ly: 52, lw: 92, label: "Núi Tây Bắc - ĐB" },
+              { cx: 140, cy: 86, r: 20, lx: 30, ly: 86, lw: 94, label: "Châu thổ S.Hồng" },
+              { cx: 122, cy: 236, r: 26, lx: 28, ly: 224, lw: 98, label: "Châu thổ S.Cửu Long" },
+            ],
+            [
+              {
+                title: "🔑 Từ khóa nắm 70% bài: Hướng nghiêng địa hình & Châu thổ",
+                line1: "• Đồi núi chiếm 3/4 diện tích (chủ yếu đồi núi thấp <1000m); nghiêng Tây Bắc – Đông Nam",
+                line2: "• 2 đồng bằng châu thổ lớn (S.Hồng, S.Cửu Long) khác với ĐB ven biển miền Trung",
+              },
+              {
+                title: "❓ Tại sao ĐB sông Hồng & ĐB sông Cửu Long là vựa lúa số 1 cả nước?",
+                line1: "• Do phù sa sông bồi đắp trên vịnh biển nông tạo địa hình phẳng, đất màu mỡ",
+                line2: "• Kết hợp khí hậu nhiệt đới ẩm gió mùa và mạng lưới sông ngòi cung cấp nước ngọt",
+              },
+              {
+                title: "❓ Tại sao miền Trung mạnh về cảng biển/thủy sản còn miền núi mạnh thủy điện?",
+                line1: "• Miền Trung: Núi đâm sát biển, bờ biển sâu nhiều vũng vịnh kín gió → Cảng nước sâu",
+                line2: "• Miền núi & Tây Nguyên: Địa hình dốc, sông nhiều thác ghềnh + đất đỏ → Thủy điện, cây CN",
+              },
+            ],
+            "Ảnh thực tế địa hình Việt Nam & Bản đồ Atlat khoanh tròn vùng núi phía Bắc và hai đồng bằng châu thổ.",
+          );
+          historyImage = {
+            src: "/images/study-geo-natural.jpg",
+            alt: "Địa hình đồi núi và ruộng bậc thang tại Mù Cang Chải, vùng núi phía Bắc Việt Nam.",
+            credit: "Wikimedia Commons · CC BY-SA 3.0",
+            source: "https://commons.wikimedia.org/wiki/File:Mu_Cang_Chai.jpg",
+          };
         }
       } else if (topicId === "cProgramming" && /thư viện chuẩn|standard librar/i.test(topic)) {
         markup = cStandardLibrary;
@@ -1499,9 +1873,12 @@
       } else if (topicId === "cProgramming" && /cấu trúc chương trình/.test(topic.toLocaleLowerCase("vi"))) {
         markup = cProgramStructure;
         caption = "Lập trình C · luồng thực thi từ khai báo thư viện đến main, xuất kết quả và kết thúc.";
+      } else if (topicId === "cProgramming" && /con trỏ và hàm|swap/i.test(topic)) {
+        markup = cPointerSwap;
+        caption = "Lập trình C · truyền số phòng (&x, &y) vào hàm swap(int *a, int *b) để dùng *a, *b mở tận 2 chiếc tủ thật và tráo đổi giá trị.";
       } else if (topicId === "cProgramming" && /con trỏ|pointer/i.test(topic)) {
         markup = cPointer;
-        caption = "Lập trình C · con trỏ lưu địa chỉ ô nhớ; giải tham chiếu để truy cập giá trị.";
+        caption = "Lập trình C · Ẩn dụ dãy tủ Locker: biến score là tủ chứa số 8, &score là số phòng 104 trên cửa tủ, pointer là tờ giấy ghi số phòng 104, còn *pointer là cầm giấy đi mở tủ.";
       } else if (topicId === "cProgramming" && /struct|cấu trúc dữ liệu/i.test(topic.toLocaleLowerCase("vi"))) {
         markup = cStruct;
         caption = "Lập trình C · kiểu Student gom các trường có liên quan; biến student là một hồ sơ cụ thể.";
@@ -1523,6 +1900,142 @@
       } else if (topicId === "cProgramming" && /tệp|file/.test(topic.toLocaleLowerCase("vi"))) {
         markup = cFile;
         caption = "Lập trình C · luồng thao tác tệp từ fopen qua đọc/ghi đến fclose.";
+      } else if (topicId === "pythonProgramming" && /cú pháp|thụt lề/i.test(topic)) {
+        markup = `
+          <rect x="18" y="18" width="604" height="264" rx="22" fill="#f1f5f9"/>
+          <rect x="36" y="34" width="568" height="34" rx="10" fill="#1e3a8a"/>
+          <text x="320" y="56" text-anchor="middle" fill="#fef08a" font-family="system-ui" font-size="14" font-weight="800">PYTHON · THỤT ĐẦU DÒNG (4 KHOẢNG TRẮNG) THAY CHO NGOẶC NHỌN { }</text>
+          <rect x="52" y="84" width="536" height="156" rx="14" fill="#0f172a" stroke="#3b82f6" stroke-width="2.5"/>
+          <text x="76" y="114" fill="#38bdf8" font-family="ui-monospace,monospace" font-size="15" font-weight="800">if score &gt;= 5:</text>
+          <rect x="76" y="126" width="44" height="58" rx="6" fill="#f59e0b33" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="98" y="159" text-anchor="middle" fill="#fcd34d" font-family="system-ui" font-size="11" font-weight="800">4 cách</text>
+          <text x="128" y="148" fill="#86efac" font-family="ui-monospace,monospace" font-size="14" font-weight="700">print("Chuc mung Dat!")</text>
+          <text x="128" y="174" fill="#86efac" font-family="ui-monospace,monospace" font-size="14" font-weight="700">print("Diem:", score)</text>
+          <text x="76" y="214" fill="#e2e8f0" font-family="ui-monospace,monospace" font-size="14" font-weight="700">print("Hoan thanh.")  # Sát lề trái = Ngoài khối if</text>
+          <text x="320" y="264" text-anchor="middle" fill="#475569" font-family="system-ui" font-size="12" font-weight="700">Sau dấu hai chấm (:) bắt buộc lùi vào thẳng hàng để gom nhóm các câu lệnh con</text>`;
+        caption = "Lập trình Python · dùng dấu hai chấm (:) và khoảng trắng thụt lề (4 dấu cách) để phân định khối lệnh.";
+      } else if (topicId === "pythonProgramming" && /biến|kiểu dữ liệu/i.test(topic)) {
+        markup = `
+          <defs><marker id="py-tag-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#0284c7"/></marker></defs>
+          <rect x="18" y="18" width="604" height="264" rx="22" fill="#f0f9ff"/>
+          <rect x="36" y="34" width="568" height="34" rx="10" fill="#0369a1"/>
+          <text x="320" y="56" text-anchor="middle" fill="#fef08a" font-family="system-ui" font-size="14" font-weight="800">BIẾN PYTHON NHƯ THẺ TÊN ĐỘNG &amp; PHÉP CHIA / vs. //</text>
+          <rect x="44" y="88" width="160" height="62" rx="14" fill="#fef9c3" stroke="#eab308" stroke-width="2.5"/>
+          <text x="124" y="115" text-anchor="middle" fill="#854d0e" font-family="system-ui" font-size="12" font-weight="800">🏷️ Thẻ tên biến x</text>
+          <text x="124" y="136" text-anchor="middle" fill="#713f12" font-family="ui-monospace,monospace" font-size="13" font-weight="800">x = 7  ➔  x = "An"</text>
+          <path d="M210 119 H266" stroke="#0284c7" stroke-width="4" marker-end="url(#py-tag-arrow)"/>
+          <rect x="274" y="84" width="324" height="154" rx="16" fill="#fff" stroke="#38bdf8" stroke-width="2.5"/>
+          <text x="436" y="112" text-anchor="middle" fill="#0369a1" font-family="system-ui" font-size="13" font-weight="800">3 TOÁN TỬ SỐ HỌC ĐẶC TRƯNG PYTHON</text>
+          <text x="296" y="142" fill="#0f766e" font-family="ui-monospace,monospace" font-size="14" font-weight="800">7 / 2  = 3.5   (Chia thực float)</text>
+          <text x="296" y="172" fill="#4338ca" font-family="ui-monospace,monospace" font-size="14" font-weight="800">7 // 2 = 3     (Chia lấy nguyên)</text>
+          <text x="296" y="202" fill="#b45309" font-family="ui-monospace,monospace" font-size="14" font-weight="800">2 ** 3 = 8     (Lũy thừa 2 mũ 3)</text>
+          <rect x="44" y="164" width="214" height="74" rx="14" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+          <text x="151" y="191" text-anchor="middle" fill="#166534" font-family="system-ui" font-size="12" font-weight="800">Đổi chữ sang số trước khi +</text>
+          <text x="151" y="216" text-anchor="middle" fill="#14532d" font-family="ui-monospace,monospace" font-size="13" font-weight="800">int("18") + 1 ➔ 19</text>
+          <text x="320" y="264" text-anchor="middle" fill="#475569" font-family="system-ui" font-size="12" font-weight="700">Biến tự nhận kiểu theo giá trị gắn vào · Dùng int() hoặc float() khi cần tính toán với chuỗi số</text>`;
+        caption = "Lập trình Python · biến hoạt động như thẻ tên gắn vào đối tượng; phân biệt rõ phép chia thực (/) và chia lấy nguyên (//).";
+      } else if (topicId === "pythonProgramming" && /chuỗi|f-string|string/i.test(topic)) {
+        markup = `
+          <rect x="18" y="18" width="604" height="264" rx="22" fill="#f5f3ff"/>
+          <rect x="36" y="34" width="568" height="34" rx="10" fill="#4c1d95"/>
+          <text x="320" y="56" text-anchor="middle" fill="#fef08a" font-family="system-ui" font-size="14" font-weight="800">CHUỖI BẤT BIẾN (IMMUTABLE) &amp; KHUÔN ĐIỀN CHỖ TRỐNG f-string</text>
+          <rect x="44" y="84" width="552" height="72" rx="14" fill="#fff" stroke="#8b5cf6" stroke-width="2.5"/>
+          <text x="320" y="112" text-anchor="middle" fill="#5b21b6" font-family="ui-monospace,monospace" font-size="15" font-weight="800">f"Hoc sinh {clean_name} dat {score} diem."</text>
+          <text x="320" y="140" text-anchor="middle" fill="#15803d" font-family="ui-monospace,monospace" font-size="14" font-weight="800">➔ "Hoc sinh An Nguyen dat 9.5 diem."</text>
+          <rect x="44" y="170" width="264" height="68" rx="12" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+          <text x="176" y="196" text-anchor="middle" fill="#991b1b" font-family="ui-monospace,monospace" font-size="13" font-weight="800">❌ word[0] = "P" (Lỗi!)</text>
+          <text x="176" y="220" text-anchor="middle" fill="#7f1d1d" font-family="system-ui" font-size="12" font-weight="700">Chuỗi khắc trên gỗ, không sửa lẻ</text>
+          <rect x="332" y="170" width="264" height="68" rx="12" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+          <text x="464" y="196" text-anchor="middle" fill="#166534" font-family="ui-monospace,monospace" font-size="13" font-weight="800">✅ word = "P" + word[1:]</text>
+          <text x="464" y="220" text-anchor="middle" fill="#14532d" font-family="system-ui" font-size="12" font-weight="700">Tạo chuỗi mới "Python" an toàn</text>
+          <text x="320" y="264" text-anchor="middle" fill="#475569" font-family="system-ui" font-size="12" font-weight="700">Đặt chữ f trước dấu nháy để điền biến vào { } · Chuỗi là bất biến nên cần tạo chuỗi mới khi đổi chữ</text>`;
+        caption = "Lập trình Python · f-string giúp chèn biến trực tiếp vào cặp ngoặc nhọn { }; chuỗi str có tính bất biến (immutable).";
+      } else if (topicId === "pythonProgramming" && /cấu trúc điều khiển|vòng lặp|rẽ nhánh|range/i.test(topic)) {
+        markup = `
+          <rect x="18" y="18" width="604" height="264" rx="22" fill="#f0fdf4"/>
+          <rect x="36" y="34" width="568" height="34" rx="10" fill="#14532d"/>
+          <text x="320" y="56" text-anchor="middle" fill="#fef08a" font-family="system-ui" font-size="14" font-weight="800">VÒNG LẶP for i in range(1, 5) · DỪNG LẠI SÁT TRƯỚC VẠCH ĐÍCH 5</text>
+          <g font-family="ui-monospace,monospace" text-anchor="middle" font-weight="800">
+            <rect x="46" y="96" width="96" height="86" rx="14" fill="#dcfce7" stroke="#22c55e" stroke-width="3"/><text x="94" y="128" fill="#166534" font-size="13">Ga 1</text><text x="94" y="160" fill="#14532d" font-size="22">i = 1</text>
+            <rect x="158" y="96" width="96" height="86" rx="14" fill="#dcfce7" stroke="#22c55e" stroke-width="3"/><text x="206" y="128" fill="#166534" font-size="13">Ga 2</text><text x="206" y="160" fill="#14532d" font-size="22">i = 2</text>
+            <rect x="270" y="96" width="96" height="86" rx="14" fill="#dcfce7" stroke="#22c55e" stroke-width="3"/><text x="318" y="128" fill="#166534" font-size="13">Ga 3</text><text x="318" y="160" fill="#14532d" font-size="22">i = 3</text>
+            <rect x="382" y="96" width="96" height="86" rx="14" fill="#dcfce7" stroke="#22c55e" stroke-width="3"/><text x="430" y="128" fill="#166534" font-size="13">Ga 4</text><text x="430" y="160" fill="#14532d" font-size="22">i = 4</text>
+            <rect x="498" y="96" width="96" height="86" rx="14" fill="#fee2e2" stroke="#ef4444" stroke-width="3" stroke-dasharray="6 4"/><text x="546" y="128" fill="#991b1b" font-size="12">STOP = 5</text><text x="546" y="158" fill="#b91c1c" font-size="15">DỪNG!</text>
+          </g>
+          <text x="320" y="220" text-anchor="middle" fill="#1e3a8a" font-family="system-ui" font-size="13" font-weight="800">Rẽ nhánh: if ... :  ➔  elif ... :  ➔  else:   (Kết hợp bằng: and · or · not)</text>
+          <text x="320" y="258" text-anchor="middle" fill="#475569" font-family="system-ui" font-size="12" font-weight="700">range(1, 5) chỉ lấy 1, 2, 3, 4 · Muốn lấy đủ từ 1 đến 5 phải viết range(1, 6)</text>`;
+        caption = "Lập trình Python · hàm range(start, stop) bắt đầu từ start và dừng lại sát trước stop.";
+      } else if (topicId === "pythonProgramming" && /list|tuple|danh sách/i.test(topic)) {
+        markup = `
+          <rect x="18" y="18" width="604" height="264" rx="22" fill="#f8fafc"/>
+          <rect x="36" y="34" width="568" height="34" rx="10" fill="#312e81"/>
+          <text x="320" y="56" text-anchor="middle" fill="#fef08a" font-family="system-ui" font-size="14" font-weight="800">LIST scores = [7, 8, 9, 10] · CHỈ SỐ DƯƠNG, CHỈ SỐ ÂM &amp; BẢN SAO .copy()</text>
+          <g font-family="ui-monospace,monospace" text-anchor="middle" font-weight="800">
+            <rect x="52" y="88" width="120" height="88" rx="14" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.5"/><text x="112" y="114" fill="#4338ca" font-size="12">scores[0]</text><text x="112" y="144" fill="#1e1b4b" font-size="22">7</text><text x="112" y="166" fill="#64748b" font-size="11">[-4]</text>
+            <rect x="188" y="88" width="120" height="88" rx="14" fill="#e0e7ff" stroke="#6366f1" stroke-width="2.5"/><text x="248" y="114" fill="#4338ca" font-size="12">scores[1]</text><text x="248" y="144" fill="#1e1b4b" font-size="22">8</text><text x="248" y="166" fill="#64748b" font-size="11">[-3]</text>
+            <rect x="324" y="88" width="120" height="88" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2.5"/><text x="384" y="114" fill="#334155" font-size="12">scores[2]</text><text x="384" y="144" fill="#0f172a" font-size="22">9</text><text x="384" y="166" fill="#64748b" font-size="11">[-2]</text>
+            <rect x="460" y="88" width="128" height="88" rx="14" fill="#dcfce7" stroke="#22c55e" stroke-width="2.5"/><text x="524" y="114" fill="#166534" font-size="12">scores[-1]</text><text x="524" y="144" fill="#14532d" font-size="22">10</text><text x="524" y="166" fill="#15803d" font-size="11">Toa cuối</text>
+          </g>
+          <text x="180" y="204" text-anchor="middle" fill="#4338ca" font-family="ui-monospace,monospace" font-size="13" font-weight="800">scores[0:2] ➔ [7, 8]</text>
+          <text x="456" y="204" text-anchor="middle" fill="#b91c1c" font-family="ui-monospace,monospace" font-size="13" font-weight="800">Tạo bản sao độc lập: b = a.copy()</text>
+          <text x="320" y="258" text-anchor="middle" fill="#475569" font-family="system-ui" font-size="12" font-weight="700">List [...] thay đổi được · Tuple (...) bất biến · Dùng a.copy() thay vì b = a khi muốn nhân bản</text>`;
+        caption = "Lập trình Python · List đánh chỉ số từ 0 (hoặc -1 từ cuối); dùng .copy() để tạo bản sao độc lập.";
+      } else if (topicId === "pythonProgramming" && /dictionary|set|từ điển|tập hợp/i.test(topic)) {
+        markup = `
+          <rect x="18" y="18" width="604" height="264" rx="22" fill="#fffbeb"/>
+          <rect x="36" y="34" width="568" height="34" rx="10" fill="#92400e"/>
+          <text x="320" y="56" text-anchor="middle" fill="#fef08a" font-family="system-ui" font-size="14" font-weight="800">DICTIONARY (TỪ ĐIỂN KHÓA : GIÁ TRỊ) &amp; SET (RỔ LỌC TRÙNG LẶP)</text>
+          <rect x="44" y="84" width="286" height="150" rx="16" fill="#fff" stroke="#f59e0b" stroke-width="2.5"/>
+          <text x="187" y="110" text-anchor="middle" fill="#b45309" font-family="system-ui" font-size="13" font-weight="800">📖 Dictionary: scores</text>
+          <text x="187" y="140" text-anchor="middle" fill="#1e293b" font-family="ui-monospace,monospace" font-size="14" font-weight="800">"An"   🔑  ➔  9</text>
+          <text x="187" y="168" text-anchor="middle" fill="#1e293b" font-family="ui-monospace,monospace" font-size="14" font-weight="800">"Binh" 🔑  ➔  8</text>
+          <text x="187" y="208" text-anchor="middle" fill="#15803d" font-family="ui-monospace,monospace" font-size="12" font-weight="800">✅ scores.get("Dung", 0) ➔ 0</text>
+          <rect x="350" y="84" width="246" height="150" rx="16" fill="#ecfdf5" stroke="#10b981" stroke-width="2.5"/>
+          <text x="473" y="110" text-anchor="middle" fill="#065f46" font-family="system-ui" font-size="13" font-weight="800">🧺 Set: Lọc trùng tự động</text>
+          <text x="473" y="145" text-anchor="middle" fill="#64748b" font-family="ui-monospace,monospace" font-size="13" font-weight="700">[9, 8, 9, 8]</text>
+          <text x="473" y="175" text-anchor="middle" fill="#047857" font-family="ui-monospace,monospace" font-size="18" font-weight="900">➔ {8, 9}</text>
+          <text x="473" y="210" text-anchor="middle" fill="#065f46" font-family="ui-monospace,monospace" font-size="12" font-weight="700">Set rỗng: set()</text>
+          <text x="320" y="262" text-anchor="middle" fill="#475569" font-family="system-ui" font-size="12" font-weight="700">Dùng scores.get(key, default) để tránh lỗi sập chương trình KeyError khi khóa chưa có</text>`;
+        caption = "Lập trình Python · Dictionary tra cứu theo khóa (dùng .get() để tránh KeyError); Set tự động loại bỏ phần tử trùng.";
+      } else if (topicId === "pythonProgramming" && /hàm|def|return/i.test(topic)) {
+        markup = cFunction;
+        caption = "Lập trình Python · định nghĩa hàm bằng def và dùng return để trả kết quả ra ngoài (nếu thiếu return hàm trả về None).";
+      } else if (topicId === "pythonProgramming" && /ngoại lệ|try|except|tệp|file/i.test(topic)) {
+        markup = `
+          <rect x="18" y="18" width="604" height="264" rx="22" fill="#f8fafc"/>
+          <rect x="36" y="34" width="568" height="34" rx="10" fill="#0f766e"/>
+          <text x="320" y="56" text-anchor="middle" fill="#fef08a" font-family="system-ui" font-size="14" font-weight="800">LƯỚI BẢO HIỂM try / except &amp; CỬA TỰ ĐÓNG with open(...) as f:</text>
+          <rect x="44" y="84" width="264" height="150" rx="16" fill="#eff6ff" stroke="#3b82f6" stroke-width="2.5"/>
+          <text x="176" y="110" text-anchor="middle" fill="#1d4ed8" font-family="system-ui" font-size="13" font-weight="800">🛡️ Bắt lỗi an toàn</text>
+          <text x="72" y="140" fill="#1e293b" font-family="ui-monospace,monospace" font-size="13" font-weight="700">try:</text>
+          <text x="92" y="162" fill="#0369a1" font-family="ui-monospace,monospace" font-size="13" font-weight="700">age = int(raw)</text>
+          <text x="72" y="186" fill="#b91c1c" font-family="ui-monospace,monospace" font-size="13" font-weight="700">except ValueError:</text>
+          <text x="92" y="208" fill="#15803d" font-family="ui-monospace,monospace" font-size="13" font-weight="700">age = 0</text>
+          <rect x="332" y="84" width="264" height="150" rx="16" fill="#f0fdf4" stroke="#22c55e" stroke-width="2.5"/>
+          <text x="464" y="110" text-anchor="middle" fill="#15803d" font-family="system-ui" font-size="13" font-weight="800">📂 Tự động đóng tệp</text>
+          <text x="352" y="148" fill="#14532d" font-family="ui-monospace,monospace" font-size="12.5" font-weight="800">with open("a.txt", "w") as f:</text>
+          <text x="372" y="174" fill="#166534" font-family="ui-monospace,monospace" font-size="12.5" font-weight="700">f.write("Diem: 9\\n")</text>
+          <text x="464" y="210" text-anchor="middle" fill="#0f766e" font-family="system-ui" font-size="12" font-weight="800">✓ Tự gọi f.close() khi xong!</text>
+          <text x="320" y="262" text-anchor="middle" fill="#475569" font-family="system-ui" font-size="12" font-weight="700">try/except ngăn chương trình bị sập đột ngột · with open đảm bảo tệp luôn được đóng an toàn</text>`;
+        caption = "Lập trình Python · dùng try/except để bắt ngoại lệ và dùng with open(...) as f: để tự động đóng tệp.";
+      } else if (topicId === "pythonProgramming") {
+        markup = `
+          <rect x="18" y="18" width="604" height="264" rx="22" fill="#f5f3ff"/>
+          <rect x="36" y="34" width="568" height="34" rx="10" fill="#3730a3"/>
+          <text x="320" y="56" text-anchor="middle" fill="#fef08a" font-family="system-ui" font-size="14" font-weight="800">LẬP TRÌNH HƯỚNG ĐỐI TƯỢNG · KHUÔN BÁNH (class) &amp; ĐỐI TƯỢNG (self)</text>
+          <rect x="44" y="84" width="256" height="150" rx="16" fill="#eef2ff" stroke="#6366f1" stroke-width="2.5"/>
+          <text x="172" y="110" text-anchor="middle" fill="#3730a3" font-family="system-ui" font-size="13" font-weight="800">📐 Khuôn class Student</text>
+          <text x="64" y="138" fill="#1e1b4b" font-family="ui-monospace,monospace" font-size="12.5" font-weight="700">def __init__(self, name):</text>
+          <text x="84" y="162" fill="#4338ca" font-family="ui-monospace,monospace" font-size="12.5" font-weight="700">self.name = name</text>
+          <text x="64" y="190" fill="#1e1b4b" font-family="ui-monospace,monospace" font-size="12.5" font-weight="700">def say_hi(self):</text>
+          <text x="84" y="212" fill="#15803d" font-family="ui-monospace,monospace" font-size="12.5" font-weight="700">return f"Hi {self.name}"</text>
+          <rect x="336" y="84" width="260" height="150" rx="16" fill="#dcfce7" stroke="#22c55e" stroke-width="2.5"/>
+          <text x="466" y="112" text-anchor="middle" fill="#166534" font-family="system-ui" font-size="13" font-weight="800">🎓 Đối tượng thật (Object)</text>
+          <text x="466" y="148" text-anchor="middle" fill="#14532d" font-family="ui-monospace,monospace" font-size="14" font-weight="800">sv = Student("An")</text>
+          <text x="466" y="180" text-anchor="middle" fill="#0f766e" font-family="ui-monospace,monospace" font-size="13" font-weight="800">sv.name ➔ "An"</text>
+          <text x="466" y="210" text-anchor="middle" fill="#15803d" font-family="system-ui" font-size="12" font-weight="700">self chính là đối tượng sv!</text>
+          <text x="320" y="262" text-anchor="middle" fill="#475569" font-family="system-ui" font-size="12" font-weight="700">__init__ khởi tạo thuộc tính ban đầu · Luôn đặt self làm tham số đầu tiên của phương thức trong class</text>`;
+        caption = "Lập trình Python · class là khuôn mẫu thiết kế, __init__ khởi tạo đối tượng và self đại diện cho chính đối tượng đó.";
       } else if (topicId === "english" || /tiếng anh|english/.test(topic.toLocaleLowerCase("vi"))) {
         markup = englishTimeline;
         caption = "Tiếng Anh · trục thời gian minh họa ba mốc để liên hệ trạng từ thời gian với dạng động từ.";
@@ -1542,10 +2055,12 @@
       }
 
       const figureId = `study-illustration-${document.querySelectorAll(".tutor-illustration").length + 1}`;
-      markup = markup
-        .replace(/\bid="([^"]+)"/g, (_match, id) => `id="${figureId}-${id}"`)
-        .replace(/url\(#([^)]+)\)/g, (_match, id) => `url(#${figureId}-${id})`);
-      svg.innerHTML = markup;
+      if (markup) {
+        markup = markup
+          .replace(/\bid="([^"]+)"/g, (_match, id) => `id="${figureId}-${id}"`)
+          .replace(/url\(#([^)]+)\)/g, (_match, id) => `url(#${figureId}-${id})`);
+        svg.innerHTML = markup;
+      }
       const captionElement = document.createElement("figcaption");
       captionElement.textContent = caption;
       if (historyImage) {
@@ -1564,7 +2079,7 @@
         if (historyImage.note) captionElement.append(document.createTextNode(`. ${historyImage.note}`));
         figure.append(image);
       }
-      figure.append(svg, captionElement);
+      figure.append(customBoard || svg, captionElement);
       log.append(figure);
       return figure;
     }
@@ -1975,11 +2490,20 @@
       };
       const lessonNote = document.createElement("section");
       lessonNote.className = "study-lesson-note";
+      const lessonHeader = document.createElement("div");
+      lessonHeader.className = "study-lesson-header";
       const lessonNoteHeading = document.createElement("h3");
-      lessonNoteHeading.textContent = "Bài giảng · đọc theo từng ý";
-      lessonNote.append(lessonNoteHeading);
-      (lesson.sections?.length ? lesson.sections : [{ title: "Nội dung trọng tâm", content: lesson.theory }])
-        .forEach((section) => {
+      lessonNoteHeading.textContent = "Bài giảng · học từng bước nhỏ (Micro-learning)";
+      const microControls = document.createElement("div");
+      microControls.className = "study-micro-controls";
+      lessonHeader.append(lessonNoteHeading, microControls);
+      lessonNote.append(lessonHeader);
+
+      const rawSections = lesson.sections?.length
+        ? lesson.sections
+        : [{ title: "Nội dung trọng tâm", content: lesson.theory }];
+      const sectionElements = [];
+      rawSections.forEach((section) => {
           const sectionElement = document.createElement("section");
           sectionElement.className = "study-lesson-section";
           const sectionHeading = document.createElement("h4");
@@ -1992,7 +2516,9 @@
             codeExample.className = "study-code-example";
             const codeLabel = document.createElement("span");
             codeLabel.className = "study-code-label";
-            codeLabel.textContent = "Ví dụ mã C chạy được";
+            codeLabel.textContent = roadmap.topicId === "pythonProgramming"
+              ? "Ví dụ mã Python chạy được"
+              : "Ví dụ mã C chạy được";
             const pre = document.createElement("pre");
             const code = document.createElement("code");
             code.textContent = section.code;
@@ -2021,6 +2547,7 @@
             sectionElement.append(output);
           }
           lessonNote.append(sectionElement);
+          sectionElements.push(sectionElement);
         });
       if (/history\.com\/articles\/battle-of-dien-bien-phu/i.test(lesson.theory)) {
         const source = document.createElement("p");
@@ -2029,18 +2556,64 @@
         lessonNote.append(source);
       }
 
+      const isCodingSubject = roadmap.topicId === "cProgramming" || roadmap.topicId === "pythonProgramming";
+      const codeLangName = roadmap.topicId === "pythonProgramming" ? "Python" : "C";
+      const microSteps = rawSections.length === 4 && isCodingSubject
+        ? [
+            {
+              label: "Bước 1: Ẩn dụ & Khái niệm",
+              indices: [0],
+              prompt: rawSections[0]?.checkPrompt || "Bạn đã hiểu phần khái niệm và hình ảnh ẩn dụ vừa học chưa?",
+              buttonText: rawSections[0]?.nextButtonLabel || `Đã hiểu khái niệm — Đẩy tiếp phần Code ${codeLangName} →`,
+            },
+            {
+              label: `Bước 2: Code ${codeLangName} minh họa`,
+              indices: [1, 2],
+              prompt: rawSections[1]?.checkPrompt || `Bạn đã nắm được cách chạy của đoạn code ${codeLangName} vừa rồi chưa?`,
+              buttonText: rawSections[1]?.nextButtonLabel || `Đã hiểu Code ${codeLangName} — Đẩy tiếp phần Debug (Bắt bệnh) →`,
+            },
+            {
+              label: "Bước 3: Bắt bệnh Debug",
+              indices: [3],
+              prompt: rawSections[3]?.checkPrompt || "Bạn đã hiểu phần vừa học chưa?",
+              buttonText: "Đã hiểu — bắt đầu kiểm tra",
+            },
+          ]
+        : rawSections.map((sec, idx) => ({
+            label: `Bước ${idx + 1}/${rawSections.length}`,
+            indices: [idx],
+            prompt: sec.checkPrompt || (idx + 1 < rawSections.length
+              ? `Bạn đã nắm được ý "${sec.title}" chưa? Mình cùng mở tiếp phần tiếp theo nhé!`
+              : "Bạn đã hiểu phần vừa học chưa?"),
+            buttonText: sec.nextButtonLabel || (idx + 1 < rawSections.length
+              ? `Đã hiểu phần ${idx + 1} — Xem tiếp phần ${idx + 2} →`
+              : "Đã hiểu — bắt đầu kiểm tra"),
+          }));
+
+      let currentMicroStep = 0;
+      const microPills = microSteps.map((step) => {
+        const pill = document.createElement("span");
+        pill.className = "study-micro-pill";
+        pill.textContent = step.label;
+        microControls.append(pill);
+        return pill;
+      });
+      const showAllMicroButton = document.createElement("button");
+      showAllMicroButton.type = "button";
+      showAllMicroButton.className = "study-micro-show-all";
+      showAllMicroButton.textContent = "Xem toàn bộ bài";
+      if (microSteps.length > 1) microControls.append(showAllMicroButton);
+
       const comprehension = document.createElement("section");
       comprehension.className = "study-comprehension";
       const comprehensionQuestion = document.createElement("p");
-      comprehensionQuestion.textContent = "Bạn đã hiểu phần vừa học chưa?";
       const comprehensionActions = document.createElement("div");
       comprehensionActions.className = "study-comprehension-actions";
       const understoodButton = document.createElement("button");
       understoodButton.type = "button";
-      understoodButton.textContent = "Đã hiểu — bắt đầu kiểm tra";
       const clarifyButton = document.createElement("button");
       clarifyButton.type = "button";
-      clarifyButton.textContent = "Chưa hiểu, mình muốn hỏi";
+      clarifyButton.textContent = "Chưa hiểu, mình muốn hỏi Lụa";
       comprehensionActions.append(understoodButton, clarifyButton);
       const clarification = document.createElement("form");
       clarification.className = "study-clarification";
@@ -2048,12 +2621,48 @@
       const clarificationQuestion = document.createElement("textarea");
       clarificationQuestion.maxLength = 2_000;
       clarificationQuestion.setAttribute("aria-label", "Câu hỏi về nội dung đang học");
-      clarificationQuestion.placeholder = "Bạn đang vướng ý nào trong bài này?";
+      clarificationQuestion.placeholder = "Bạn đang vướng ý nào trong bước này?";
       const clarificationSubmit = document.createElement("button");
       clarificationSubmit.type = "submit";
       clarificationSubmit.textContent = "Hỏi Lụa về bài này";
       clarification.append(clarificationQuestion, clarificationSubmit);
       comprehension.append(comprehensionQuestion, comprehensionActions, clarification);
+
+      const updateMicroStepView = (scrollTarget = null) => {
+        const revealedIndices = new Set();
+        for (let stepIdx = 0; stepIdx <= currentMicroStep && stepIdx < microSteps.length; stepIdx += 1) {
+          microSteps[stepIdx].indices.forEach((secIdx) => revealedIndices.add(secIdx));
+        }
+        sectionElements.forEach((el, idx) => {
+          const wasHidden = el.hidden;
+          const shouldShow = revealedIndices.has(idx);
+          el.hidden = !shouldShow;
+          if (wasHidden && shouldShow) {
+            el.classList.add("micro-reveal");
+          }
+        });
+        microPills.forEach((pill, idx) => {
+          pill.classList.toggle("active", idx === currentMicroStep);
+          pill.classList.toggle("done", idx < currentMicroStep);
+        });
+        const activeStep = microSteps[currentMicroStep] || microSteps[microSteps.length - 1];
+        comprehensionQuestion.textContent = activeStep.prompt;
+        understoodButton.textContent = activeStep.buttonText;
+        if (currentMicroStep >= microSteps.length - 1) {
+          showAllMicroButton.hidden = true;
+        }
+        if (scrollTarget) {
+          scrollTarget.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      };
+
+      updateMicroStepView();
+
+      showAllMicroButton.addEventListener("click", () => {
+        currentMicroStep = microSteps.length - 1;
+        updateMicroStepView();
+      });
+
       const assessment = document.createElement("section");
       assessment.className = "study-assessment";
       assessment.hidden = true;
@@ -2083,6 +2692,15 @@
       assessmentActions.append(assessmentCheck, assessmentNext, syncStudyActivityButton);
       assessment.append(assessmentHeading, assessmentProgress, assessmentQuestion, assessmentOptions, assessmentFeedback, studyActivitySyncStatus, assessmentActions);
       understoodButton.addEventListener("click", () => {
+        if (currentMicroStep + 1 < microSteps.length) {
+          currentMicroStep += 1;
+          const firstNewSecIdx = microSteps[currentMicroStep].indices[0];
+          updateMicroStepView(sectionElements[firstNewSecIdx]);
+          const newlyOpenedSections = microSteps[currentMicroStep].indices.map((i) => rawSections[i]);
+          lastTutorText = newlyOpenedSections.map((s) => `${s.title}\n${s.content}`).join("\n\n");
+          status.textContent = `Đang học ${microSteps[currentMicroStep].label} của chủ đề "${lesson.focusTopic}".`;
+          return;
+        }
         comprehension.hidden = true;
         if (lesson.remediationIndex > 0) {
           say(lesson.practiceQuestion, "happy", true);
@@ -2094,6 +2712,7 @@
         } else {
           assessment.hidden = false;
           renderAssessmentQuestion();
+          assessment.scrollIntoView({ behavior: "smooth", block: "nearest" });
           status.textContent = "Bài kiểm tra gồm ba câu mới về nội dung vừa học; cần đạt ít nhất 90% để mở bước tiếp theo.";
         }
       });
@@ -2293,8 +2912,8 @@
         renderAssessmentQuestion();
       });
 
-      say(`Chào bạn! Hôm nay mình cùng học "${lesson.focusTopic}" nhé. Mình đã chia bài thành từng ý và có hình minh họa.`, "happy", true);
-      lastTutorText = lesson.theory;
+      say(`Chào bạn! Hôm nay mình cùng học "${lesson.focusTopic}" theo từng bước nhỏ (Micro-learning) để dễ thấm và không bị ngợp nhé. Trước tiên, mình cùng khám phá Bước 1 (Ẩn dụ đời thường & Khái niệm) kèm sơ đồ minh họa bên dưới!`, "happy", true);
+      lastTutorText = rawSections[0] ? `${rawSections[0].title}\n${rawSections[0].content}` : lesson.theory;
       hintButton.hidden = true;
       log.append(lessonNote);
       appendStudyIllustration(log, lesson.focusTopic, roadmap.topicId, lesson.phase);
@@ -3324,7 +3943,7 @@
         period.textContent = topic.period;
         const heading = document.createElement("div");
         heading.className = "topic-heading";
-        const symbols = { antiUsWar: "🏛️", geography: "🌏", cProgramming: "💻" };
+        const symbols = { antiUsWar: "🏛️", geography: "🌏", cProgramming: "💻", pythonProgramming: "🐍" };
         const symbol = document.createElement("span");
         symbol.className = "topic-symbol";
         symbol.setAttribute("aria-hidden", "true");

@@ -134,9 +134,19 @@ test("opens direct lessons for menu topics without claiming quiz results", async
       ["cProgramming", "Hàm", "Lập trình C: Tìm hiểu về Hàm"],
       ["cProgramming", "Mảng & Chuỗi", "Lập trình C: Tìm hiểu về Mảng & Chuỗi"],
       ["cProgramming", "Con trỏ", "Lập trình C: Tìm hiểu về Con trỏ"],
+      ["cProgramming", "Con trỏ và Hàm", "Lập trình C: Tìm hiểu về Con trỏ và Hàm"],
       ["cProgramming", "Struct", "Lập trình C: Tìm hiểu về Struct"],
       ["cProgramming", "Bộ nhớ động", "Lập trình C: Tìm hiểu về Bộ nhớ động"],
       ["cProgramming", "Tệp", "Lập trình C: Tìm hiểu về Tệp"],
+      ["pythonProgramming", "Cú pháp & Thụt lề Python", "Lập trình Python: Tìm hiểu về Cú pháp & Thụt lề Python"],
+      ["pythonProgramming", "Biến & Kiểu dữ liệu", "Lập trình Python: Tìm hiểu về Biến & Kiểu dữ liệu"],
+      ["pythonProgramming", "Chuỗi & f-string", "Lập trình Python: Tìm hiểu về Chuỗi & f-string"],
+      ["pythonProgramming", "Cấu trúc điều khiển", "Lập trình Python: Tìm hiểu về Cấu trúc điều khiển"],
+      ["pythonProgramming", "List & Tuple", "Lập trình Python: Tìm hiểu về List & Tuple"],
+      ["pythonProgramming", "Dictionary & Set", "Lập trình Python: Tìm hiểu về Dictionary & Set"],
+      ["pythonProgramming", "Hàm trong Python", "Lập trình Python: Tìm hiểu về Hàm trong Python"],
+      ["pythonProgramming", "Xử lý ngoại lệ & Tệp", "Lập trình Python: Tìm hiểu về Xử lý ngoại lệ & Tệp"],
+      ["pythonProgramming", "Lập trình hướng đối tượng (OOP)", "Lập trình Python: Tìm hiểu về Lập trình hướng đối tượng (OOP)"],
     ];
     for (const [topicId, focusTopic, expectedTitle] of menuLessons) {
       const response = await requestLesson(topicId, focusTopic);
@@ -145,7 +155,7 @@ test("opens direct lessons for menu topics without claiming quiz results", async
       assert.equal(lesson.title, expectedTitle);
       assert.equal(lesson.focusTopic, focusTopic);
       assert.equal(lesson.totalSteps, 3);
-      assert.match(lesson.practiceQuestion, new RegExp(focusTopic));
+      assert.ok(lesson.practiceQuestion.includes(focusTopic));
       assert.equal(lesson.assessmentQuestions.length, 3);
       assert.equal(new Set(lesson.assessmentQuestions.map(({ question }) => question)).size, 3);
       for (const assessmentQuestion of lesson.assessmentQuestions) {
@@ -165,6 +175,14 @@ test("opens direct lessons for menu topics without claiming quiz results", async
         assert.ok(codeSection.codeNotes.length > 0);
         assert.ok(codeSection.codeOutput);
         assert.equal(lesson.assessmentQuestions.length, 3);
+      }
+      if (topicId === "pythonProgramming") {
+        const codeSection = lesson.sections.find(({ code }) => code);
+        assert.ok(codeSection, `${focusTopic} should provide a runnable Python example`);
+        assert.equal(lesson.sections.length, 4, `${focusTopic} should have 4 micro-learning sections`);
+        assert.match(codeSection.code, /print\(/);
+        assert.ok(codeSection.codeNotes.length > 0);
+        assert.ok(codeSection.codeOutput);
       }
       if (focusTopic === "Hiệp định Genève") {
         assert.doesNotMatch(`${lesson.title} ${lesson.theory} ${lesson.practiceQuestion}`, /Hiệp định Paris.{0,40}(?:ký|1954)|(?:ký|1954).{0,40}Hiệp định Paris/);
@@ -790,7 +808,7 @@ test("serves shuffled prewritten quizzes for 5, 10, or 50 questions without wait
       server.once("error", reject);
     });
     const baseUrl = `http://127.0.0.1:${server.address().port}`;
-    for (const topicId of ["antiUsWar", "geography", "cProgramming"]) {
+    for (const topicId of ["antiUsWar", "geography", "cProgramming", "pythonProgramming"]) {
       for (const numQuestions of [5, 10, 50]) {
         const startedAt = performance.now();
         const response = await originalFetch(`${baseUrl}/api/generate-quiz`, {

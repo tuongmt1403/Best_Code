@@ -11,7 +11,8 @@ test("loads the primary Groq key and all distinct backup keys", () => {
     GROQ_API_KEY_5: "backup-5",
     GROQ_API_KEY_6: "backup-6",
     GROQ_API_KEY_7: "backup-7",
-  }), ["primary", "backup-2", "backup-3", "backup-4", "backup-5", "backup-6", "backup-7"]);
+    GROQ_API_KEY_8: "backup-8",
+  }), ["primary", "backup-2", "backup-3", "backup-4", "backup-5", "backup-6", "backup-7", "backup-8"]);
 });
 
 test("uses the second Groq key after a quota response", async () => {

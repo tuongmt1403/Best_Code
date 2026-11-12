@@ -157,6 +157,31 @@ Thao tác tệp dùng FILE* cùng các hàm trong stdio.h như fopen, fprintf, f
 
 Một quy trình biên dịch cơ bản gồm viết mã nguồn, biên dịch, xử lý lỗi biên dịch, chạy chương trình và kiểm thử với cả dữ liệu thông thường lẫn trường hợp biên. Khi gỡ lỗi, cần kiểm tra giá trị biến, chỉ số mảng, điều kiện dừng vòng lặp, con trỏ và đường đi giải phóng bộ nhớ. Câu hỏi và lời giải cần phân biệt rõ lỗi cú pháp, lỗi khi chạy và lỗi logic.`,
   },
+  pythonProgramming: {
+    id: "pythonProgramming",
+    title: "Lập trình Python cơ bản đến ứng dụng",
+    period: "Python 3.x",
+    description: "Làm chủ cú pháp thụt lề, biến kiểu động, chuỗi f-string, if/for/while, List/Tuple, Dictionary/Set, hàm, xử lý ngoại lệ và lập trình hướng đối tượng.",
+    material: `Chủ đề: Lập trình Python cơ bản đến ứng dụng (theo chuẩn Python 3.x).
+
+Python là ngôn ngữ thông dịch có cú pháp sáng sủa, dùng dấu hai chấm (:) và khoảng trắng thụt đầu dòng (indentation, chuẩn PEP 8 là 4 khoảng trắng) để phân định khối lệnh thay vì cặp ngoặc nhọn. Hàm print() dùng để xuất dữ liệu ra màn hình, còn input() đọc một dòng văn bản từ bàn phím và luôn trả về kiểu chuỗi (str).
+
+Biến trong Python không cần khai báo kiểu trước mà hoạt động như những chiếc thẻ tên (nhãn dán) gắn vào đối tượng trong bộ nhớ (kiểu dữ liệu động - dynamic typing). Các kiểu cơ bản gồm số nguyên (int), số thực (float), chuỗi ký tự (str), giá trị đúng/sai (bool: True, False) và giá trị rỗng đặc biệt None. Hàm type() cho biết kiểu của đối tượng. Cần lưu ý phép chia / luôn trả về float, phép chia lấy phần nguyên dùng //, chia lấy dư dùng %, lũy thừa dùng **. Khi nhận số từ input(), cần ép kiểu bằng int() hoặc float() trước khi tính toán.
+
+Chuỗi (str) là kiểu dữ liệu bất biến (immutable): không thể sửa trực tiếp một ký tự tại một vị trí bằng phép gán mà phải tạo chuỗi mới. f-string (ví dụ f"Xin chào {name}") giúp chèn giá trị biến hoặc biểu thức trực tiếp vào chuỗi. Các phương thức phổ biến gồm strip(), lower(), upper(), split() và join().
+
+Cấu trúc điều khiển dùng if, elif, else kết hợp các toán tử so sánh (==, !=, <, >, <=, >=) và logic (and, or, not). Vòng lặp for thường duyệt qua một dãy hoặc kết hợp với range(start, stop, step), trong đó giá trị stop không được bao gồm (range(1, 5) tạo ra 1, 2, 3, 4). Vòng lặp while lặp khi điều kiện còn đúng. break dừng vòng lặp, continue bỏ qua lượt hiện tại.
+
+List (danh sách, viết trong ngoặc vuông []) lưu các phần tử có thứ tự, đánh chỉ số từ 0 (chỉ số âm -1 là phần tử cuối) và có thể thay đổi nội dung (mutable). Phép cắt lát (slicing) a[start:stop] lấy từ start đến sát stop. Cần phân biệt gán b = a (hai nhãn cùng chỉ vào một danh sách, sửa b làm a đổi theo) với tạo bản sao b = a.copy() hoặc a[:]. Tuple (ngoặc tròn ()) tương tự List nhưng bất biến (immutable), giúp bảo vệ dữ liệu cố định.
+
+Dictionary (từ điển, viết trong ngoặc nhọn {key: value}) lưu các cặp khóa – giá trị giúp tra cứu cực nhanh theo khóa; khóa phải là kiểu bất biến và không trùng lặp. Truy cập trực tiếp bằng d[key] sẽ gây lỗi KeyError nếu khóa không tồn tại; dùng d.get(key, default) giúp lấy giá trị an toàn. Set (tập hợp) chỉ chứa các phần tử duy nhất không trùng lặp và không có thứ tự chỉ số.
+
+Hàm trong Python được định nghĩa bằng từ khóa def, nhận tham số và trả kết quả bằng return; nếu hàm không có lệnh return (hoặc chỉ viết return trống), hàm tự động trả về None. Cần tránh dùng kiểu khả biến như danh sách rỗng làm tham số mặc định (def add(x, items=[])) vì danh sách mặc định đó được dùng chung qua nhiều lần gọi hàm; thay vào đó nên dùng None làm mặc định.
+
+Xử lý ngoại lệ dùng khối try / except (kèm else, finally) để bắt và xử lý các lỗi khi chạy như ValueError hay ZeroDivisionError mà không làm sập chương trình. Khi làm việc với tệp tin, câu lệnh with open("data.txt", "r", encoding="utf-8") as f: (context manager) đảm bảo tệp luôn được đóng tự động ngay cả khi xảy ra lỗi.
+
+Lập trình hướng đối tượng (OOP) dùng class để định nghĩa bản thiết kế (khuôn mẫu), phương thức khởi tạo __init__(self, ...) để thiết lập thuộc tính cho từng đối tượng (object / instance), và tham số đầu tiên self đại diện cho chính đối tượng đang gọi phương thức.`,
+  },
 };
 
 function getQuizTopic(topicId) {
@@ -166,7 +191,8 @@ function getQuizTopic(topicId) {
 const studyFocusTopics = {
   antiUsWar: ["Phong trào Đồng Khởi", "Hiệp định Genève", "Chiến dịch Điện Biên Phủ", "Tết Mậu Thân", "Hiệp định Paris", "Kết thúc chiến tranh"],
   geography: ["Địa lý tự nhiên", "Địa lý dân cư", "Khí hậu"],
-  cProgramming: ["Cấu trúc chương trình C", "Thư viện chuẩn", "Biến & Kiểu dữ liệu", "Cấu trúc điều khiển", "Hàm", "Mảng & Chuỗi", "Con trỏ", "Struct", "Bộ nhớ động", "Tệp"],
+  cProgramming: ["Cấu trúc chương trình C", "Thư viện chuẩn", "Biến & Kiểu dữ liệu", "Cấu trúc điều khiển", "Hàm", "Mảng & Chuỗi", "Con trỏ", "Con trỏ và Hàm", "Struct", "Bộ nhớ động", "Tệp"],
+  pythonProgramming: ["Cú pháp & Thụt lề Python", "Biến & Kiểu dữ liệu", "Chuỗi & f-string", "Cấu trúc điều khiển", "List & Tuple", "Dictionary & Set", "Hàm trong Python", "Xử lý ngoại lệ & Tệp", "Lập trình hướng đối tượng (OOP)"],
 };
 
 function bankQuestion(topic, question, answer, distractors, explanation) {
@@ -250,6 +276,36 @@ const supplementalQuizQuestions = {
     bankQuestion("Bộ nhớ động", "Nếu malloc cấp phát thất bại, giá trị trả về cần được kiểm tra là gì?", "NULL", ["EOF", "Một chuỗi rỗng", "Luôn là địa chỉ hợp lệ"], "Cần kiểm tra malloc trả về NULL trước khi dùng."),
     bankQuestion("Tệp", "Sau khi thao tác xong với FILE*, nên gọi hàm nào?", "fclose", ["free", "continue", "sizeof"], "fclose đóng tệp đang mở."),
   ],
+  pythonProgramming: [
+    bankQuestion("Cú pháp & Thụt lề Python", "Trong Python, điều gì được dùng để phân định một khối lệnh (như bên trong if, for, def)?", "Khoảng trắng thụt đầu dòng (indentation) sau dấu hai chấm (:)", ["Cặp dấu ngoặc nhọn { }", "Từ khóa begin và end", "Dấu chấm phẩy (;) ở cuối dòng"], "Python dùng dấu hai chấm và khoảng trắng thụt lề để xác định khối lệnh."),
+    bankQuestion("Cú pháp & Thụt lề Python", "Theo chuẩn phong cách PEP 8 của Python, mỗi mức thụt đầu dòng nên dùng bao nhiêu khoảng trắng?", "4 khoảng trắng", ["1 khoảng trắng", "3 khoảng trắng", "8 dấu chấm phẩy"], "Chuẩn PEP 8 khuyến nghị dùng 4 khoảng trắng cho mỗi mức thụt lề."),
+    bankQuestion("Cú pháp & Thụt lề Python", "Hàm input() trong Python 3 luôn trả về dữ liệu thuộc kiểu nào?", "str (chuỗi ký tự)", ["int (số nguyên)", "float (số thực)", "bool (True/False)"], "Hàm input() luôn trả về một chuỗi ký tự (str), dù người dùng gõ chữ số."),
+    bankQuestion("Cú pháp & Thụt lề Python", "Ký hiệu nào dùng để viết chú thích (comment) trên một dòng trong Python?", "Dấu thăng (#)", ["Hai dấu gạch chéo (//)", "Cặp /* ... */", "Dấu phần trăm (%)"], "Python dùng dấu # để bắt đầu chú thích trên một dòng."),
+    bankQuestion("Biến & Kiểu dữ liệu", "Trong Python, phép chia một gạch chéo `7 / 2` trả về kết quả nào?", "3.5 (kiểu float)", ["3 (kiểu int)", "1 (phần dư)", "Báo lỗi TypeError"], "Toán tử `/` trong Python 3 luôn thực hiện phép chia thực và trả về float (3.5)."),
+    bankQuestion("Biến & Kiểu dữ liệu", "Toán tử nào trong Python dùng để chia lấy phần nguyên (làm tròn xuống)?", "//", ["/", "%", "**"], "Toán tử `//` là phép chia lấy phần nguyên, ví dụ `7 // 2` bằng `3`."),
+    bankQuestion("Biến & Kiểu dữ liệu", "Biểu thức `2 ** 3` trong Python có ý nghĩa và kết quả là gì?", "2 lũy thừa 3, kết quả bằng 8", ["2 nhân 3, kết quả bằng 6", "Khai báo con trỏ cấp 2", "Chia 2 cho 3"], "Toán tử `**` dùng để tính lũy thừa trong Python (`2 ** 3 = 8`)."),
+    bankQuestion("Biến & Kiểu dữ liệu", "Hàm tích hợp nào dùng để kiểm tra kiểu dữ liệu hiện tại của một biến trong Python?", "type()", ["sizeof()", "typeof()", "strlen()"], "Hàm `type(x)` cho biết kiểu dữ liệu của đối tượng mà `x` đang gắn nhãn."),
+    bankQuestion("Biến & Kiểu dữ liệu", "Hai giá trị kiểu logic (bool) chuẩn trong Python được viết đúng chính tả như thế nào?", "True và False (viết hoa chữ cái đầu)", ["true và false", "TRUE và FALSE", "1b và 0b"], "Trong Python, hai giá trị boolean phải viết hoa chữ cái đầu là `True` và `False`."),
+    bankQuestion("Chuỗi & f-string", "Cú pháp f-string nào sau đây chèn đúng giá trị biến `name = \"An\"` vào chuỗi?", "f\"Xin chào {name}\"", ["\"Xin chào $name\"", "f\"Xin chào (name)\"", "str(\"Xin chào %name\")"], "f-string có chữ `f` đứng trước dấu nháy và đặt tên biến/biểu thức trong cặp ngoặc nhọn `{}`."),
+    bankQuestion("Chuỗi & f-string", "Phương thức nào giúp xóa khoảng trắng thừa ở hai đầu của một chuỗi trong Python?", ".strip()", [".split()", ".join()", ".append()"], "Phương thức `.strip()` loại bỏ khoảng trắng và ký tự xuống dòng ở đầu và cuối chuỗi."),
+    bankQuestion("Chuỗi & f-string", "Kết quả của `\"a,b,c\".split(\",\")` trong Python là gì?", "Danh sách ['a', 'b', 'c']", ["Chuỗi 'abc'", "Số nguyên 3", "Từ điển {'a': 'b'}"], "Phương thức `.split(\",\")` tách chuỗi theo dấu phẩy và trả về một danh sách (list) các chuỗi con."),
+    bankQuestion("Cấu trúc điều khiển", "Trong Python, từ khóa nào dùng cho nhánh 'ngược lại nếu' (nằm giữa `if` và `else`)?", "elif", ["else if", "elseif", "switch"], "Python viết tắt 'else if' thành từ khóa `elif`."),
+    bankQuestion("Cấu trúc điều khiển", "Các toán tử kết hợp điều kiện logic trong Python được viết bằng những từ khóa nào?", "and, or, not", ["&&, ||, !", "&, |, ~", "AND(), OR(), NOT()"], "Python dùng từ tiếng Anh tự nhiên `and`, `or`, `not` cho các phép toán logic."),
+    bankQuestion("Cấu trúc điều khiển", "Hàm `list(range(2, 6))` tạo ra danh sách các số nào?", "[2, 3, 4, 5]", ["[2, 3, 4, 5, 6]", "[1, 2, 3, 4, 5, 6]", "[2, 6]"], "`range(start, stop)` bắt đầu từ `start` (2) và dừng trước khi chạm tới `stop` (6)."),
+    bankQuestion("List & Tuple", "Với danh sách `nums = [10, 20, 30, 40]`, biểu thức `nums[-1]` trả về giá trị nào?", "40 (phần tử cuối cùng)", ["10 (phần tử đầu tiên)", "-1", "Báo lỗi IndexError"], "Trong Python, chỉ số âm `-1` dùng để lấy phần tử cuối cùng của danh sách."),
+    bankQuestion("List & Tuple", "Với `nums = [10, 20, 30, 40, 50]`, phép cắt lát `nums[1:4]` trả về kết quả nào?", "[20, 30, 40]", ["[10, 20, 30, 40]", "[20, 30, 40, 50]", "[10, 40]"], "Cắt lát `nums[1:4]` lấy từ chỉ số 1 đến sát chỉ số 4 (tức là các chỉ số 1, 2, 3)."),
+    bankQuestion("List & Tuple", "Phương thức nào thêm một phần tử mới vào cuối danh sách (`list`) trong Python?", ".append()", [".push()", ".add()", ".insert_last()"], "Phương thức `.append(x)` nối thêm phần tử `x` vào vị trí cuối cùng của list."),
+    bankQuestion("List & Tuple", "Điểm khác biệt cốt lõi giữa `Tuple` `(1, 2, 3)` và `List` `[1, 2, 3]` là gì?", "Tuple là bất biến (không thể sửa/xóa phần tử sau khi tạo), còn List có thể thay đổi", ["Tuple chỉ chứa được số nguyên, còn List chứa được mọi kiểu", "Tuple không thể truy cập phần tử bằng chỉ số `[0]`", "List không thể dùng trong vòng lặp `for`"], "Tuple có tính bất biến (immutable), giúp bảo vệ dữ liệu cố định khỏi bị vô tình sửa đổi."),
+    bankQuestion("Dictionary & Set", "Cấu trúc `Set` (tập hợp, ví dụ `{1, 2, 2, 3}`) trong Python có đặc điểm nổi bật nào?", "Tự động loại bỏ các phần tử trùng lặp (chỉ giữ lại `{1, 2, 3}`)", ["Lưu các phần tử theo cặp khóa - giá trị", "Cho phép chứa nhiều phần tử giống hệt nhau và giữ nguyên thứ tự chèn", "Chỉ lưu được chuỗi ký tự"], "Set là tập hợp các phần tử duy nhất không trùng lặp."),
+    bankQuestion("Dictionary & Set", "Làm thế nào để khởi tạo một tập hợp (`set`) rỗng trong Python?", "set()", ["{}", "[]", "empty_set()"], "Cặp `{}` rỗng trong Python tạo ra một từ điển (`dict`) rỗng; muốn tạo `set` rỗng phải viết `set()`."),
+    bankQuestion("Dictionary & Set", "Khi duyệt một từ điển `d` qua cả khóa và giá trị trong vòng lặp `for k, v in ...:`, ta gọi phương thức nào?", "d.items()", ["d.keys()", "d.values()", "d.pairs()"], "`d.items()` trả về các cặp `(key, value)` để duyệt đồng thời khóa và giá trị."),
+    bankQuestion("Hàm trong Python", "Từ khóa nào dùng để định nghĩa một hàm trong Python?", "def", ["function", "func", "void"], "Python dùng từ khóa `def` kèm tên hàm, danh sách tham số và dấu hai chấm `:`."),
+    bankQuestion("Hàm trong Python", "Nếu một hàm trong Python thực thi hết thân hàm mà không gặp lệnh `return`, hàm đó trả về giá trị gì?", "None", ["0", "False", "Chuỗi rỗng \"\""], "Mọi hàm trong Python nếu không `return` giá trị cụ thể sẽ tự động trả về `None`."),
+    bankQuestion("Xử lý ngoại lệ & Tệp", "Cấu trúc nào trong Python dùng để bắt và xử lý lỗi khi chạy (exception) mà không làm dừng đột ngột chương trình?", "try ... except", ["do ... catch", "if ... error", "check ... rescue"], "Python dùng khối `try:` để thử chạy lệnh và `except:` để bắt lỗi phát sinh."),
+    bankQuestion("Xử lý ngoại lệ & Tệp", "Vì sao nên mở tệp bằng cú pháp `with open(\"data.txt\", \"r\", encoding=\"utf-8\") as f:` thay vì chỉ gọi `open()` rời rạc?", "Vì khối `with` đảm bảo tệp luôn được đóng tự động (`close`) ngay cả khi có lỗi xảy ra bên trong", ["Vì không dùng `with` thì Python không đọc được tiếng Việt", "Vì `with` giúp xóa tệp ngay sau khi đọc xong", "Vì `open()` không thể dùng nếu không có `with`"], "Context manager `with open(...)` tự động đóng tệp an toàn khi thoát khỏi khối lệnh."),
+    bankQuestion("Lập trình hướng đối tượng (OOP)", "Phương thức đặc biệt nào trong một `class` Python được tự động gọi ngay khi tạo một đối tượng mới?", "__init__", ["__main__", "__start__", "constructor"], "`__init__(self, ...)` là phương thức khởi tạo thiết lập dữ liệu ban đầu cho đối tượng vừa tạo."),
+    bankQuestion("Lập trình hướng đối tượng (OOP)", "Tham số đầu tiên `self` trong các phương thức của lớp (`class`) Python đại diện cho điều gì?", "Chính đối tượng (instance) cụ thể đang gọi phương thức đó", ["Toàn bộ tệp mã nguồn Python", "Lớp cha của mọi lớp", "Một biến toàn cục dùng chung cho mọi chương trình"], "`self` tham chiếu tới chính bản thân đối tượng đang thực hiện hành động."),
+  ],
 };
 
 function getHistoryEventKey(topic) {
@@ -268,111 +324,165 @@ function getHistoryStudySections(topic) {
   if (eventKey === "dienBien") {
     return [
       {
-        title: "Mục tiêu của phía Pháp tại Điện Biên Phủ",
-        content: "Chiến dịch diễn ra từ 13/3 đến 7/5/1954 trong kháng chiến chống Pháp. Pháp xây dựng tập đoàn cứ điểm ở Tây Bắc, muốn gây sức ép lên các tuyến tiếp tế sang Lào và dụ Việt Minh vào trận đánh lớn mà họ tin ưu thế hỏa lực, không vận sẽ có lợi. Theo nguồn được dẫn trong tài liệu, Pháp đưa hơn 15.000 quân vào khu vực; đây là số ước tính của nguồn, không phải kiểm kê tuyệt đối.",
+        title: "1. Bối cảnh & Mục tiêu của thực dân Pháp tại lòng chảo Điện Biên Phủ",
+        content: "Chiến dịch diễn ra từ 13/3 đến 7/5/1954 trong kháng chiến chống Pháp. Pháp xây dựng tập đoàn cứ điểm khổng lồ ở Tây Bắc với 49 cứ điểm chia làm 3 phân khu (Bắc, Trung tâm, Nam), muốn gây sức ép lên các tuyến tiếp tế sang Lào và dụ Việt Minh vào trận đánh lớn mà họ tin ưu thế hỏa lực, xe tăng, pháo binh và cầu hàng không sẽ nghiền nát đối phương. Theo nguồn được dẫn trong tài liệu, Pháp đưa hơn 15.000 quân tinh nhuệ vào khu vực; đây là số ước tính của nguồn, không phải kiểm kê tuyệt đối.",
       },
       {
-        title: "Cách đánh và hậu cần của phía Việt Minh",
-        content: "Phía Việt Minh bao vây lòng chảo, đào chiến hào áp sát các cứ điểm và đưa pháo lên vị trí trên sườn núi. Vận chuyển pháo, đạn và lương thực qua địa hình khó khăn giúp duy trì vòng vây và làm suy yếu khả năng tiếp tế đường không của Pháp.",
+        title: "2. Ông cha ta đã anh dũng chiến đấu và dùng chiến thuật nào?",
+        content: "Từ phương án 'Đánh nhanh, thắng nhanh' ban đầu, Đại tướng Võ Nguyên Giáp đã đưa ra quyết định lịch sử chuyển sang phương châm 'Đánh chắc, tiến chắc'. Phía Việt Minh bao vây lòng chảo, đào hàng trăm km chiến hào (giao thông hào trục và hào tiếp cận) tạo thành 'thòng lọng' siết chặt từng cứ điểm và đưa pháo 105mm lên vị trí hầm pháo đào sâu trong sườn núi. Chiến thuật 'vây, lấn, tấn, phá, triệt, diệt' kết hợp bắn tỉa và cắt đứt đường băng sân bay Mường Thanh đã vô hiệu hóa hoàn toàn ưu thế pháo binh – không quân của Pháp. Vận chuyển pháo, đạn và lương thực qua địa hình khó khăn giúp duy trì vòng vây và làm suy yếu khả năng tiếp tế đường không của Pháp.",
       },
       {
-        title: "Diễn biến, kết quả và giới hạn dữ kiện",
-        content: "Ngày 13/3, pháo binh mở màn đánh các cứ điểm vòng ngoài phía bắc; sau đó sân bay bị vô hiệu hóa, giao tranh tập trung ở các cứ điểm và cao điểm phía đông. Đợt tổng công kích cuối bắt đầu ngày 1/5; ngày 7/5/1954, sở chỉ huy tập đoàn cứ điểm bị đánh chiếm. Chiến thắng góp phần tạo sức ép lớn tại Hội nghị Genève nhưng không phải nguyên nhân duy nhất dẫn tới hiệp định. Nguồn History.com nêu tổn thất máy bay Pháp, không có bảng thương vong con người đầy đủ, thống nhất cho cả hai phía; bài học không tự bịa con số hoặc giờ chính xác.",
+        title: "3. Chuyện bên lề chiến trường & Hậu cần nhân dân huyền thoại",
+        content: "Đằng sau tiền tuyến là kỳ tích hậu cần chưa từng có: hơn 260.000 dân công hỏa tuyến cùng hơn 20.000 chiếc xe đạp thồ cải tiến (mỗi xe thồ từ 200–300 kg gạo, đạn) vượt qua mưa bom bão đạn trên đèo Pha Đin, Lũng Lô. Bộ đội ta sáng tạo 'bếp Hoàng Cầm' dẫn khói tan vào lòng đất để nấu cơm nóng ngay sát đồn địch mà máy bay trinh sát không phát hiện được. Trong lửa đạn xuất hiện những tấm gương hy sinh bất tử: anh hùng Tô Vĩnh Diện lấy thân mình chèn bánh pháo 105mm không cho lao xuống vực, Phan Đình Giót lấy thân mình lấp lỗ châu mai ở đồi Him Lam, Bế Văn Đàn lấy vai làm giá súng.",
+      },
+      {
+        title: "4. Thiệt hại của quân địch & Chiến thắng lịch sử của dân tộc",
+        content: "Ngày 13/3, pháo binh mở màn đánh các cứ điểm vòng ngoài phía bắc (Him Lam, Độc Lập); sau đó sân bay bị vô hiệu hóa, giao tranh tập trung ở các cứ điểm và cao điểm phía đông (đặc biệt là cuộc chiến giằng co từng tấc đất tại đồi A1). Đợt tổng công kích cuối bắt đầu ngày 1/5; ngày 7/5/1954, sở chỉ huy tập đoàn cứ điểm bị đánh chiếm, tướng De Castries cùng toàn bộ Bộ tham mưu Pháp đầu hàng. Chiến thắng góp phần tạo sức ép lớn tại Hội nghị Genève nhưng không phải nguyên nhân duy nhất dẫn tới hiệp định. Nguồn History.com nêu tổn thất máy bay Pháp (62 chiếc bị bắn rơi/phá hủy và 167 chiếc khác bị hư hại), không có bảng thương vong con người đầy đủ, thống nhất cho cả hai phía; bài học không tự bịa con số hoặc giờ chính xác.",
       },
     ];
   }
   if (eventKey === "geneva") {
     return [
       {
-        title: "Hiệp định Genève: thỏa thuận đình chiến năm 1954",
-        content: "Hiệp định Genève về Đông Dương được ký tháng 7/1954 sau khi chiến tranh chống Pháp kết thúc. Ở Việt Nam, việc tập kết và chuyển quân được tổ chức tạm thời ở hai vùng; giới tuyến quân sự gần vĩ tuyến 17 không phải biên giới quốc gia vĩnh viễn.",
+        title: "1. Hiệp định Genève: Đấu tranh ngoại giao & Thỏa thuận đình chiến năm 1954",
+        content: "Hiệp định Genève về Đông Dương được ký tháng 7/1954 sau khi chiến tranh chống Pháp kết thúc và ngay sau tiếng súng chiến thắng vang dội từ chiến trường Điện Biên Phủ. Các nhà ngoại giao Việt Nam đã kiên cường đấu tranh trên bàn hội nghị quốc tế để buộc các cường quốc công nhận độc lập, chủ quyền, thống nhất và toàn vẹn lãnh thổ của Việt Nam, Lào, Campuchia. Ở Việt Nam, việc tập kết và chuyển quân được tổ chức tạm thời ở hai vùng; giới tuyến quân sự gần vĩ tuyến 17 (sông Bến Hải – cầu Hiền Lương) không phải biên giới quốc gia vĩnh viễn.",
       },
       {
-        title: "Điều khoản, dự kiến và điều không diễn ra",
-        content: "Hiệp định dự kiến tổng tuyển cử để thống nhất Việt Nam vào năm 1956. Cuộc tổng tuyển cử đó không diễn ra như dự kiến. Cần phân biệt điều khoản được dự kiến với kết quả lịch sử thực tế, đồng thời không đồng nhất Genève năm 1954 với Paris năm 1973.",
+        title: "2. Điều khoản, dự kiến tổng tuyển cử và âm mưu phá hoại của đối phương",
+        content: "Hiệp định dự kiến tổng tuyển cử để thống nhất Việt Nam vào năm 1956. Cuộc tổng tuyển cử đó không diễn ra như dự kiến do sự can thiệp của Hoa Kỳ và chính quyền Ngô Đình Diệm ở miền Nam từ chối hiệp thương. Cần phân biệt điều khoản được dự kiến với kết quả lịch sử thực tế, đồng thời không đồng nhất Genève với văn kiện ngoại giao năm 1973.",
       },
       {
-        title: "Sơ đồ mốc cần nhớ",
-        content: "Trình tự: chiến thắng Điện Biên Phủ tháng 5/1954 tạo bối cảnh đàm phán → Hiệp định Genève tháng 7/1954 → tập kết quân sự tạm thời và dự kiến tổng tuyển cử năm 1956. Hiệp định tạo bước ngoặt chấm dứt chiến tranh với Pháp ở Đông Dương, nhưng chưa thống nhất Việt Nam.",
+        title: "3. Chuyện bên lề lịch sử & Ý nghĩa chiến thắng",
+        content: "Trong những ngày tập kết 300 ngày sau Hiệp định, hàng vạn cán bộ, chiến sĩ miền Nam khi bước lên tàu ra Bắc tại Cà Mau, Quy Nhơn đã giơ hai ngón tay hẹn '2 năm nữa sẽ về' với niềm tin sắt đá vào ngày thống nhất, trong khi nhiều cán bộ kiên trung được phân công ở lại bám đất, bám dân trong lòng địch. Trình tự cần nhớ: chiến thắng Điện Biên Phủ tháng 5/1954 tạo bối cảnh đàm phán → Hiệp định Genève tháng 7/1954 → tập kết quân sự tạm thời và dự kiến tổng tuyển cử năm 1956. Quân viễn chinh Pháp buộc phải cuốn cờ rút khỏi miền Bắc, giải phóng hoàn toàn miền Bắc làm hậu phương lớn cho cả nước.",
       },
     ];
   }
   if (eventKey === "dongKhoi") {
     return [
       {
-        title: "Đồng Khởi bùng lên ở miền Nam",
-        content: "Cuối thập niên 1950 và đầu thập niên 1960, phong trào đấu tranh ở miền Nam phát triển trong bối cảnh chính quyền Ngô Đình Diệm đàn áp các lực lượng cách mạng. Bến Tre là địa phương tiêu biểu, phong trào Đồng Khởi bùng lên mạnh mẽ năm 1960 rồi lan ra nhiều nơi.",
+        title: "1. Bối cảnh đen tối & Ngọn lửa Đồng Khởi bùng lên ở miền Nam",
+        content: "Cuối thập niên 1950 và đầu thập niên 1960, phong trào đấu tranh ở miền Nam phát triển trong bối cảnh chính quyền Ngô Đình Diệm thực hiện chính sách 'Tố cộng, diệt cộng' và Luật 10/59 lê máy chém khắp miền Nam đàn áp đẫm máu các lực lượng cách mạng. Trước tình thế 'tức nước vỡ bờ', Nghị quyết 15 của Đảng đã thổi bùng ngọn lửa nổi dậy. Bến Tre là địa phương tiêu biểu, phong trào Đồng Khởi bùng lên mạnh mẽ năm 1960 (mở đầu ngày 17/1/1960 tại ba xã Định Thủy, Phước Hiệp, Bình Khánh thuộc huyện Mỏ Cày) rồi lan ra nhiều nơi khắp Nam Bộ, Tây Nguyên và Trung Trung Bộ.",
       },
       {
-        title: "Diễn biến và ý nghĩa",
-        content: "Ở nhiều vùng nông thôn, quần chúng nổi dậy phá thế kìm kẹp, giành quyền làm chủ ở một số địa bàn; đấu tranh chính trị kết hợp với lực lượng vũ trang. Phong trào làm thay đổi tương quan và mở rộng lực lượng cách mạng ở miền Nam. Không nên mô tả Đồng Khởi như một trận đánh đơn lẻ chỉ diễn ra tại một điểm.",
+        title: "2. Chiến thuật 'Ba mũi giáp công' & Đội quân tóc dài huyền thoại",
+        content: "Ở nhiều vùng nông thôn, quần chúng nổi dậy phá thế kìm kẹp, giành quyền làm chủ ở một số địa bàn; đấu tranh chính trị kết hợp với lực lượng vũ trang theo phương thức sáng tạo 'Hai chân' (Chính trị + Quân sự) và 'Ba mũi giáp công' (Chính trị – Quân sự – Binh vận). Đặc biệt, hình ảnh 'Đội quân tóc dài' do nữ tướng Nguyễn Thị Định lãnh đạo — hàng vạn phụ nữ, các mẹ, các chị tay không kéo vào thị xã, dùng lý lẽ và lòng quả cảm chặn đầu xe tăng, đấu tranh trực diện buộc địch phải nhượng bộ — đã trở thành biểu tượng độc đáo của chiến tranh nhân dân Việt Nam. Phong trào làm thay đổi tương quan và mở rộng lực lượng cách mạng ở miền Nam. Không nên mô tả Đồng Khởi như một trận đánh đơn lẻ chỉ diễn ra tại một điểm.",
       },
       {
-        title: "Mốc ghi nhớ",
-        content: "Gắn ba ý với nhau: Bến Tre là nơi tiêu biểu → năm 1960 là mốc phong trào Đồng Khởi → đây là phong trào rộng ở miền Nam, không phải sự kiện Điện Biên Phủ năm 1954 hay cuộc Tổng tiến công Tết Mậu Thân năm 1968.",
+        title: "3. Vũ khí tự tạo độc đáo & Thiệt hại của bộ máy kìm kẹp địch",
+        content: "Bắt đầu cuộc nổi dậy khi trong tay hầu như không có súng đạn hiện đại, nhân dân Bến Tre đã dùng mỏ lết, gậy tầm vông, giáo mác, súng kíp, 'súng ngựa trời' tự chế từ ống sắt và thậm chí nuôi hàng trăm tổ ong vò vẽ làm 'vũ khí sinh học' khiến lính địch đi càn khiếp đảm; dùng tiếng mõ dừa, trống, ống tre tạo thanh thế áp đảo làm đồn bốt địch hoang mang đầu hàng để thu súng giặc đánh giặc. Kết quả: hàng loạt 'ấp chiến lược', đồn bốt và bộ máy cai trị cơ sở của địch ở nông thôn bị đập tan, Mặt trận Dân tộc Giải phóng miền Nam Việt Nam ra đời (20/12/1960), chuyển cách mạng miền Nam từ thế giữ gìn lực lượng sang thế tiến công chiến lược.",
       },
     ];
   }
   if (eventKey === "tet") {
     return [
       {
-        title: "Tổng tiến công và nổi dậy Tết Mậu Thân 1968",
-        content: "Đầu năm 1968, lực lượng cách mạng mở cuộc Tổng tiến công và nổi dậy trên nhiều đô thị, địa bàn ở miền Nam vào dịp Tết. Đây là một đợt hoạt động quân sự quy mô rộng, không phải một trận đánh duy nhất ở một thành phố.",
+        title: "1. Tổng tiến công và nổi dậy Tết Mậu Thân 1968: Đòn sấm sét giữa đô thị",
+        content: "Đầu năm 1968, giữa lúc Mỹ đưa hơn nửa triệu quân viễn chinh vào miền Nam và tuyên bố 'đã nhìn thấy ánh sáng cuối đường hầm', lực lượng cách mạng mở cuộc Tổng tiến công và nổi dậy trên nhiều đô thị, địa bàn ở miền Nam vào đúng đêm giao thừa Tết Mậu Thân (gồm 4/6 thành phố lớn, 37/44 thị xã và hàng trăm quận lỵ). Đây là một đợt hoạt động quân sự quy mô rộng, không phải một trận đánh duy nhất ở một thành phố.",
       },
       {
-        title: "Kết quả quân sự và tác động chính trị",
-        content: "Cuộc tiến công không đạt mọi mục tiêu quân sự dự kiến và gây tổn thất lớn cho nhiều bên. Tuy vậy, quy mô và diễn biến của sự kiện tạo tác động chính trị, truyền thông sâu rộng, ảnh hưởng đến tranh luận tại Hoa Kỳ và tiến trình đàm phán. Cần tách kết quả quân sự trước mắt khỏi tác động chính trị lâu dài.",
+        title: "2. Chiến thuật Biệt động thành, Chuyện bên lề & Tác động làm rung chuyển nước Mỹ",
+        content: "Để tạo yếu tố bất ngờ tuyệt đối ngay tại sào huyệt địch, các chiến sĩ Biệt động Sài Gòn đã sử dụng chiến thuật hóa trang, ém quân và vận chuyển hàng tấn thuốc nổ, súng AK vào giấu trong các căn hầm bí mật đào ngay dưới nền nhà dân giữa lòng Sài Gòn suốt nhiều năm mà mật vụ Mỹ - Việt Nam Cộng hòa không hề hay biết. Đêm Mậu Thân, các đội cảm tử đánh thẳng vào Tòa Đại sứ Mỹ, Dinh Độc Lập, Bộ Tổng tham mưu, Đài Phát thanh Sài Gòn và làm chủ cố đô Huế suốt 25 ngày đêm. Cuộc tiến công không đạt mọi mục tiêu quân sự dự kiến và gây tổn thất lớn cho nhiều bên. Tuy vậy, quy mô và diễn biến của sự kiện tạo tác động chính trị, truyền thông sâu rộng, ảnh hưởng đến tranh luận tại Hoa Kỳ và tiến trình đàm phán. Cần tách kết quả quân sự trước mắt khỏi tác động chính trị lâu dài.",
       },
       {
-        title: "Phân biệt các mốc trong cuộc chiến",
-        content: "Tết Mậu Thân gắn với năm 1968; Hiệp định Paris được ký năm 1973; chiến tranh tại miền Nam kết thúc năm 1975. Ba mốc này liên quan trong tiến trình lịch sử nhưng không thể thay thế cho nhau.",
+        title: "3. Thiệt hại chiến lược của địch & Bước ngoặt buộc Mỹ ngồi vào bàn đàm phán",
+        content: "Đòn tiến công Tết Mậu Thân làm phá sản chiến lược 'Chiến tranh cục bộ' của Mỹ, làm lung lay tận gốc ý chí xâm lược của Nhà Trắng: Tổng thống Lyndon B. Johnson phải tuyên bố ngừng ném bom miền Bắc từ vĩ tuyến 20 trở ra, từ bỏ ý định tranh cử nhiệm kỳ hai và chấp nhận ngồi vào bàn đàm phán tại Paris. Hãy nhớ rõ dòng thời gian: Tết Mậu Thân gắn với năm 1968; Hiệp định Paris được ký năm 1973; chiến tranh tại miền Nam kết thúc năm 1975.",
       },
     ];
   }
   if (eventKey === "paris") {
     return [
       {
-        title: "Hiệp định Paris được ký ngày 27/1/1973",
-        content: "Hiệp định Paris về chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam được ký ngày 27/1/1973. Thỏa thuận quy định ngừng bắn và việc quân đội Hoa Kỳ cùng lực lượng đồng minh rút khỏi Việt Nam theo tiến trình của hiệp định.",
+        title: "1. Cuộc đấu trí dài nhất lịch sử ngoại giao & Hiệp định Paris ngày 27/1/1973",
+        content: "Hiệp định Paris về chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam được ký ngày 27/1/1973 sau gần 5 năm đàm phán căng thẳng với hơn 200 phiên họp công khai và 45 cuộc gặp riêng giữa Cố vấn đặc biệt Lê Đức Thọ, Bộ trưởng Xuân Thủy, Bộ trưởng Nguyễn Thị Bình với phía Hoa Kỳ (Henry Kissinger). Thỏa thuận quy định ngừng bắn, Hoa Kỳ cam kết tôn trọng độc lập, chủ quyền, thống nhất và toàn vẹn lãnh thổ của Việt Nam, đồng thời việc quân đội Hoa Kỳ cùng lực lượng đồng minh rút khỏi Việt Nam theo tiến trình của hiệp định.",
       },
       {
-        title: "Rút quân không đồng nghĩa chiến tranh đã kết thúc",
-        content: "Sau khi quân đội Hoa Kỳ rút, xung đột giữa các lực lượng Việt Nam vẫn tiếp diễn. Vì vậy, năm 1973 là mốc ký hiệp định và rút quân Hoa Kỳ, không phải mốc kết thúc chiến tranh tại miền Nam.",
+        title: "2. Chiến thuật 'Vừa đánh vừa đàm' & Chiến thắng Điện Biên Phủ trên không",
+        content: "Để ép ta ký theo điều kiện của Mỹ, cuối tháng 12/1972 Tổng thống Nixon mở cuộc tập kích đường không chiến lược Linebacker II bằng pháo đài bay B-52 rải thảm Hà Nội, Hải Phòng suốt 12 ngày đêm. Quân và dân miền Bắc đã anh dũng lập nên trận 'Điện Biên Phủ trên không', kết hợp lưới lửa tên lửa SAM-2, pháo cao xạ và tiêm kích MiG-21 vạch nhiễu tìm thù, bắn rơi hàng chục máy bay (trong đó có 34 siêu pháo đài bay B-52), đập tan uy thế không lực Hoa Kỳ và buộc Mỹ phải ký Hiệp định Paris ngày 27/1/1973. Sau khi quân đội Hoa Kỳ rút, xung đột giữa các lực lượng Việt Nam vẫn tiếp diễn. Vì vậy, năm 1973 là mốc ký hiệp định và rút quân Hoa Kỳ, không phải mốc kết thúc chiến tranh tại miền Nam.",
       },
       {
-        title: "Đặt Hiệp định Paris đúng trong dòng thời gian",
-        content: "Chuỗi mốc: Hiệp định Genève năm 1954 → Hiệp định Paris ngày 27/1/1973 → chiến dịch mùa Xuân năm 1975 và chiến tranh kết thúc tại miền Nam ngày 30/4/1975. Đừng gán sự kiện năm 1975 cho nội dung hiệp định năm 1973.",
+        title: "3. Ý nghĩa chiến lược: 'Đánh cho Mỹ cút' tạo đà 'Đánh cho Ngụy nhào'",
+        content: "Việc cuốn cờ rút hết quân viễn chinh Mỹ chấm dứt hơn một thế kỷ có bóng dáng quân đội nước ngoài đóng trên đất Việt Nam, làm thay đổi hẳn so sánh lực lượng trên chiến trường có lợi cho cách mạng. Chuỗi mốc: Hiệp định Genève năm 1954 → Hiệp định Paris ngày 27/1/1973 → chiến dịch mùa Xuân năm 1975 và chiến tranh kết thúc tại miền Nam ngày 30/4/1975.",
       },
     ];
   }
   if (eventKey === "endWar") {
     return [
       {
-        title: "Chiến dịch mùa Xuân 1975 diễn ra liên tiếp",
-        content: "Mùa Xuân năm 1975, các chiến dịch Tây Nguyên, Huế–Đà Nẵng và Hồ Chí Minh diễn ra nối tiếp, làm thay đổi nhanh cục diện chiến trường. Ngày 10/3/1975, chiến dịch Tây Nguyên mở màn bằng cuộc tiến công Buôn Ma Thuột; sau đó lực lượng Việt Nam Cộng hòa rút lui khỏi Tây Nguyên và tình hình ở miền Trung biến chuyển nhanh.",
+        title: "1. Đại thắng mùa Xuân 1975: Nghệ thuật nghi binh & 3 đòn tiến công chiến lược",
+        content: "Mùa Xuân năm 1975, các chiến dịch Tây Nguyên, Huế–Đà Nẵng và Hồ Chí Minh diễn ra nối tiếp, làm thay đổi nhanh cục diện chiến trường. Bằng nghệ thuật nghi binh chiến lược tài tình (tạo giả định ta sẽ đánh Pleiku – Kon Tum để kéo chủ lực địch lên phía Bắc Tây Nguyên), ngày 10/3/1975, chiến dịch Tây Nguyên mở màn bằng cuộc tiến công bất ngờ giải phóng thị xã Buôn Ma Thuột; sau đó lực lượng Việt Nam Cộng hòa rút lui hỗn loạn khỏi Tây Nguyên trên Đường 7 và tình hình ở miền Trung biến chuyển nhanh với việc giải phóng hoàn toàn Huế (25/3) và Đà Nẵng (29/3).",
       },
       {
-        title: "Chiến dịch Hồ Chí Minh và ngày 30/4",
-        content: "Chiến dịch Hồ Chí Minh bắt đầu ngày 26/4/1975. Ngày 30/4, lực lượng tiến công tiến vào Sài Gòn; Tổng thống Dương Văn Minh tuyên bố đầu hàng. Đây là mốc kết thúc chiến tranh tại miền Nam Việt Nam, không phải ngày ký Hiệp định Paris.",
+        title: "2. Chiến thuật 'Thần tốc, táo bạo' & Chiến dịch Hồ Chí Minh lịch sử (26/4 – 30/4/1975)",
+        content: "Với mệnh lệnh lịch sử của Đại tướng Võ Nguyên Giáp: 'Thần tốc, thần tốc hơn nữa; táo bạo, táo bạo hơn nữa; tranh thủ từng giờ, từng phút, xốc tới mặt trận, giải phóng miền Nam!', 5 quân đoàn chủ lực hợp đồng binh chủng quy mô lớn hình thành 5 cánh quân tiến thẳng vào Sài Gòn. Chiến dịch Hồ Chí Minh bắt đầu ngày 26/4/1975. Ngày 30/4, lực lượng tiến công tiến vào Sài Gòn, xe tăng 390 và 843 húc đổ cổng Dinh Độc Lập, cắm lá cờ chiến thắng trên nóc dinh; Tổng thống Dương Văn Minh tuyên bố đầu hàng không điều kiện. Đây là mốc kết thúc chiến tranh tại miền Nam Việt Nam.",
       },
       {
-        title: "Kết quả và mốc thống nhất nhà nước",
-        content: "Chiến tranh kết thúc tại miền Nam năm 1975; việc thống nhất nhà nước được thực hiện năm 1976. Khi kể lại, hãy xếp đúng thứ tự Tây Nguyên → Huế–Đà Nẵng → Hồ Chí Minh, rồi phân biệt mốc chiến tranh kết thúc với mốc thống nhất nhà nước.",
+        title: "3. Thiệt hại sụp đổ của đối phương & Mốc thống nhất nhà nước năm 1976",
+        content: "Chỉ trong 55 ngày đêm thần tốc mùa Xuân 1975, toàn bộ quân lực Việt Nam Cộng hòa với hơn 1 triệu quân được Mỹ trang bị hiện đại đã tan rã hoàn toàn; non sông thu về một mối sau 21 năm chia cắt đầy hy sinh xương máu. Chiến tranh kết thúc tại miền Nam năm 1975; việc thống nhất nhà nước được thực hiện năm 1976 thông qua cuộc Tổng tuyển cử bầu Quốc hội chung của cả nước (25/4/1976). Khi kể lại, hãy xếp đúng thứ tự Tây Nguyên → Huế–Đà Nẵng → Hồ Chí Minh, rồi phân biệt mốc chiến tranh kết thúc với mốc thống nhất nhà nước.",
       },
     ];
   }
   return [
     {
-      title: "Dòng thời gian chính của giai đoạn 1954–1975",
+      title: "1. Dòng thời gian hào hùng của giai đoạn 1954–1975",
       content: "Sau Hiệp định Genève năm 1954, phong trào Đồng Khởi phát triển ở miền Nam, tiêu biểu tại Bến Tre năm 1960; cuộc Tổng tiến công và nổi dậy Tết Mậu Thân diễn ra năm 1968; Hiệp định Paris được ký ngày 27/1/1973; chiến tranh tại miền Nam kết thúc ngày 30/4/1975.",
     },
     {
-      title: "Phân biệt mốc hiệp định và mốc kết thúc chiến tranh",
-      content: "Genève năm 1954 gắn với đình chiến và tập kết quân sự tạm thời; Paris năm 1973 gắn với thỏa thuận ngừng bắn và việc quân đội Hoa Kỳ rút; ngày 30/4/1975 là mốc chiến tranh kết thúc tại miền Nam. Đây là các sự kiện khác nhau, không dùng thay cho nhau.",
+      title: "2. Nghệ thuật quân sự Việt Nam & Phân biệt các mốc lịch sử",
+      content: "Ông cha ta đã kết hợp nhuần nhuyễn đấu tranh chính trị, quân sự và ngoại giao: từ 'Đánh chắc, tiến chắc' ở Điện Biên Phủ, 'Ba mũi giáp công' ở Đồng Khởi, Biệt động thành ở Mậu Thân 1968 đến hợp đồng binh chủng thần tốc mùa Xuân 1975. Genève năm 1954 gắn với đình chiến và tập kết quân sự tạm thời; Paris năm 1973 gắn với thỏa thuận ngừng bắn và việc quân đội Hoa Kỳ rút; ngày 30/4/1975 là mốc chiến tranh kết thúc tại miền Nam.",
     },
     {
-      title: "Cách trình bày một sự kiện lịch sử",
-      content: "Khi câu hỏi chưa xác định rõ sự kiện, hãy nêu mốc thời gian, bối cảnh, lực lượng liên quan, diễn biến chính, kết quả và tác động; không tự gán một chi tiết của sự kiện này sang sự kiện khác. Việc thống nhất nhà nước được thực hiện năm 1976, sau mốc chiến tranh kết thúc tại miền Nam.",
+      title: "3. Cách trình bày một sự kiện lịch sử trọn vẹn",
+      content: "Khi phân tích lịch sử, hãy nêu rõ: bối cảnh, chiến thuật tác chiến của quân dân ta, tinh thần hy sinh và hậu cần nhân dân, thiệt hại của địch cùng ý nghĩa chiến thắng. Việc thống nhất nhà nước được thực hiện năm 1976, sau mốc chiến tranh kết thúc tại miền Nam.",
+    },
+  ];
+}
+
+function getGeographyStudySections(topic) {
+  const topicText = topic.toLocaleLowerCase("vi");
+  if (/khí hậu/.test(topicText)) {
+    return [
+      {
+        title: "1. Hiểu thuật ngữ & Khái niệm cốt lõi (Nắm chắc 70% nội dung bài học)",
+        content: "Khí hậu Việt Nam mang tính chất nhiệt đới ẩm gió mùa. Để hiểu bản chất thay vì học thuộc lòng, bạn cần nắm 4 từ khóa: (1) Tính nhiệt đới: tổng bức xạ nắng lớn, nhiệt độ trung bình năm trên 20°C (trừ vùng núi cao); (2) Tính ẩm: lượng mưa lớn (1.500–2.000 mm/năm) và độ ẩm không khí trên 80%; (3) Gió mùa: một năm có 2 mùa gió chính là gió mùa mùa đông (gió mùa Đông Bắc lạnh khô đầu đông, lạnh ẩm mưa phùn cuối đông ở miền Bắc) và gió mùa mùa hạ (gió mùa Tây Nam nóng ẩm gây mưa lớn); (4) Biên độ nhiệt năm: mức chênh lệch giữa tháng nóng nhất và tháng lạnh nhất (miền Bắc biên độ nhiệt lớn 10–12°C, miền Nam biên độ nhiệt nhỏ chỉ 2–3°C).",
+      },
+      {
+        title: "2. Tư duy Nhân – Quả (Tránh học vẹt: Tại sao khí hậu các vùng lại khác nhau?)",
+        content: "Đừng chỉ nhớ kết quả, hãy đặt câu hỏi 'Tại sao?':\n• Tại sao miền Bắc có mùa đông lạnh còn miền Nam nóng quanh năm? → Nguyên nhân: Miền Bắc nằm ở vĩ độ cao hơn (gần chí tuyến Bắc) nên đón trực tiếp các đợt không khí lạnh từ phương Bắc tràn xuống; khi gió mùa Đông Bắc đi xuống phía Nam thì suy yếu và bị dãy núi Bạch Mã (vĩ tuyến 16°B) chặn lại, khiến miền Nam mang khí hậu cận xích đạo nóng quanh năm (2 mùa mưa – khô rõ rệt).\n• Tại sao miền Trung lại khô nóng (gió Lào) vào đầu mùa hạ và mưa lũ dồn dập vào thu – đông? → Nguyên nhân: Gió Tây Nam vượt dãy Trường Sơn bị biến tính gây hiệu ứng phơn khô nóng ở sườn Đông; còn vào thu – đông, dải hội tụ nhiệt đới kết hợp gió Đông Bắc thổi qua biển gặp bức chắn địa hình Trường Sơn gây mưa lớn và bão lũ.",
+      },
+      {
+        title: "3. Đọc Bản đồ / Atlat & Vận dụng vào kinh tế – đời sống",
+        content: "Quan sát bản đồ Atlat bên dưới (các vùng khoanh tròn đỏ): Khí hậu nhiệt đới ẩm gió mùa giúp cây cối xanh tốt quanh năm, thâm canh tăng vụ lúa nước, đồng thời mùa đông lạnh ở miền Bắc và độ cao địa hình (Sa Pa, Đà Lạt) cho phép trồng rau quả cận nhiệt và ôn đới. Tuy nhiên, cần chủ động phòng chống thiên tai theo vùng: bão và lũ quét ở miền Bắc – miền Trung, hạn hán ở Nam Trung Bộ – Tây Nguyên, và xâm nhập mặn mùa khô ở Đồng bằng sông Cửu Long.",
+      },
+    ];
+  }
+  if (/dân cư/.test(topicText)) {
+    return [
+      {
+        title: "1. Hiểu thuật ngữ & Khái niệm cốt lõi (Nắm chắc 70% nội dung bài học)",
+        content: "Trước khi vào số liệu, hãy nắm rõ 4 khái niệm nền tảng của Địa lý dân cư: (1) Mật độ dân số (người/km²): số dân trung bình sống trên 1 km² diện tích đất tự nhiên, phản ánh mức độ tập trung dân cư; (2) Gia tăng dân số tự nhiên: chênh lệch giữa tỷ suất sinh thô và tỷ suất tử thô; (3) Gia tăng dân số cơ học (di cư): chênh lệch giữa người nhập cư và xuất cư (quyết định sự dịch chuyển lao động về các khu công nghiệp, đô thị); (4) Cơ cấu dân số vàng & Đô thị hóa: giai đoạn tỷ lệ dân số trong độ tuổi lao động cao gấp đôi dân số phụ thuộc, đi kèm quá trình mở rộng quy mô và lối sống thành thị.",
+      },
+      {
+        title: "2. Tư duy Nhân – Quả (Tránh học vẹt: Tại sao dân cư phân bố không đều?)",
+        content: "Dân cư Việt Nam phân bố không đồng đều giữa đồng bằng và miền núi. Hãy giải thích theo tư duy Nhân – Quả:\n• Tại sao Đồng bằng sông Hồng và Đông Nam Bộ có mật độ dân số cao nhất cả nước (trên 1.000 người/km²), trong khi Tây Bắc và Tây Nguyên rất thưa dân? → Nguyên nhân tự nhiên: Đồng bằng có địa hình bằng phẳng, đất phù sa màu mỡ, nguồn nước dồi dào thuận lợi cho cư trú và canh tác lúa nước lâu đời. Nguyên nhân kinh tế – xã hội: Các đô thị lớn (Hà Nội, TP.HCM), cảng biển, khu công nghiệp và dịch vụ tập trung ở đồng bằng tạo ra nhiều việc làm và thu nhập cao, hút dòng di cư cơ học mạnh mẽ.\n• Tại sao dân số đông vừa là động lực vừa là sức ép? → Hệ quả kép: Tạo nguồn nhân lực dồi dào và thị trường tiêu thụ lớn, nhưng gây áp lực trực tiếp lên giải quyết việc làm, nhà ở, giao thông, y tế, giáo dục và môi trường đô thị.",
+      },
+      {
+        title: "3. Đọc Bản đồ / Atlat & Phân tích vùng trọng điểm khoanh tròn",
+        content: "Trên bản đồ Atlat Việt Nam bên dưới, hai vùng được khoanh tròn đỏ đậm ở hai đầu đất nước (Đồng bằng sông Hồng gắn với tam giác tăng trưởng Hà Nội – Hải Phòng – Quảng Ninh, và Đông Nam Bộ – Đồng bằng sông Cửu Long gắn với TP.HCM) chính là hai cực tập trung dân cư và lao động lớn nhất. Việt Nam có 54 dân tộc anh em cùng sinh sống đoàn kết, tạo nên bản sắc văn hóa phong phú từ miền ngược đến miền xuôi.",
+      },
+    ];
+  }
+  return [
+    {
+      title: "1. Hiểu thuật ngữ & Khái niệm cốt lõi (Nắm chắc 70% nội dung bài học)",
+      content: "Để làm chủ Địa lý tự nhiên Việt Nam mà không cần học vẹt, hãy nắm chắc 4 khái niệm gốc: (1) Hướng nghiêng địa hình (Tây Bắc – Đông Nam): chiều thấp dần của địa hình từ vùng núi cao phía Tây Bắc xuống vùng đồng bằng và thềm lục địa phía Đông Nam (nhìn hướng chảy của sông Hồng, sông Đà, sông Tiền – sông Hậu đều đổ ra Biển Đông là thấy ngay!); (2) Đồi núi thấp: vùng đồi núi có độ cao dưới 1.000m (chiếm tới 85% diện tích lãnh thổ Việt Nam, còn núi cao trên 2.000m chỉ chiếm 1%); (3) Đồng bằng châu thổ: đồng bằng rộng lớn do phù sa các hệ thống sông lớn bồi đắp trên vịnh biển nông (Đồng bằng sông Hồng và Đồng bằng sông Cửu Long); (4) Đồng bằng ven biển (chân núi – ven biển): dải đồng bằng nhỏ hẹp miền Trung do biển đóng vai trò chính khi hình thành nên đất thường nhiều cát, ít phù sa sông.",
+    },
+    {
+      title: "2. Tư duy Nhân – Quả (Tránh học vẹt: Tại sao ngành kinh tế lại gắn với từng vùng?)",
+      content: "Địa lý là mối liên hệ Nhân – Quả giữa Tự nhiên và Kinh tế:\n• Tại sao Đồng bằng sông Cửu Long và Đồng bằng sông Hồng lại là hai vựa lúa và vùng nông nghiệp trọng điểm của cả nước? → Do địa hình châu thổ bằng phẳng, đất phù sa ngọt màu mỡ được bồi tụ hằng năm kết hợp mạng lưới sông ngòi dày đặc.\n• Tại sao dải miền Trung ít trồng lúa diện rộng mà phát triển mạnh kinh tế biển (cảng nước sâu, thủy sản, du lịch biển)? → Do dãy Trường Sơn đâm sát ra biển làm đồng bằng hẹp và đất cát nghèo dinh dưỡng, nhưng bù lại bờ biển khúc khuỷu, thềm lục địa sâu, nhiều vũng vịnh kín gió (Vân Phong, Cam Ranh, Đà Nẵng) và bãi biển đẹp.\n• Tại sao vùng núi phía Bắc và Tây Nguyên lại phát triển thủy điện và cây công nghiệp lâu năm? → Do địa hình dốc, sông nhiều thác ghềnh tạo trữ năng thủy điện lớn, cùng đất đỏ bazan / feralit và khí hậu phân hóa theo đai cao.",
+    },
+    {
+      title: "3. Đọc Bản đồ / Atlat Việt Nam (Quan sát các vùng khoanh tròn đỏ)",
+      content: "Lãnh thổ Việt Nam gồm vùng đất, vùng biển (với hai quần đảo Hoàng Sa và Trường Sa) và vùng trời. Khi nhìn vào bản đồ Atlat bên dưới, hãy chú ý 3 khu vực được khoanh tròn đỏ: (1) Vùng núi Tây Bắc – Đông Bắc (nóc nhà Đông Dương Fansipan 3.143m và địa hình vòng cung); (2) Châu thổ sông Hồng & Dải ven biển miền Trung; (3) Châu thổ sông Cửu Long rộng khoảng 40.000 km² ở cực Nam.",
     },
   ];
 }
@@ -759,10 +869,28 @@ function getStudyEvidence(material, topic) {
       return historySections.map(({ title, content }) => `${title}\n${content}`).join("\n\n");
     }
   }
+  if (material === quizTopics.geography.material) {
+    const geoSections = getGeographyStudySections(topic);
+    if (geoSections) {
+      return geoSections.map(({ title, content }) => `${title}\n${content}`).join("\n\n");
+    }
+  }
   if (material === quizTopics.cProgramming.material) {
     const cSections = getCStudySections(topic);
     if (cSections) {
       return cSections.map((section) => [
+        section.title,
+        section.content,
+        section.code,
+        ...(section.codeNotes || []),
+        section.codeOutput ? `Kết quả mong đợi:\n${section.codeOutput}` : "",
+      ].filter(Boolean).join("\n")).join("\n\n");
+    }
+  }
+  if (material === quizTopics.pythonProgramming.material) {
+    const pySections = getPythonStudySections(topic);
+    if (pySections) {
+      return pySections.map((section) => [
         section.title,
         section.content,
         section.code,
@@ -780,12 +908,14 @@ function getCStudySections(topic) {
   if (/thư viện chuẩn|standard librar/.test(topicText)) {
     return [
       {
-        title: "Thư viện chuẩn cung cấp gì?",
-        content: "Thư viện chuẩn C cung cấp các hàm đã được định nghĩa cho những việc phổ biến như nhập/xuất, xử lý chuỗi và cấp phát bộ nhớ. Mỗi header như stdio.h, string.h hoặc stdlib.h khai báo giao diện cần dùng; chỉ thị #include giúp trình biên dịch biết cách gọi hàm. Phần cài đặt hàm được cung cấp bởi thư viện khi liên kết chương trình, không phải do #include tự chạy.",
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Hộp dụng cụ có sẵn và Danh mục tra cứu'",
+        content: "Hãy tưởng tượng bạn đang lắp ráp một chiếc xe đạp: thay vì phải tự rèn từng chiếc cờ-lê hay tua-vít từ cục sắt, bạn chỉ cần mở 'Hộp dụng cụ tiêu chuẩn' đã chế tạo sẵn ra dùng! Trong C, Thư viện chuẩn cung cấp các hàm đã được định nghĩa cho những việc phổ biến như nhập/xuất màn hình, đếm độ dài chuỗi và tính toán. Mỗi header như stdio.h, string.h hoặc stdlib.h khai báo giao diện cần dùng (giống như tờ danh mục ghi tên dụng cụ và cách cầm); dòng #include ở đầu bài giúp trình biên dịch biết cách gọi hàm đó.",
+        checkPrompt: "Bạn đã hiểu hình ảnh 'Tờ danh mục (#include header)' và 'Hộp dụng cụ có sẵn (thư viện chuẩn)' chưa?",
+        nextButtonLabel: "Đã hiểu ẩn dụ — Xem tiếp Code C minh họa →",
       },
       {
-        title: "Ví dụ chạy được: chọn đúng header và gọi hàm",
-        content: "Ví dụ dùng strlen từ string.h, abs từ stdlib.h và printf từ stdio.h. Mỗi hàm được khai báo bởi header tương ứng; kết quả được in ra sau khi các hàm trả về.",
+        title: "2. Áp dụng như thế nào & Code C minh họa chạy được",
+        content: "Khi cần dùng công cụ nào, ta mở đúng tờ danh mục (#include) của hộp dụng cụ đó ở đầu file rồi gọi hàm. Ví dụ dùng strlen (đếm chữ) từ string.h, abs (lấy số dương) từ stdlib.h và printf (in ra màn hình) từ stdio.h:",
         code: `#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -801,27 +931,36 @@ int main(void) {
 }`,
         codeNotes: [
           "#include <stdio.h> khai báo printf; string.h khai báo strlen; stdlib.h khai báo abs.",
-          "strlen đếm ký tự trước '\\0' và trả về size_t; biến length dùng đúng kiểu cho độ dài.",
-          "abs(7 - 10) tính trị tuyệt đối của hiệu số nguyên, cho kết quả 3.",
-          "Header cung cấp khai báo để biên dịch kiểm tra cách gọi; linker kết nối phần cài đặt thư viện khi tạo chương trình.",
+          "strlen đếm số ký tự của chữ \"C\" (trước vạch đích '\\0') và trả về kết quả bằng 1.",
+          "abs(7 - 10) đổi số âm -3 thành số dương 3 (trị tuyệt đối).",
+          "Header cung cấp khai báo để trình biên dịch kiểm tra cách gọi; phần cài đặt thực sự của hàm được nối vào khi tạo chương trình.",
         ],
         codeOutput: "Mon C co 1 ky tu; |7-10| = 3",
+        checkPrompt: "Bạn đã thấy cách khai báo `#include` ở đầu bài để gọi `printf`, `strlen`, `abs` trong `main` chưa?",
+        nextButtonLabel: "Đã hiểu Code C — Xem tiếp phần Bắt bệnh (Debug) →",
       },
       {
-        title: "Cách chọn thư viện và lỗi thường gặp",
-        content: "Hãy tìm hàm cần dùng, tra header chuẩn khai báo hàm đó, thêm header tương ứng rồi kiểm tra kiểu tham số và giá trị trả về. Thiếu header có thể khiến lời gọi hàm không được khai báo đúng; dùng sai định dạng printf hoặc bỏ qua giá trị trả về có thể gây lỗi. Không nhầm header với toàn bộ phần cài đặt của thư viện.",
+        title: "3. Quy tắc nhớ nhanh: Tờ danh mục khác với Chiếc máy thật",
+        content: "Hãy tìm hàm cần dùng, tra header chuẩn khai báo hàm đó và thêm #include tương ứng. Nhớ rằng tờ danh mục (.h) chỉ giới thiệu tên hàm, còn phần cài đặt hàm được cung cấp bởi thư viện khi ghép nối chương trình, không phải do #include tự chạy.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Lỗi kinh điển nhất khi dùng hàm nhập xuất chuẩn",
+        content: "Khi mới học thư viện `<stdio.h>`, 90% người mới đều từng vấp lỗi quên dấu `&` (số phòng) khi dùng `scanf`:\n\n❌ Code bị lỗi:\nint age = 0;\nscanf(\"%d\", age); // LỖI! Chỉ đưa giá trị 0 mà không đưa số phòng của tủ age\n\n• Tại sao lỗi? Hàm `scanf` giống như nhân viên giao hàng cần biết SỐ PHÒNG (`&age`) để mang con số người dùng vừa gõ cất vào đúng chiếc tủ `age`. Nếu thiếu dấu `&`, nhân viên giao hàng đi nhầm địa chỉ làm chương trình bị sập ngay!\n• Cách sửa đúng: Luôn thêm dấu `&` trước tên biến số trong `scanf`:\nscanf(\"%d\", &age); // Đưa đúng số phòng &age để scanf cất dữ liệu vào tủ",
+        checkPrompt: "Bạn đã nắm rõ vì sao `scanf(\"%d\", &age)` bắt buộc phải có dấu `&` chưa? Sẵn sàng làm 3 câu kiểm tra ngắn nhé!",
       },
     ];
   }
   if (/cấu trúc chương trình/.test(topicText)) {
     return [
       {
-        title: "Một chương trình C bắt đầu và kết thúc ra sao?",
-        content: "Mã nguồn C được biên dịch thành chương trình thực thi. Khi chạy, chương trình bắt đầu từ hàm main; các lệnh trong main chạy theo thứ tự từ trên xuống, trừ khi rẽ nhánh hoặc gọi hàm khác. Dấu ngoặc nhọn tạo khối lệnh, còn dấu chấm phẩy kết thúc phần lớn câu lệnh.",
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Công thức nấu ăn và Cửa chính vào nhà'",
+        content: "Hãy hình dung một chương trình C giống như một ngôi nhà có nhiều phòng, nhưng máy tính khi bước vào nhà luôn luôn tìm đúng chiếc cửa chính có treo biển `main` để bắt đầu đi vào! Khi chạy, chương trình bắt đầu từ hàm main; các lệnh bên trong cặp ngoặc nhọn `{ ... }` giống như từng bước trong công thức nấu ăn, được làm lần lượt từ dòng trên xuống dòng dưới. Cuối mỗi bước (câu lệnh), bạn đặt dấu chấm phẩy `;` giống như dấu chấm hết câu trong tiếng Việt.",
+        checkPrompt: "Bạn đã hình dung được 'Cửa chính main()' và cách máy tính đọc từng dòng lệnh từ trên xuống dưới chưa?",
+        nextButtonLabel: "Đã hiểu khái niệm — Xem tiếp Code C minh họa →",
       },
       {
-        title: "Ví dụ C hoàn chỉnh: từ thư viện đến kết quả",
-        content: "Đây là chương trình tối thiểu có thể biên dịch. Hãy lần theo thứ tự: khai báo thư viện, vào main, tạo dữ liệu, gọi printf, rồi trả mã kết thúc.",
+        title: "2. Áp dụng như thế nào & Code C minh họa chạy được",
+        content: "Đây là một chương trình C hoàn chỉnh, ngắn gọn nhất. Bạn hãy đọc từ dòng 1 xuống dòng cuối như đọc một công thức 4 bước:",
         code: `#include <stdio.h>
 
 int main(void) {
@@ -833,28 +972,37 @@ int main(void) {
     return 0;
 }`,
         codeNotes: [
-          "#include <stdio.h> cho phép dùng printf để xuất ra màn hình.",
-          "int main(void) là điểm bắt đầu của chương trình; int là kiểu giá trị kết thúc mà main trả về.",
-          "Các lệnh tạo biến và tính tổng chạy theo thứ tự; mỗi lệnh kết thúc bằng dấu chấm phẩy.",
-          "printf hiển thị kết quả; return 0 báo chương trình kết thúc bình thường.",
+          "#include <stdio.h> lấy hộp công cụ nhập xuất chuẩn để dùng được lệnh in màn hình printf.",
+          "int main(void) là cửa chính bắt đầu chương trình; cặp ngoặc nhọn { ... } ôm trọn các việc cần làm.",
+          "Máy tính lần lượt lấy số 4, số 7, cộng lại thành 11 rồi cất vào biến sum; mỗi dòng đều kết thúc bằng dấu chấm phẩy `;`.",
+          "printf in dòng chữ Tong = 11 ra màn hình; return 0 ở cuối giống như lời báo cáo: 'Đã hoàn thành nhiệm vụ suôn sẻ!'.",
         ],
         codeOutput: "Tong = 11",
+        checkPrompt: "Bạn đã nắm được thứ tự chạy từ `#include` → `main` → tính tổng → `printf` → `return 0` chưa?",
+        nextButtonLabel: "Đã hiểu Code C — Xem tiếp phần Bắt bệnh (Debug) →",
       },
       {
-        title: "Sơ đồ đọc mã và lỗi người mới hay gặp",
-        content: "Hãy nhìn chương trình như một luồng: nạp khai báo cần thiết → bắt đầu tại main → thực hiện câu lệnh → trả kết quả/kết thúc. Thiếu dấu chấm phẩy hoặc ngoặc nhọn cân bằng thường là lỗi cú pháp; đặt phép tính sai nhưng chương trình vẫn biên dịch là lỗi logic. #include không phải lệnh chạy trong main mà là chỉ thị xử lý trước khi biên dịch.",
+        title: "3. Mẹo phân biệt nhanh: Lỗi viết sai chính tả vs. Lỗi làm sai công thức",
+        content: "Nếu bạn quên dấu chấm phẩy `;` hoặc quên đóng ngoặc nhọn `}`, máy tính sẽ báo lỗi ngay lập tức và không chịu chạy (gọi là lỗi cú pháp). Còn nếu bạn muốn tính tổng mà viết nhầm dấu `+` thành dấu `-`, máy tính vẫn chạy trơn tru nhưng ra kết quả sai (gọi là lỗi suy luận / lỗi logic). Lưu ý nhỏ: dòng `#include` ở đầu bài là bước chuẩn bị dụng cụ trước khi vào `main`.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Bẫy đặt dư dấu chấm phẩy `;` ngay sau cửa chính `main`",
+        content: "Ở ngay bài đầu tiên này, bạn chỉ cần nhớ bắt đúng 1 lỗi cú pháp kinh điển nhất khi mới viết hàm `main`:\n\n❌ Code bị lỗi (Đặt dư dấu `;` ngay sau `main(void)`):\n#include <stdio.h>\nint main(void); // LỖI! Dấu ; ở đây làm đóng sập cửa chính ngay lập tức\n{\n    printf(\"Tong = 11\\n\");\n    return 0;\n}\n\n• Tại sao lỗi? Dấu chấm phẩy `;` dùng để kết thúc một câu lệnh đơn. Nếu bạn đặt `;` ngay sau `int main(void);`, máy tính tưởng rằng bạn chỉ giới thiệu tên hàm rồi thôi, khiến phần thân `{ ... }` bên dưới bị tách rời bơ vơ!\n\n✅ Code sửa đúng (Mở ngoặc nhọn `{` ngay sau `main(void)`, tuyệt đối không có dấu `;`):\nint main(void) {\n    printf(\"Tong = 11\\n\");\n    return 0;\n}",
+        checkPrompt: "Bạn đã thấy vì sao tuyệt đối không được viết dấu `;` ngay sau `int main(void)` chưa? Cùng làm 3 câu kiểm tra ngắn nhé!",
       },
     ];
   }
   if (/struct|cấu trúc dữ liệu/.test(topicText)) {
     return [
       {
-        title: "Struct là gì, và vì sao cần dùng?",
-        content: "Một biến int chỉ giữ một giá trị, nhưng một hồ sơ học sinh gồm tên, tuổi và điểm. Nếu tách thành nhiều mảng song song, rất dễ ghép nhầm tên của người này với điểm của người khác. struct định nghĩa một kiểu mới gom các trường có liên quan thành một bản ghi; bản thân định nghĩa là khuôn mẫu, còn biến struct là một hồ sơ cụ thể.",
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Tờ phiếu hồ sơ học sinh đóng thành một tập'",
+        content: "Một biến `int` thông thường giống như một mảnh giấy nhỏ chỉ ghi được đúng 1 con số. Nhưng một hồ sơ học sinh ngoài đời thực gồm cả Tên (chữ), Tuổi (số nguyên) và Điểm (số lẻ). Nếu bạn để Tên một nơi, Tuổi một nơi, Điểm một nơi thì rất dễ ghép nhầm điểm của bạn An sang cho bạn Bình! Vì vậy, C cung cấp `struct` — giúp gom các trường có liên quan thành một bản ghi (giống như một tờ phiếu thông tin in sẵn 3 mục Tên - Tuổi - Điểm trên cùng một tờ giấy); bản thân định nghĩa `struct` là cái khuôn mẫu phiếu trắng, còn biến `struct` là một tờ hồ sơ cụ thể đã điền thông tin.",
+        checkPrompt: "Bạn đã hình dung được `struct` giống như 'tờ phiếu hồ sơ gom chung Tên, Tuổi, Điểm vào một chỗ' chưa?",
+        nextButtonLabel: "Đã hiểu ẩn dụ — Xem tiếp Code C minh họa →",
       },
       {
-        title: "Ví dụ C hoàn chỉnh: tạo và đọc một hồ sơ",
-        content: "Chương trình tạo một học sinh, in các trường trực tiếp bằng dấu chấm, rồi đọc trường qua con trỏ bằng mũi tên. Đây là ví dụ C11/C17, không cần nhập dữ liệu từ bàn phím.",
+        title: "2. Áp dụng như thế nào & Code C minh họa chạy được",
+        content: "Chương trình dưới đây tạo khuôn mẫu phiếu `Student`, điền hồ sơ của bạn An, rồi lấy thông tin bằng dấu chấm (`.`) khi cầm trực tiếp tờ phiếu, hoặc dùng dấu mũi tên (`->`) khi tìm qua tờ giấy ghi số tủ (con trỏ):",
         code: `#include <stdio.h>
 
 typedef struct {
@@ -872,46 +1020,124 @@ int main(void) {
     return 0;
 }`,
         codeNotes: [
-          "typedef struct { ... } Student; định nghĩa một kiểu Student gồm ba trường; typedef cho phép viết Student thay vì struct Student.",
-          "Student student = { ... }; tạo một đối tượng cụ thể và khởi tạo các trường ngay từ đầu.",
-          "student.name dùng dấu chấm vì student là biến struct; record->score dùng mũi tên vì record là con trỏ tới struct.",
-          "const Student *record chỉ cho phép đọc hồ sơ qua con trỏ; record trỏ tới cùng đối tượng student, không tạo bản sao.",
+          "typedef struct { ... } Student; thiết kế khuôn mẫu phiếu Student gồm 3 mục: name, age và score.",
+          "Student student = { ... }; in ra một tờ phiếu thật tên là student và điền sẵn thông tin của An.",
+          "student.name dùng dấu chấm (.) vì ta đang cầm trực tiếp tờ phiếu student trên tay.",
+          "record->score dùng dấu mũi tên (->) vì record là con trỏ (tờ giấy ghi địa chỉ tủ chứa phiếu student).",
         ],
         codeOutput: "An, 18 tuoi\nDiem: 8.5",
+        checkPrompt: "Bạn đã phân biệt được khi nào dùng dấu chấm `.` (`student.name`) và khi nào dùng dấu mũi tên `->` (`record->score`) chưa?",
+        nextButtonLabel: "Đã hiểu Code C — Xem tiếp phần Bắt bệnh (Debug) →",
       },
       {
-        title: "Ý nghĩa thực tế và điều cần nhớ",
-        content: "Trong chương trình thật, struct hữu ích để biểu diễn một thực thể có nhiều thuộc tính: sản phẩm (mã, tên, giá), điểm số (môn, điểm), hoặc một điểm tọa độ (x, y). Khi cần quản lý nhiều bản ghi cùng dạng, có thể tạo mảng Student students[30]; mỗi phần tử là một hồ sơ riêng. struct giúp dữ liệu đi cùng nhau và dễ truyền cho hàm, nhưng không tự kiểm tra dữ liệu hợp lệ; chương trình vẫn phải kiểm tra điểm, tuổi và giới hạn mảng.",
+        title: "3. Ý nghĩa thực tế: Quản lý cả lớp học chỉ với một danh sách phiếu",
+        content: "Khi cần quản lý 30 học sinh trong lớp, bạn chỉ cần tạo một danh sách gồm 30 tờ phiếu: `Student students[30];` — mỗi phần tử là một hồ sơ riêng gọn gàng, không sợ nhầm điểm người này sang người kia.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Lỗi nhầm dấu chấm (`.`) và dấu mũi tên (`->`)",
+        content: "Lỗi phổ biến nhất khi mới học `struct` là dùng nhầm dấu chấm `.` cho con trỏ:\n\n❌ Code bị lỗi:\nStudent s = { \"An\", 18, 8.5f };\nStudent *p = &s;     // p là tờ giấy ghi địa chỉ của hồ sơ s\nprintf(\"%.1f\", p.score); // LỖI BIÊN DỊCH! p là con trỏ nên không dùng dấu chấm trực tiếp được\n\n• Cách nhớ cực dễ:\n  - Cầm **hồ sơ thật** (`s`) → dùng **dấu chấm**: `s.score`\n  - Cầm **tờ giấy chỉ đường / con trỏ** (`p`) → dùng **mũi tên chỉ đường**: `p->score`!",
+        checkPrompt: "Bạn đã nhớ mẹo 'Hồ sơ thật dùng dấu chấm (.), Con trỏ chỉ đường dùng mũi tên (->)' chưa?",
+      },
+    ];
+  }
+  if (/con trỏ và hàm|pointer.*function|swap/.test(topicText)) {
+    return [
+      {
+        title: "1. Ẩn dụ đời thường: 'Đưa ảnh chụp món đồ hay Đưa chìa khóa kèm số tủ?'",
+        content: "Ở bài trước, bạn đã biết: Biến là chiếc tủ đồ, `&` là số phòng dán trên cửa tủ, còn Con trỏ là tờ giấy ghi số phòng. Vậy tại sao khi viết hàm (ví dụ hàm `swap` để tráo đổi điểm giữa 2 chiếc tủ `x` và `y`), ta lại bắt buộc phải dùng Con trỏ?\n• Nếu truyền biến bình thường (`swap(x, y)`): Giống như bạn chỉ CHỤP ẢNH món đồ trong tủ gửi cho người bạn (`hàm swap`). Người bạn cắt ghép bức ảnh thế nào thì 2 chiếc tủ thật ở nhà vẫn y nguyên không đổi!\n• Nếu truyền địa chỉ cho con trỏ (`swap(&x, &y)`): Bạn đưa cho người bạn 2 TỜ GIẤY GHI SỐ PHÒNG (`&x` và `&y`). Người bạn cầm giấy đi tới tận nơi, dùng dấu `*` mở cửa cả 2 chiếc tủ thật và tráo đổi món đồ bên trong!",
+        checkPrompt: "Bạn đã hiểu vì sao muốn hàm sửa được biến gốc ở ngoài thì phải đưa 'số phòng (&)' thay vì đưa 'bản chụp ảnh' chưa?",
+        nextButtonLabel: "Đã hiểu 'Ảnh chụp vs. Số tủ' — Xem tiếp Code C hàm swap →",
+      },
+      {
+        title: "2. Code C minh họa trọn vẹn: Hàm `swap` đổi chỗ 2 số bằng Con trỏ",
+        content: "Dưới đây là toàn bộ chương trình có hàm `swap(int *a, int *b)` hoàn chỉnh để bạn thấy tận mắt cách 2 tờ giấy `a` và `b` mở tủ và đổi giá trị cho nhau:",
+        code: `#include <stdio.h>
+
+void swap(int *a, int *b) {
+    int temp = *a;  // 1. Mở tủ a lấy số 5 cất tạm vào hộp phụ temp
+    *a = *b;        // 2. Mở tủ b lấy số 9 bỏ sang tủ a
+    *b = temp;      // 3. Lấy số 5 từ hộp phụ temp bỏ vào tủ b
+}
+
+int main(void) {
+    int x = 5;
+    int y = 9;
+    swap(&x, &y);   // Đưa số phòng của tủ x (&x) và tủ y (&y) cho hàm swap
+    printf("x = %d, y = %d\\n", x, y);
+    return 0;
+}`,
+        codeNotes: [
+          "Trong main, lệnh swap(&x, &y); gửi số phòng của tủ x cho tờ giấy a, và số phòng của tủ y cho tờ giấy b.",
+          "int temp = *a; mở tủ a (đang chứa 5) cất vào hộp tạm temp để không bị mất số 5.",
+          "*a = *b; lấy số 9 trong tủ b đem cất đè vào tủ a.",
+          "*b = temp; lấy số 5 từ hộp tạm cất vào tủ b. Khi hàm kết thúc, hai tủ x và y ở main đã đổi ruột cho nhau thành 9 và 5!",
+        ],
+        codeOutput: "x = 9, y = 5",
+        checkPrompt: "Bạn đã hình dung rõ 3 bước dùng hộp phụ `temp` và dấu `*a`, `*b` để tráo đồ giữa 2 chiếc tủ trong hàm `swap` chưa?",
+        nextButtonLabel: "Đã hiểu Code hàm swap — Xem tiếp phần Bắt bệnh (Debug) →",
+      },
+      {
+        title: "3. Quy tắc sống còn khi dùng Con trỏ với Hàm",
+        content: "Khi truyền con trỏ vào hàm, hãy luôn nhớ: (1) Muốn đổi đồ bên trong tủ thì phải có dấu `*` (`*a = *b`), nếu không có dấu `*` (`a = b`) thì bạn chỉ đang chép đè số phòng trên tờ giấy nháp! (2) Các biến tạo ra bên trong một hàm giống như 'chiếc tủ dựng tạm' chỉ dùng trong lúc hàm đang chạy; khi hàm kết thúc, chiếc tủ tạm đó sẽ bị dỡ bỏ ngay.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: 2 lỗi kinh điển khi kết hợp Con trỏ và Hàm",
+        content: "Bây giờ đã có đầy đủ code ở trên, bạn hãy soi 2 lỗi mà người mới hay mắc nhất khi viết hàm dùng con trỏ:\n\n• Lỗi 1 (Sửa số ghi trên tờ giấy thay vì mở tủ đổi đồ):\nTrong hàm `void swap(int *a, int *b)`, nếu bạn viết:\n❌ Sai: `a = &y;` hoặc `int *temp = a; a = b; b = temp;` → Bạn chỉ đang tráo đổi 2 tờ giấy nháp trong tay hàm `swap`, còn 2 chiếc tủ thật `x` và `y` ở `main` chưa hề được mở cửa nên giá trị vẫn giữ nguyên!\n✅ Đúng: Phải dùng dấu `*` để mở tủ: `int temp = *a; *a = *b; *b = temp;`.\n\n• Lỗi 2 (Trả về số phòng của một 'chiếc tủ tạm' đã bị dỡ bỏ):\n❌ Sai:\nint* taoDiem(void) {\n    int s = 10;   // Tủ tạm s chỉ tồn tại bên trong hàm taoDiem\n    return &s;    // NGUY HIỂM! Đưa số phòng của tủ tạm ra ngoài\n}\n→ Ngay khi hàm `taoDiem` chạy xong dòng `return`, chiếc tủ tạm `s` bị hệ thống dỡ bỏ hoàn toàn! Tờ giấy nhận về lúc này chỉ vào một căn phòng đã bị phá hủy (tài liệu chuyên ngành gọi tờ giấy chỉ vào vùng nhớ đã bị hủy này là Con trỏ treo - Dangling Pointer).",
+        checkPrompt: "Bạn đã phân biệt được lỗi `a = b` (chỉ đổi tờ giấy) với `*a = *b` (mở tủ đổi đồ) và hiểu vì sao không được `return &s` của biến tạm trong hàm chưa?",
       },
     ];
   }
   if (/con trỏ|pointer/.test(topicText)) {
     return [
-      { title: "Con trỏ giữ địa chỉ, không phải giá trị thay thế", content: "Một biến int score giữ điểm số. Con trỏ int *pointer giữ địa chỉ của biến đó. Toán tử & lấy địa chỉ; toán tử * truy cập giá trị ở địa chỉ ấy. Chỉ giải tham chiếu con trỏ đã được gán tới một đối tượng còn tồn tại." },
       {
-        title: "Ví dụ chạy được: đọc và sửa qua con trỏ",
-        content: "Ví dụ cho thấy biến gốc đổi giá trị khi ta ghi vào *pointer.",
+        title: "1. Ẩn dụ đời thường: 'Dãy tủ đồ Locker và Tờ giấy ghi số phòng'",
+        content: "Nếu bạn mới học C, đừng lo lắng về các thuật ngữ phức tạp! Hãy tưởng tượng bộ nhớ máy tính (RAM) giống hệt như một dãy tủ gửi đồ (locker) hoặc các phòng trong một khách sạn, mỗi chiếc tủ đều có dán một con số thứ tự trên cửa:\n• Biến thông thường (`int score = 8;`): Bạn cất con số `8` vào trong một chiếc tủ đồ tên là `score`.\n• Địa chỉ (`&score`): Chính là SỐ PHÒNG / SỐ TỦ dán trên cửa tủ đó (ví dụ: phòng số `104`). Dấu `&` hiểu nôm na là hỏi máy tính: 'Cho tôi hỏi tủ `score` mang số phòng mấy?'.\n• Con trỏ (`int *pointer;`): Không trực tiếp chứa số 8, mà là MỘT TỜ GIẤY NHỚ dùng để ghi lại số phòng của chiếc tủ kia (trên tờ giấy ghi: `Phòng 104`).\n• Toán tử mở tủ (`*pointer`): Hành động cầm tờ giấy trên tay, đi tìm đúng phòng số `104`, mở cửa tủ ra để xem bên trong có số mấy hoặc thay số `8` bằng số `9`!",
+        checkPrompt: "Bạn đã hiểu hình ảnh ẩn dụ 'Tủ đồ (biến score) — Số dán trên cửa tủ (&score) — Tờ giấy ghi số phòng (pointer) — Cầm giấy đi mở tủ (*pointer)' chưa?",
+        nextButtonLabel: "Đã hiểu 'Tủ đồ & Chìa khóa' — Đẩy tiếp phần Code C →",
+      },
+      {
+        title: "2. Từ Ẩn dụ sang Code C: Mở phòng 104 và đổi điểm từ 8 thành 9",
+        content: "Khi đã hiểu 'tủ đồ và tờ giấy ghi số phòng', bạn sẽ thấy 4 dòng code C dưới đây cực kỳ dễ đọc:",
         code: `#include <stdio.h>
 
 int main(void) {
-    int score = 8;
-    int *pointer = &score;
-    *pointer = 9;
+    int score = 8;          // 1. Cất số 8 vào chiếc tủ tên là score
+    int *pointer = &score;  // 2. Lấy số phòng của tủ (&score) ghi vào tờ giấy pointer
+    *pointer = 9;           // 3. Cầm tờ giấy tìm đúng phòng đó, mở cửa tủ thay bằng số 9
     printf("score = %d\\n", score);
     return 0;
 }`,
-        codeNotes: ["&score lấy địa chỉ của score.", "pointer nhận địa chỉ đó; *pointer là chính giá trị score tại địa chỉ ấy.", "Gán *pointer = 9 thay đổi score, nên kết quả in ra là 9."],
+        codeNotes: [
+          "&score lấy số phòng (địa chỉ) của chiếc tủ score.",
+          "int *pointer = &score; tạo tờ giấy tên là pointer và ghi số phòng đó vào. (Mẹo nhỏ: dấu * lúc mới khai báo int *pointer chỉ là cái nhãn đánh dấu 'đây là tờ giấy ghi số phòng', chưa phải hành động mở tủ).",
+          "*pointer = 9; lúc này viết *pointer nghĩa là cầm tờ giấy đi mở đúng chiếc tủ score và đổi giá trị bên trong từ 8 thành 9 (trong tài liệu kỹ thuật, hành động dùng * để mở tủ gọi là 'giải tham chiếu').",
+        ],
         codeOutput: "score = 9",
+        checkPrompt: "Bạn đã thấy cách dòng lệnh `*pointer = 9;` đi theo số phòng trên tờ giấy để đổi trực tiếp số trong tủ `score` từ 8 thành 9 chưa?",
+        nextButtonLabel: "Đã hiểu Code C — Đẩy tiếp phần Bắt bệnh (Debug) →",
       },
-      { title: "Dùng khi nào?", content: "Con trỏ thường được dùng để cho hàm sửa dữ liệu của nơi gọi, duyệt mảng và quản lý bộ nhớ động. Không dùng con trỏ chưa khởi tạo, đã free, hoặc trỏ tới biến cục bộ đã hết vòng đời." },
+      {
+        title: "3. Quy tắc vàng bằng ngôn ngữ bình dân",
+        content: "Với người mới bắt đầu, bạn chỉ cần thuộc lòng đúng 1 quy tắc đơn giản: Tuyệt đối không dùng dấu `*` để mở một vùng nhớ không có thật hoặc khi tờ giấy chưa ghi số phòng! Nếu bạn mới lấy tờ giấy ra mà chưa biết ghi số phòng nào, hãy gán cho nó chữ `NULL` (`int *pointer = NULL;`) để đánh dấu rõ rằng 'tờ giấy đang để trắng, chưa chỉ vào chiếc tủ nào cả'.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh (Dành riêng cho bài mở đầu): Lỗi cầm tờ giấy trắng đi mở tủ!",
+        content: "Ở bài đầu tiên này, chúng ta chỉ tập trung bắt đúng 1 lỗi kinh điển nhất mà ai mới học Con trỏ cũng từng gặp — đó là lỗi Con trỏ `NULL` (hoặc chưa khởi tạo số phòng):\n\n❌ Code bị lỗi (Cầm giấy trắng đi mở tủ):\nint *pointer = NULL;  // Tờ giấy đang để trắng, chưa ghi số phòng của tủ nào\n*pointer = 100;       // LỖI! Cầm giấy trắng mà đòi mở cửa tủ để cất số 100\n\n• Tại sao lỗi? Vì trên tờ giấy `pointer` đang ghi `NULL` (không có phòng nào cả), nên khi dùng `*pointer = 100`, máy tính không tìm thấy tủ để mở và buộc phải dừng chương trình ngay lập tức để bảo vệ bộ nhớ!\n\n✅ Code sửa đúng (Ghi số phòng của một chiếc tủ có thật trước khi mở):\nint score = 0;          // Bước 1: Phải có chiếc tủ thật\nint *pointer = &score;  // Bước 2: Ghi số phòng &score vào tờ giấy\n*pointer = 100;         // Bước 3: Mở tủ cất số 100 an toàn tuyệt đối!\n\n(💡 Gợi ý lộ trình: Sau khi làm xong 3 câu kiểm tra nhẹ nhàng bên dưới, bạn hãy chọn học tiếp bài 'Con trỏ và Hàm' ở menu môn C để khám phá cách dùng con trỏ trong hàm hoán đổi `swap` nhé!)",
+        checkPrompt: "Bạn đã nắm chắc toàn bộ 3 bước: Ẩn dụ tủ đồ → Code C cơ bản → Bắt lỗi tờ giấy trắng `NULL` chưa? Cùng làm 3 câu kiểm tra ngắn nhé!",
+      },
     ];
   }
   if (/hàm/.test(topicText)) {
     return [
-      { title: "Hàm giải quyết vấn đề gì?", content: "Hàm đóng gói một nhiệm vụ có tên và ranh giới rõ ràng. Thay vì chép phép tính ở nhiều nơi, ta viết một lần, gọi lại khi cần và kiểm thử riêng." },
       {
-        title: "Ví dụ chạy được: nhận đầu vào và trả kết quả",
-        content: "Hàm add nhận hai số nguyên, tính tổng và trả kết quả cho main.",
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Chiếc máy ép trái cây làm thuê theo yêu cầu'",
+        content: "Hãy tưởng tượng Hàm (Function) trong C giống như một chiếc máy ép trái cây đặt trong bếp: bạn bỏ nguyên liệu đầu vào (ví dụ: 4 quả cam và 7 quả táo — gọi là tham số), chiếc máy tự chạy quy trình bên trong thân máy, rồi rót ra một ly nước ép thành phẩm (kết quả trả về qua lệnh `return`) để bạn mang đi dùng! Nhờ chia chương trình thành các hàm có tên rõ ràng, bạn không phải viết đi viết lại cùng một đoạn code nhiều lần.",
+        checkPrompt: "Bạn đã hình dung được Hàm giống như 'chiếc máy nhận nguyên liệu đầu vào → xử lý → trả ra kết quả' chưa?",
+        nextButtonLabel: "Đã hiểu ẩn dụ — Xem tiếp Code C minh họa →",
+      },
+      {
+        title: "2. Áp dụng như thế nào & Code C minh họa chạy được",
+        content: "Dưới đây là chiếc máy `add` nhận vào hai con số `left` và `right`, cộng chúng lại rồi trả kết quả về cho hàm `main`:",
         code: `#include <stdio.h>
 
 int add(int left, int right) {
@@ -923,18 +1149,37 @@ int main(void) {
     printf("Tong = %d\\n", total);
     return 0;
 }`,
-        codeNotes: ["int add(int left, int right) khai báo kiểu trả về và kiểu của từng tham số.", "return left + right trả kết quả về nơi gọi; C truyền đối số theo giá trị.", "main lưu giá trị trả về vào total rồi mới in."],
+        codeNotes: [
+          "int add(int left, int right) tạo chiếc máy tên là add, nhận 2 số nguyên và hứa sẽ trả ra 1 số nguyên (int).",
+          "return left + right; tính tổng 4 + 7 = 11 rồi trả kết quả 11 ra khỏi máy.",
+          "Trong main, dòng int total = add(4, 7); hứng lấy kết quả 11 cất vào biến total rồi in ra màn hình.",
+        ],
         codeOutput: "Tong = 11",
+        checkPrompt: "Bạn đã thấy cách `main` gửi hai số `4, 7` vào hàm `add` và nhận về tổng `11` qua lệnh `return` chưa?",
+        nextButtonLabel: "Đã hiểu Code C — Xem tiếp phần Bắt bệnh (Debug) →",
       },
-      { title: "Ý nghĩa khi tổ chức chương trình", content: "Tách hàm theo nhiệm vụ giúp chương trình dễ đọc, kiểm thử và sửa đổi. Hàm chỉ thay đổi biến của bên gọi khi ta truyền địa chỉ qua con trỏ; truyền một int thông thường chỉ tạo bản sao cho tham số." },
+      {
+        title: "3. Bản chất cần nhớ: Mặc định C chỉ gửi 'bản photo' vào hàm!",
+        content: "Trong C, khi bạn truyền một biến thông thường vào hàm (ví dụ `tangDiem(diem)`), máy tính chỉ chụp một BẢN SAO (bản photo) của con số đó đưa cho hàm xử lý (gọi là truyền theo giá trị - pass-by-value). Mọi chỉnh sửa bên trong hàm chỉ diễn ra trên tờ giấy photo, biến gốc ở bên ngoài vẫn giữ nguyên không đổi.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Tại sao gọi hàm cộng thêm 10 mà điểm gốc vẫn bằng 5?",
+        content: "Hãy xem đoạn code khiến rất nhiều người mới học C bối rối:\n\n❌ Code bị lỗi logic (Sửa trên bản photo):\nvoid tangDiem(int x) {\n    x = x + 10; // Chỉ cộng 10 vào tờ giấy photo x rồi vứt đi!\n}\nint main(void) {\n    int diem = 5;\n    tangDiem(diem);\n    printf(\"%d\", diem); // Vẫn in ra 5 chứ KHÔNG PHẢI 15!\n}\n\n• Cách sửa 1 (Dùng `return` trả kết quả mới về rồi hứng lấy):\n`int tangDiem(int x) { return x + 10; }` và trong `main` viết: `diem = tangDiem(diem);`\n• Cách sửa 2 (Đưa số phòng qua Con trỏ — bạn sẽ học kỹ ở bài 'Con trỏ và Hàm'):\n`void tangDiem(int *x) { *x = *x + 10; }` và gọi `tangDiem(&diem);`.",
+        checkPrompt: "Bạn đã hiểu vì sao `void tangDiem(int x)` chỉ sửa bản sao chứ không làm thay đổi biến `diem` trong `main` chưa?",
+      },
     ];
   }
   if (/mảng|chuỗi/.test(topicText)) {
     return [
-      { title: "Mảng là dãy phần tử cùng kiểu", content: "Mảng giữ nhiều giá trị cùng kiểu dưới một tên. Chỉ số bắt đầu từ 0, nên mảng có 3 phần tử có chỉ số hợp lệ 0, 1, 2; C không tự kiểm tra biên khi truy cập." },
       {
-        title: "Ví dụ chạy được: tính tổng bằng vòng lặp",
-        content: "Biến count cho biết số phần tử; vòng lặp chỉ đọc chỉ số nhỏ hơn count.",
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Toa tàu đánh số từ toa số 0'",
+        content: "Mảng giữ nhiều giá trị cùng kiểu dưới một tên trong một vùng nhớ liên tiếp nhau trên RAM — hãy tưởng tượng nó như một đoàn tàu gồm nhiều toa nối liền nhau! Điều thú vị nhất trong lập trình C là: người soát vé đếm toa đầu tiên là **Toa số 0** chứ không phải toa số 1! Vì vậy, nếu đoàn tàu `scores` có 3 toa, thì số hiệu của 3 toa lần lượt là **0, 1 và 2** (tuyệt đối không có toa số 3). Ngôn ngữ C không tự đặt rào chắn ở cuối tàu, nên bạn phải luôn giữ chỉ số nằm trong phạm vi từ `0` đến `số toa - 1`.",
+        checkPrompt: "Bạn đã nhớ quy tắc 'Đoàn tàu 3 toa trong C được đánh số là 0, 1, 2 (không có toa số 3)' chưa?",
+        nextButtonLabel: "Đã hiểu ẩn dụ — Xem tiếp Code C minh họa →",
+      },
+      {
+        title: "2. Áp dụng như thế nào & Code C minh họa chạy được",
+        content: "Chương trình dưới đây tạo đoàn tàu `scores` gồm 3 toa chứa điểm `{7, 8, 10}`, rồi cho vòng lặp đi qua từng toa từ `0` đến `2` để cộng tổng điểm:",
         code: `#include <stdio.h>
 
 int main(void) {
@@ -948,18 +1193,37 @@ int main(void) {
     printf("Tong = %d\\n", total);
     return 0;
 }`,
-        codeNotes: ["scores[0] là 7; phần tử đầu tiên có chỉ số 0.", "sizeof scores / sizeof scores[0] tính số phần tử khi scores vẫn là mảng trong phạm vi này.", "Điều kiện i < count giữ chỉ số trong khoảng hợp lệ."],
+        codeNotes: [
+          "scores[0] là toa đầu tiên chứa 7; scores[1] chứa 8; scores[2] là toa cuối cùng chứa 10.",
+          "sizeof scores / sizeof scores[0] lấy tổng chiều dài đoàn tàu chia cho độ dài 1 toa để tính ra đúng số toa (count = 3).",
+          "Điều kiện i < count (tức là i < 3) giúp người soát vé chỉ bước vào toa 0, 1, 2 rồi dừng lại an toàn.",
+        ],
         codeOutput: "Tong = 25",
+        checkPrompt: "Bạn đã thấy vì sao vòng lặp dùng điều kiện `i < count` (chạy 0, 1, 2) thay vì `i <= count` chưa?",
+        nextButtonLabel: "Đã hiểu Code C — Xem tiếp phần Chuỗi & Bắt bệnh (Debug) →",
       },
-      { title: "Chuỗi trong C", content: "Chuỗi C là mảng char kết thúc bằng ký tự '\\0'. Bộ đệm phải có chỗ cho ký tự kết thúc; luôn giới hạn số ký tự được ghi/đọc và không truy cập vượt kích thước mảng." },
+      {
+        title: "3. Bản chất Chuỗi chữ cái (String): Luôn cần thêm 1 toa cuối cắm cờ dừng `'\\0'`",
+        content: "Trong C, một chuỗi chữ cái (như chữ `\"An!\"`) thực chất là một đoàn tàu chở từng chữ cái trên các toa `char`, nhưng bắt buộc phải dành thêm **1 toa cuối cùng** để cắm lá cờ báo hiệu hết chữ mang ký hiệu `'\\0'` (gọi là ký tự kết thúc chuỗi). Vì vậy, muốn chở từ `\"An!\"` (dài 3 ký tự), bạn phải khai báo đoàn tàu có ít nhất **4 toa**: `char name[4] = \"An!\";`.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Bẫy bước hụt chân sang 'Toa số 3' không tồn tại (`i <= 3`)",
+        content: "Ở bài Mảng và Chuỗi này, chúng ta chỉ tập trung bắt đúng 1 lỗi kinh điển nhất mà ai mới học mảng cũng từng mắc — đó là dùng nhầm dấu `<=` làm bước hụt chân ra ngoài đoàn tàu:\n\n❌ Code bị lỗi (Đoàn tàu chỉ có 3 toa 0, 1, 2 nhưng lại bước sang toa 3):\nint scores[3] = {7, 8, 10};\nint total = 0;\nfor (int i = 0; i <= 3; i++) {  // LỖI ở dấu <= 3!\n    total += scores[i];         // Khi i = 3, đọc nhầm vào scores[3] ngoài đoàn tàu!\n}\n\n• Tại sao lỗi? Đoàn tàu `scores[3]` có 3 toa, đánh số từ `0` đến `2` (`scores[0]`, `scores[1]`, `scores[2]`). Không hề có `scores[3]`! Khi viết `i <= 3`, ở vòng cuối `i` bằng `3` làm chương trình bước hụt chân ra khỏi đoàn tàu và lấy nhầm một con số rác bên ngoài cộng vào tổng (tài liệu kỹ thuật gọi đây là lỗi tràn biên một đơn vị — Off-by-one).\n\n✅ Code sửa đúng (Luôn dùng dấu nhỏ hơn `< số lượng toa`):\nfor (int i = 0; i < 3; i++) {   // Chỉ chạy i = 0, 1, 2 rồi dừng lại an toàn!\n    total += scores[i];\n}",
+        checkPrompt: "Bạn đã thấy vì sao mảng có 3 phần tử thì vòng lặp bắt buộc phải viết `i < 3` (chạy 0, 1, 2) chứ không được viết `i <= 3` chưa?",
+      },
     ];
   }
   if (/cấu trúc điều khiển|vòng lặp|rẽ nhánh/.test(topicText)) {
     return [
-      { title: "Điều khiển đường đi của chương trình", content: "if/else chọn nhánh theo điều kiện; vòng lặp thực hiện lại một khối lệnh. Trước khi chạy, xác định điều kiện đúng/sai và biến nào thay đổi để vòng lặp có thể dừng." },
       {
-        title: "Ví dụ chạy được: phân loại và lặp qua các số",
-        content: "Chương trình quyết định kết quả theo điểm, sau đó dùng for để cộng các số từ 1 đến 4.",
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Biển báo ngã rẽ và Đường chạy vòng quanh sân'",
+        content: "Nếu không có cấu trúc điều khiển, chương trình chỉ biết đi thẳng một mạch từ trên xuống dưới. Cấu trúc điều khiển cho chương trình 2 khả năng thông minh:\n• Rẽ nhánh (`if / else`, `switch`): Giống như biển báo ở ngã ba đường — 'Nếu điểm từ 5 trở lên thì rẽ sang nhánh Đạt, ngược lại thì rẽ sang nhánh Cần học thêm'.\n• Vòng lặp (`for`, `while`, `do-while`): Giống như chạy bộ quanh sân vận động — mỗi vòng làm một việc giống nhau và luôn phải có vạch dừng rõ ràng (ví dụ: chạy đủ 4 vòng thì nghỉ) để không bị chạy mãi không dừng!",
+        checkPrompt: "Bạn đã hình dung được sự khác nhau giữa 'Ngã rẽ điều kiện (if/else)' và 'Chạy lặp lại có vạch dừng (for/while)' chưa?",
+        nextButtonLabel: "Đã hiểu ẩn dụ — Xem tiếp Code C minh họa →",
+      },
+      {
+        title: "2. Áp dụng như thế nào & Code C minh họa chạy được",
+        content: "Chương trình dưới đây dùng `if / else` để xét điểm Đạt, sau đó dùng vòng lặp `for` chạy 4 vòng để cộng các số `1 + 2 + 3 + 4`:",
         code: `#include <stdio.h>
 
 int main(void) {
@@ -977,18 +1241,37 @@ int main(void) {
     printf("Tong = %d\\n", sum);
     return 0;
 }`,
-        codeNotes: ["if chọn đúng một nhánh; với score = 8, điều kiện score >= 5 đúng.", "for khởi tạo i một lần, kiểm tra điều kiện trước mỗi lượt, rồi tăng i.", "Khi i thành 5, điều kiện i <= 4 sai nên vòng lặp dừng."],
+        codeNotes: [
+          "Vì score = 8 lớn hơn hoặc bằng 5 (điều kiện đúng), chương trình chọn nhánh đầu tiên và in chữ Dat.",
+          "Vòng lặp for bắt đầu từ vòng i = 1, mỗi vòng cộng thêm i vào sum rồi tăng i lên 1 đơn vị (i++).",
+          "Khi i tăng lên 5, điều kiện i <= 4 không còn đúng nữa nên vòng lặp dừng lại ngay.",
+        ],
         codeOutput: "Dat\nTong = 10",
+        checkPrompt: "Bạn đã nắm được 3 thành phần trong ngoặc của `for (khởi tạo; điều kiện tiếp tục; bước tăng)` chưa?",
+        nextButtonLabel: "Đã hiểu Code C — Xem tiếp phần Bắt bệnh (Debug) →",
       },
-      { title: "Lỗi thường gặp", content: "Quên cập nhật biến điều khiển có thể tạo vòng lặp vô hạn. Dùng = thay cho == trong điều kiện cũng làm đổi giá trị ngoài ý muốn; hãy kiểm tra điều kiện, cập nhật và điểm dừng cùng nhau." },
+      {
+        title: "3. Khi nào chọn `for`, `while` hay `do-while`?",
+        content: "Mẹo chọn nhanh: Dùng `for` khi đã biết trước cần lặp bao nhiêu lần (ví dụ lặp từ 1 đến 4); dùng `while` khi chưa biết trước số lần mà chỉ lặp chừng nào điều kiện còn đúng; dùng `do-while` khi muốn làm công việc ít nhất 1 lần rồi mới kiểm tra điều kiện (như hiện menu hỏi người dùng).",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Cú lừa thị giác `=` và `==` bên trong câu lệnh `if`",
+        content: "Ở bài Cấu trúc điều khiển này, bạn chỉ cần cảnh giác cao độ với 1 cái bẫy làm đau đầu hầu hết người mới học C — đó là viết nhầm 1 dấu bằng (`=`) thay vì 2 dấu bằng (`==`) khi so sánh trong `if`:\n\n❌ Code bị lỗi (Điểm chỉ có 3 nhưng vẫn được khen Điểm tuyệt đối!):\nint score = 3;\nif (score = 10) {   // LỖI! Viết 1 dấu = là cất đè số 10 vào hộp score\n    puts(\"Diem tuyet doi!\");\n}\n\n• Tại sao lỗi? Trong C, **1 dấu bằng (`=`)** là hành động **cất số vào hộp**, còn **2 dấu bằng (`==`)** mới là câu hỏi **so sánh xem hai bên có bằng nhau không**. Khi viết `if (score = 10)`, máy tính lấy số 10 nhét đè vào hộp `score`, rồi thấy số 10 khác 0 nên coi như điều kiện luôn luôn đúng!\n\n✅ Code sửa đúng (Luôn dùng 2 dấu bằng `==` khi kiểm tra bằng nhau):\nint score = 3;\nif (score == 10) {  // Hỏi: score có bằng 10 không? (3 == 10 là Sai nên không in)\n    puts(\"Diem tuyet doi!\");\n}",
+        checkPrompt: "Bạn đã nhớ kỹ quy tắc: '1 dấu bằng (`=`) là cất vào hộp, 2 dấu bằng (`==`) mới là so sánh bằng nhau trong `if`' chưa?",
+      },
     ];
   }
   if (/biến|kiểu dữ liệu/.test(topicText)) {
     return [
-      { title: "Kiểu dữ liệu quyết định cách hiểu giá trị", content: "Biến có tên, kiểu và giá trị. int phù hợp với số nguyên; float/double biểu diễn số thực; char lưu ký tự. Chọn kiểu theo dữ liệu cần biểu diễn và kiểm tra giới hạn trước khi tính toán." },
       {
-        title: "Ví dụ chạy được: khai báo và tính toán",
-        content: "Phép chia hai số nguyên cho kết quả nguyên; đổi một toán hạng sang double nếu cần phần thập phân.",
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Chiếc hộp đựng đồ có dán nhãn kích cỡ'",
+        content: "Hãy hình dung Biến (Variable) giống như những chiếc hộp đựng đồ trong nhà kho, có dán tên bên ngoài để bạn dễ gọi. Còn Kiểu dữ liệu (Data Type) chính là loại khay bên trong hộp:\n• Hộp `int`: Chỉ đựng được các con số nguyên vẹn (như `7`, `-3`, `42`), nếu bạn cố bỏ số lẻ `3.5` vào hộp `int` thì phần lẻ `.5` sẽ bị gọt mất ngay!\n• Hộp `float` và `double`: Hộp chuyên dụng để đựng số thực có phần thập phân (như `3.5`, `8.75`).\n• Hộp `char`: Hộp nhỏ xíu chỉ đựng vừa 1 ký tự đơn lẻ (như `'A'`, `'9'`).",
+        checkPrompt: "Bạn đã phân biệt được 3 chiếc hộp cơ bản: `int` (số nguyên), `double/float` (số có phần lẻ thập phân) và `char` (1 ký tự) chưa?",
+        nextButtonLabel: "Đã hiểu ẩn dụ — Xem tiếp Code C minh họa →",
+      },
+      {
+        title: "2. Áp dụng như thế nào & Code C minh họa chạy được",
+        content: "Trong C có một quy tắc rất thú vị: khi bạn lấy một số nguyên `int` chia cho một số nguyên `int` (như `7 / 2`), máy tính sẽ tự động cắt bỏ phần lẻ thập phân và chỉ trả ra `3`! Muốn giữ lại kết quả `3.50`, ta gắn nhãn `(double)` trước khi chia:",
         code: `#include <stdio.h>
 
 int main(void) {
@@ -998,18 +1281,37 @@ int main(void) {
     printf("Trung binh = %.2f\\n", average);
     return 0;
 }`,
-        codeNotes: ["completed và total là int nên lưu số nguyên.", "(double)completed chuyển phép tính sang số thực trước khi chia.", "%.2f in hai chữ số sau dấu thập phân."],
+        codeNotes: [
+          "completed giữ số nguyên 7 và total giữ số nguyên 2.",
+          "(double)completed biến số 7 thành số thực 7.0 trước khi đem chia cho 2, nhờ đó 7.0 / 2 ra đúng 3.5.",
+          "%.2f trong printf dặn màn hình in số thực với đúng 2 chữ số sau dấu chấm thập phân (3.50).",
+        ],
         codeOutput: "Trung binh = 3.50",
+        checkPrompt: "Bạn đã hiểu vì sao phải đặt `(double)` ngay trước `completed` để phép chia không bị mất phần lẻ `.5` chưa?",
+        nextButtonLabel: "Đã hiểu Code C — Xem tiếp phần Bắt bệnh (Debug) →",
       },
-      { title: "Ý nghĩa thực tế", content: "Chọn sai kiểu có thể làm mất phần thập phân hoặc vượt giới hạn biểu diễn. Không giả định kích thước mọi kiểu giống nhau trên mọi môi trường; dùng sizeof khi chương trình cần biết kích thước thực tế." },
+      {
+        title: "3. Công cụ đo kích thước hộp: Toán tử `sizeof`",
+        content: "Trên các dòng máy tính khác nhau, kích thước thật (số byte) của một chiếc hộp `int` hay `long` có thể thay đổi. Vì vậy, thay vì đoán mò kích thước kiểu dữ liệu, người lập trình C luôn dùng công cụ đo tự động `sizeof` (ví dụ `sizeof(int)`) khi cần biết chính xác chiếc hộp chiếm bao nhiêu byte.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Bẫy 'ép kiểu quá muộn' làm mất sạch phần thập phân",
+        content: "Hãy so sánh 2 dòng code chỉ khác nhau đúng một cặp dấu ngoặc đơn dưới đây:\n\n❌ Code bị lỗi (Đặt ngoặc bao quanh phép chia `7 / 2`):\ndouble avg = (double)(7 / 2); // Kết quả in ra 3.00 (SAI!)\n• Tại sao sai? Vì `(7 / 2)` nằm trong ngoặc nên được tính trước. Mà `7` và `2` đều là số nguyên `int` nên `7 / 2` đã bị gọt mất `.5` thành `3` rồi! Sau đó `(double)` mới biến số `3` thành `3.00` — lúc này phần `.5` đã mất không cứu lại được nữa!\n\n✅ Code sửa đúng (Biến số đầu tiên thành số thực TRƯỚC khi chia):\ndouble avg = (double)7 / 2;   // Hoặc viết 7.0 / 2 → Ra đúng 3.50!",
+        checkPrompt: "Bạn đã thấy sự khác biệt giữa `(double)(7 / 2)` (chia nguyên xong mới đổi kiểu → ra 3.0) và `(double)7 / 2` (đổi kiểu trước khi chia → ra 3.5) chưa?",
+      },
     ];
   }
   if (/bộ nhớ động|malloc|calloc/.test(topicText)) {
     return [
-      { title: "Khi nào cần bộ nhớ động?", content: "Dùng bộ nhớ động khi kích thước dữ liệu chỉ biết lúc chạy hoặc cần sống ngoài phạm vi khai báo cục bộ. malloc trả về địa chỉ vùng nhớ hoặc NULL nếu cấp phát thất bại." },
       {
-        title: "Ví dụ chạy được: cấp phát, dùng rồi giải phóng",
-        content: "Ví dụ kiểm tra malloc trước khi ghi và gọi free đúng một lần khi dùng xong.",
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Thuê thêm phòng khách sạn theo nhu cầu và Trả phòng'",
+        content: "Khi khai báo mảng thông thường (như `int a[10]`), bạn phải chốt cứng số lượng từ lúc viết code. Nhưng ngoài thực tế, nhiều khi chương trình chạy rồi mới biết hôm nay có 5 khách hay 500 khách! Bộ nhớ động giúp bạn **thuê thêm vùng nhớ ngay trong lúc chương trình đang chạy**:\n• Hàm `malloc`: Giống như bạn đến quầy lễ tân xin thuê một dãy phòng; lễ tân sẽ đưa cho bạn tờ giấy ghi số phòng đầu tiên (hoặc trả về `NULL` nếu khách sạn đã hết sạch phòng).\n• Hàm `free`: Khi dùng xong, bạn bắt buộc phải gọi `free` để **trả phòng cho lễ tân**, giúp máy tính không bị cạn kiệt bộ nhớ!",
+        checkPrompt: "Bạn đã hình dung được `malloc` (xin thuê phòng lúc đang chạy) và `free` (trả phòng sau khi dùng xong) chưa?",
+        nextButtonLabel: "Đã hiểu ẩn dụ — Xem tiếp Code C minh họa →",
+      },
+      {
+        title: "2. Áp dụng như thế nào & Code C minh họa chạy được",
+        content: "Quy trình chuẩn gồm 4 bước không bao giờ tách rời: **Xin thuê (`malloc`) → Kiểm tra xem còn phòng không (`!= NULL`) → Sử dụng → Trả phòng (`free`)**:",
         code: `#include <stdio.h>
 #include <stdlib.h>
 
@@ -1026,18 +1328,37 @@ int main(void) {
     free(values);
     return 0;
 }`,
-        codeNotes: ["malloc cấp phát đủ chỗ cho ba int; sizeof *values bám theo kiểu con trỏ.", "Phải kiểm tra NULL trước khi sử dụng vùng nhớ.", "Sau free(values), không được đọc/ghi values; giải phóng hai lần cũng là lỗi."],
+        codeNotes: [
+          "malloc(3 * sizeof *values) xin thuê đủ chỗ cho 3 số nguyên int (lấy số lượng 3 nhân với kích thước của 1 số).",
+          "if (values == NULL) kiểm tra xem có thuê được bộ nhớ không; nếu hết RAM thì dừng an toàn.",
+          "free(values); trả lại vùng nhớ ngay khi đã tính tổng và in xong.",
+        ],
         codeOutput: "Tong = 15",
+        checkPrompt: "Bạn đã nắm được quy trình 4 bước `malloc` → kiểm tra `NULL` → dùng → `free` chưa?",
+        nextButtonLabel: "Đã hiểu Code C — Xem tiếp phần Bắt bệnh (Debug) →",
       },
-      { title: "Quy tắc an toàn", content: "Mỗi vùng nhớ cấp phát cần có một đường giải phóng rõ ràng. Tránh rò rỉ bộ nhớ, dùng sau khi giải phóng và mất con trỏ duy nhất tới vùng nhớ." },
+      {
+        title: "3. Quy tắc vàng khi thuê bộ nhớ động",
+        content: "Mỗi vùng nhớ xin bằng `malloc` hoặc `calloc` phải được trả lại đúng 1 lần bằng `free`. Tuyệt đối không dùng lại phòng sau khi đã trả (`free`), và không quên gọi `free` trước khi kết thúc công việc.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Lỗi trả phòng xong vẫn quay lại lấy đồ (Và quên nhân `sizeof`)",
+        content: "Hãy xem đoạn code thuê phòng cho 5 số nguyên ở dưới — đây là lỗi kinh điển nhất khi mới dùng `malloc` và `free`:\n\n❌ Code bị lỗi:\nint *arr = malloc(5);       // LỖI 1: Chỉ xin 5 byte lẻ tẻ, thiếu nhân kích thước sizeof!\narr[0] = 10;\nfree(arr);                  // Đã trả phòng cho lễ tân xong...\nprintf(\"%d\\n\", arr[0]);     // LỖI 2: Trả phòng rồi mà vẫn mở cửa vào lấy đồ!\n\n• Tại sao lỗi?\n  1. Mỗi số nguyên `int` thường cần tới 4 byte, nên viết `malloc(5)` chỉ đủ cho hơn 1 số! Phải viết `malloc(5 * sizeof *arr)` để xin đủ chỗ cho 5 số nguyên.\n  2. Khi đã gọi `free(arr);`, căn phòng đã được thu hồi. Việc cố tình đọc `arr[0]` sau khi `free` giống như trả phòng khách sạn rồi vẫn tự ý xông vào (tài liệu kỹ thuật gọi là lỗi Use-after-free).\n\n✅ Code sửa đúng (Xin đủ diện tích, in kết quả xong xuôi rồi mới trả phòng `free` ở cuối):\nint *arr = malloc(5 * sizeof *arr);\nif (arr != NULL) {\n    arr[0] = 10;\n    printf(\"%d\\n\", arr[0]);\n    free(arr); // Dùng xong hoàn toàn mới trả phòng!\n}",
+        checkPrompt: "Bạn đã thấy rõ vì sao phải viết `malloc(5 * sizeof *arr)` và tuyệt đối không đọc `arr[0]` sau khi đã gọi `free(arr)` chưa?",
+      },
     ];
   }
   if (/tệp|file/.test(topicText)) {
     return [
-      { title: "Tệp giúp dữ liệu tồn tại sau khi chương trình kết thúc", content: "FILE* đại diện cho luồng tệp. fopen mở tệp theo chế độ; luôn kiểm tra kết quả khác NULL, xử lý lỗi và đóng tệp bằng fclose." },
       {
-        title: "Ví dụ chạy được: ghi một dòng vào tệp",
-        content: "Chế độ w tạo tệp mới hoặc ghi đè nội dung cũ, vì vậy chỉ dùng khi hành vi đó đúng mong muốn.",
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Ghi chép vào cuốn sổ tay trên ổ cứng'",
+        content: "Mọi biến thông thường trong RAM giống như chữ viết trên tấm bảng phấn: hễ tắt chương trình (hoặc mất điện) là bảng bị xóa sạch! Muốn lưu điểm số hay lịch sử học tập để ngày mai mở máy lên vẫn còn, ta phải ghi vào **Tệp (File)** trên ổ cứng — giống như mở một cuốn sổ tay bằng giấy:\n• `fopen`: Mở cuốn sổ tay ra (chọn chế độ đọc `\"r\"`, viết mới từ đầu `\"w\"`, hoặc viết nối thêm vào trang cuối `\"a\"`).\n• `fprintf` / `fscanf` / `fgets`: Viết chữ vào sổ hoặc đọc chữ từ sổ ra.\n• `fclose`: Gấp cuốn sổ lại và cất lên kệ an toàn sau khi viết xong!",
+        checkPrompt: "Bạn đã hình dung được quy trình làm việc với Tệp giống như 'Mở sổ (fopen) → Ghi/Đọc → Đóng sổ (fclose)' chưa?",
+        nextButtonLabel: "Đã hiểu ẩn dụ — Xem tiếp Code C minh họa →",
+      },
+      {
+        title: "2. Áp dụng như thế nào & Code C minh họa chạy được",
+        content: "Ví dụ mở cuốn sổ `result.txt` ở chế độ ghi (`\"w\"`), kiểm tra xem mở sổ có thành công không (`!= NULL`), ghi điểm 9 vào sổ rồi đóng sổ bằng `fclose`:",
         code: `#include <stdio.h>
 
 int main(void) {
@@ -1054,10 +1375,384 @@ int main(void) {
     }
     return 0;
 }`,
-        codeNotes: ["fopen trả NULL nếu mở tệp thất bại; không gọi fprintf khi file là NULL.", "fprintf ghi nội dung theo định dạng vào tệp, không phải ra màn hình.", "fclose hoàn tất ghi và giải phóng tài nguyên hệ điều hành."],
+        codeNotes: [
+          "fopen(\"result.txt\", \"w\") mở tệp để ghi; nếu ổ cứng bị khóa hoặc sai đường dẫn, nó sẽ trả về NULL.",
+          "fprintf(file, ...) viết dòng chữ 'Diem: 9' vào trong tệp file thay vì in ra màn hình.",
+          "fclose(file) đẩy toàn bộ mực còn đọng lại xuống giấy (ổ cứng) và đóng tệp an toàn.",
+        ],
         codeOutput: "Tạo result.txt với nội dung: Diem: 9",
+        checkPrompt: "Bạn đã thấy bước kiểm tra `if (file == NULL)` ngay sau `fopen` và bước đóng tệp `fclose(file)` ở cuối chưa?",
+        nextButtonLabel: "Đã hiểu Code C — Xem tiếp phần Bắt bệnh (Debug) →",
       },
-      { title: "Lưu ý khi chọn chế độ", content: "w ghi đè, a nối thêm và r đọc tệp đã có. Chọn sai chế độ có thể làm mất dữ liệu; kiểm tra lỗi khi mở, đọc/ghi và đóng tệp." },
+      {
+        title: "3. Phân biệt nhanh 3 chế độ mở sổ: `\"r\"`, `\"w\"` và `\"a\"`",
+        content: "• `\"r\"` (read): Chỉ mở ra để đọc; nếu tệp chưa có sẵn thì `fopen` trả về `NULL`.\n• `\"w\"` (write): Mở để viết mới hoàn toàn — **cảnh báo**: nếu tệp đã có nội dung cũ, chế độ `\"w\"` sẽ xóa trắng toàn bộ nội dung cũ ngay khi mở!\n• `\"a\"` (append): Mở để viết nối thêm vào cuối trang mà vẫn giữ nguyên nội dung cũ.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Lỗi đọc sổ ngay mà quên kiểm tra xem sổ có mở được không (`file == NULL`)",
+        content: "Khi mới học thao tác Tệp, lỗi phổ biến nhất làm chương trình bị sập ngay lập tức là quên kiểm tra `file == NULL` sau khi gọi `fopen`:\n\n❌ Code bị lỗi (Mở tệp chưa có thật rồi đọc luôn):\nFILE *f = fopen(\"data.txt\", \"r\"); // Nếu chưa có file data.txt, f sẽ bằng NULL!\nint x = 0;\nfscanf(f, \"%d\", &x);              // LỖI SẬP CHƯƠNG TRÌNH! Đòi đọc chữ từ cuốn sổ không tồn tại\nfclose(f);\n\n• Tại sao lỗi? Khi mở tệp ở chế độ đọc `\"r\"`, nếu người dùng chưa tạo tệp `data.txt` (hoặc gõ sai tên tệp), `fopen` không tìm thấy sổ nên trả về `NULL`. Lúc đó truyền `f` vào `fscanf` giống như bắt máy tính đọc chữ từ khoảng không!\n\n✅ Code sửa đúng (Luôn kiểm tra `if (f == NULL)` trước khi đọc/ghi):\nFILE *f = fopen(\"data.txt\", \"r\");\nif (f == NULL) {\n    puts(\"Chua co tep data.txt!\");\n    return 1;\n}\nint x = 0;\nfscanf(f, \"%d\", &x);\nfclose(f);",
+        checkPrompt: "Bạn đã nhớ quy tắc luôn kiểm tra `if (f == NULL)` ngay sau `fopen` và phân biệt chế độ `\"w\"` (xóa viết mới) với `\"a\"` (ghi nối thêm) chưa?",
+      },
+    ];
+  }
+  return null;
+}
+
+function getPythonStudySections(topic) {
+  const topicText = topic.toLocaleLowerCase("vi");
+  if (/cú pháp|thụt lề|indentation/.test(topicText)) {
+    return [
+      {
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Gạch đầu dòng lùi vào trong vở ghi bài'",
+        content: "Nếu ngôn ngữ C phải xây những bức tường ngoặc nhọn `{ ... }` và đặt dấu chấm phẩy `;` ở cuối mỗi câu, thì Python đọc giống như một trang vở ghi chép sạch đẹp của học sinh:\n• **Dấu hai chấm (`:`)**: Báo hiệu 'Sau đây là các bước con bên trong!'.\n• **Khoảng trắng thụt đầu dòng (Indentation — chuẩn 4 dấu cách)**: Giống như khi bạn viết mục lớn sát lề trái, còn các ý nhỏ bên trong thì lùi vào 1 ô vở. Tất cả những dòng cùng lùi vào thẳng hàng với nhau sẽ nằm chung trong một nhóm lệnh!\n• **`print()` và `input()`**: `print()` in kết quả ra màn hình, còn `input()` nhận chữ người dùng gõ từ bàn phím.",
+        checkPrompt: "Bạn đã hình dung được cách Python dùng 'Dấu hai chấm (:) và Lùi đầu dòng thẳng hàng' để gom nhóm các câu lệnh thay cho ngoặc nhọn `{ }` chưa?",
+        nextButtonLabel: "Đã hiểu 'Lùi đầu dòng' — Đẩy tiếp phần Code Python →",
+      },
+      {
+        title: "2. Từ Ẩn dụ sang Code Python: Sáng sủa, không cần `;` và `{ }`",
+        content: "Hãy xem một chương trình Python hoàn chỉnh dưới đây — bạn có thể đọc hiểu ngay từ dòng đầu tiên:",
+        code: `score = 8
+if score >= 5:
+    print("Chuc mung ban da Dat!")
+    print("Diem cua ban:", score)
+print("Hoan thanh kiem tra.")`,
+        codeNotes: [
+          "score = 8 gán số 8 cho biến score mà không cần viết int hay dấu chấm phẩy ; ở cuối dòng.",
+          "if score >= 5: kết thúc bằng dấu hai chấm (:), mở ra khối lệnh con bên dưới.",
+          "Hai dòng print(...) thụt vào 4 khoảng trắng đều nằm trong nhánh if (chỉ chạy khi score >= 5).",
+          "Dòng print(\"Hoan thanh...\") quay lại sát lề trái nên nằm ngoài if, lúc nào cũng được chạy.",
+        ],
+        codeOutput: "Chuc mung ban da Dat!\nDiem cua ban: 8\nHoan thanh kiem tra.",
+        checkPrompt: "Bạn đã thấy vì sao 2 dòng `print` thụt lề thuộc về `if`, còn dòng `print` cuối cùng sát lề trái nằm ngoài `if` chưa?",
+        nextButtonLabel: "Đã hiểu Code Python — Đẩy tiếp phần Bắt bệnh (Debug) →",
+      },
+      {
+        title: "3. Quy tắc vàng bằng ngôn ngữ bình dân",
+        content: "Trong Python, khoảng trắng ở đầu dòng không phải để trang trí cho đẹp mà là **luật bắt buộc**! Đã mở dấu hai chấm `:` ở cuối dòng `if`, `for`, `while`, `def` thì dòng ngay bên dưới bắt buộc phải lùi vào (thống nhất 4 dấu cách).",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Lỗi quên lùi đầu dòng (`IndentationError`) ngay sau dấu `:`",
+        content: "Ở bài mở đầu Python này, chúng ta chỉ tập trung bắt đúng 1 lỗi kinh điển nhất mà ai mới chuyển sang Python cũng gặp ngay lần đầu gõ code:\n\n❌ Code bị lỗi (Quên lùi đầu dòng sau dấu hai chấm `:`):\nscore = 8\nif score >= 5:\nprint(\"Dat!\")  # LỖI IndentationError! Viết sát lề trái làm Python không biết lệnh nào nằm trong if\n\n• Tại sao lỗi? Sau dấu `:` của câu lệnh `if score >= 5:`, Python chờ đợi ít nhất 1 dòng lệnh được lùi vào bên trong. Vì chữ `print` vẫn đứng ngang hàng với `if`, máy tính báo lỗi `IndentationError: expected an indented block` ngay lập tức!\n\n✅ Code sửa đúng (Lùi vào 4 khoảng trắng ngay dưới dòng có dấu `:`):\nscore = 8\nif score >= 5:\n    print(\"Dat!\")  # Thụt lề 4 dấu cách chuẩn xác!",
+        checkPrompt: "Bạn đã nắm chắc quy tắc 'Sau dấu hai chấm (:) bắt buộc phải lùi đầu dòng 4 khoảng trắng' chưa? Cùng làm 3 câu kiểm tra ngắn nhé!",
+      },
+    ];
+  }
+  if (/biến|kiểu dữ liệu/.test(topicText)) {
+    return [
+      {
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Chiếc thẻ tên treo lên món đồ'",
+        content: "Trong C, biến là một chiếc hộp cố định kích cỡ (hộp `int` chỉ đựng được số nguyên). Nhưng trong Python, biến giống như **một chiếc thẻ tên có dây treo (nhãn dán)**:\n• Khi viết `x = 10`, bạn buộc thẻ tên `x` vào con số nguyên `10` (`int`).\n• Ngay dòng sau viết `x = \"Xin chào\"`, bạn chỉ việc tháo thẻ tên `x` ra và buộc sang dòng chữ `\"Xin chào\"` (`str`) — cực kỳ linh hoạt (tài liệu gọi là kiểu dữ liệu động)!\n• Đặc biệt, trong Python phép chia 1 gạch `/` luôn giữ lại phần lẻ thập phân (`7 / 2` ra `3.5`), còn muốn chia lấy phần nguyên thì dùng 2 gạch `//` (`7 // 2` ra `3`).",
+        checkPrompt: "Bạn đã hiểu hình ảnh biến Python như 'chiếc thẻ tên có thể tháo ra gắn sang món đồ khác' và sự khác nhau giữa `/` với `//` chưa?",
+        nextButtonLabel: "Đã hiểu ẩn dụ — Đẩy tiếp phần Code Python →",
+      },
+      {
+        title: "2. Từ Ẩn dụ sang Code Python: Các kiểu dữ liệu và phép chia `/` vs. `//`",
+        content: "Đoạn code dưới đây minh họa cách Python tự nhận diện kiểu dữ liệu và phân biệt phép chia thực `/` với chia nguyên `//`:",
+        code: `completed = 7
+total = 2
+exact_avg = completed / total
+floor_div = completed // total
+power = 2 ** 3
+
+print("Chia thuc (/):", exact_avg)
+print("Chia nguyen (//):", floor_div)
+print("2 mũ 3 (**):", power)`,
+        codeNotes: [
+          "completed / total dùng 1 dấu gạch chéo / nên trả về số thực float là 3.5 (không bị mất .5 như trong C).",
+          "completed // total dùng 2 dấu gạch chéo // để lấy phần nguyên là 3.",
+          "2 ** 3 là phép tính lũy thừa 2 mũ 3 = 8.",
+        ],
+        codeOutput: "Chia thuc (/): 3.5\nChia nguyen (//): 3\n2 mũ 3 (**): 8",
+        checkPrompt: "Bạn đã phân biệt rõ 3 toán tử đặc trưng của Python: `/` (chia ra số thực), `//` (chia lấy phần nguyên) và `**` (lũy thừa) chưa?",
+        nextButtonLabel: "Đã hiểu Code Python — Đẩy tiếp phần Bắt bệnh (Debug) →",
+      },
+      {
+        title: "3. Quy tắc vàng bằng ngôn ngữ bình dân: Chữ `'5'` khác với Số `5`!",
+        content: "Dù Python rất thoải mái, nhưng nó **không bao giờ tự động lấy một dòng chữ đem cộng với một con số**! Đặc biệt, mọi thứ người dùng gõ vào qua lệnh `input()` đều được Python coi là **chữ viết (`str`)** (ví dụ gõ số 18 thì Python nhận được chữ `\"18\"`). Muốn đem đi cộng trừ, bạn phải đổi chữ đó thành số bằng `int(...)`.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Bẫy đem 'Chữ số' từ `input()` cộng trực tiếp với Số (`TypeError`)",
+        content: "Ở bài Biến & Kiểu dữ liệu này, hãy bắt ngay lỗi mà 95% người mới học Python đều vấp khi viết chương trình tính tuổi:\n\n❌ Code bị lỗi (Cộng trực tiếp kết quả `input()` với số `1`):\nage_text = \"18\"           # Giả sử người dùng gõ 18 vào input(), Python thu được chuỗi \"18\"\nnext_year = age_text + 1  # LỖI TypeError! Không thể lấy chữ \"18\" cộng với số 1!\n\n• Tại sao lỗi? Trong mắt Python, `\"18\"` nằm trong dấu nháy kép là một chuỗi văn bản (giống như chữ `\"AB\"`), còn `1` là con số toán học. Python không biết bạn muốn ghép chữ thành `\"181\"` hay cộng toán học thành `19`, nên nó dừng lại báo lỗi `TypeError`!\n\n✅ Code sửa đúng (Dùng `int()` đổi chữ thành số nguyên trước khi cộng):\nage = int(\"18\")       # Đổi chuỗi \"18\" thành con số 18\nnext_year = age + 1   # 18 + 1 = 19 (Chạy êm ru!)",
+        checkPrompt: "Bạn đã hiểu vì sao phải bọc `int(...)` quanh dữ liệu chuỗi số trước khi đem cộng trừ toán học chưa?",
+      },
+    ];
+  }
+  if (/chuỗi|f-string|string/.test(topicText)) {
+    return [
+      {
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Dòng chữ khắc trên tấm gỗ và Khuôn điền chỗ trống f-string'",
+        content: "Trong Python, Chuỗi ký tự (`str`) có 2 đặc điểm cực kỳ thú vị mà bạn có thể nhớ ngay qua hình ảnh đời thường:\n• **f-string (`f\"Xin chào {name}\"`)**: Giống như một tờ giấy mời có chừa sẵn ô trống `{name}` — Python sẽ tự động lấy giá trị trong biến `name` điền thẳng vào ô trống đó mà không cần cộng nối chuỗi lằng nhằng!\n• **Tính bất biến (Immutable)**: Chuỗi trong Python giống như dòng chữ đã khắc lên tấm gỗ — bạn có thể đọc từng chữ cái (`word[0]`), nhưng không thể lấy tẩy xóa sửa riêng 1 chữ cái trên tấm gỗ đó, mà phải tạo ra một chuỗi mới!",
+        checkPrompt: "Bạn đã hình dung được 'Ô trống điền tự động f-string `{...}`' và tính chất 'Dòng chữ khắc trên gỗ (không sửa lẻ 1 ký tự trực tiếp)' chưa?",
+        nextButtonLabel: "Đã hiểu ẩn dụ — Đẩy tiếp phần Code Python →",
+      },
+      {
+        title: "2. Từ Ẩn dụ sang Code Python: Dùng f-string và các công cụ làm sạch chuỗi",
+        content: "Đoạn code dưới đây dùng `.strip()` để cắt bỏ khoảng trắng thừa ở 2 đầu và dùng `f-string` để tạo câu thông báo gọn đẹp:",
+        code: `raw_name = "   an nguyen   "
+clean_name = raw_name.strip().title()
+score = 9.5
+
+message = f"Hoc sinh {clean_name} dat {score} diem."
+print(message)`,
+        codeNotes: [
+          "raw_name.strip() cắt sạch các dấu cách thừa ở đầu và cuối chuỗi.",
+          ".title() viết hoa chữ cái đầu mỗi từ, biến \"an nguyen\" thành \"An Nguyen\".",
+          "f\"Hoc sinh {clean_name} dat {score} diem.\" tự động điền cả chữ lẫn số thực 9.5 vào trong dấu ngoặc nhọn {}.",
+        ],
+        codeOutput: "Hoc sinh An Nguyen dat 9.5 diem.",
+        checkPrompt: "Bạn đã thấy chữ `f` đứng ngay trước dấu nháy kép `f\"...\"` giúp chèn biến `{clean_name}` và `{score}` dễ dàng như thế nào chưa?",
+        nextButtonLabel: "Đã hiểu Code Python — Đẩy tiếp phần Bắt bệnh (Debug) →",
+      },
+      {
+        title: "3. Quy tắc vàng bằng ngôn ngữ bình dân",
+        content: "Khi dùng `f-string`, đừng bao giờ quên chữ `f` ở ngay trước dấu nháy mở đầu! Và khi muốn đổi chữ cái trong chuỗi, hãy gán lại bằng chuỗi mới chứ không gán trực tiếp vào `s[0]`.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Lỗi cố tình sửa trực tiếp 1 ký tự trong chuỗi (`TypeError`)",
+        content: "Hãy xem lỗi mà những bạn học C chuyển sang Python hay mắc nhất khi thao tác với chuỗi:\n\n❌ Code bị lỗi (Cố sửa chữ cái đầu tiên bằng chỉ số `word[0]`):\nword = \"python\"\nword[0] = \"P\"   # LỖI TypeError: 'str' object does not support item assignment!\n\n• Tại sao lỗi? Như ẩn dụ ở Bước 1, chuỗi `str` trong Python là 'dòng chữ khắc trên gỗ' (bất biến — immutable). Bạn có thể đọc `word[0]` (ra `\"p\"`), nhưng không được phép gán đè `word[0] = \"P\"`!\n\n✅ Code sửa đúng (Tạo chuỗi mới từ chữ `\"P\"` ghép với phần đuôi `word[1:]` hoặc dùng `.capitalize()`):\nword = \"python\"\nword = \"P\" + word[1:]  # Tạo chuỗi mới \"Python\" rồi gắn lại thẻ tên word!",
+        checkPrompt: "Bạn đã hiểu vì sao trong Python `word[0] = \"P\"` bị báo lỗi và cách tạo chuỗi mới để thay thế chưa?",
+      },
+    ];
+  }
+  if (/cấu trúc điều khiển|vòng lặp|rẽ nhánh|range/.test(topicText)) {
+    return [
+      {
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Ngã rẽ if/elif/else và Vé tàu range(start, stop)'",
+        content: "Cách rẽ nhánh và lặp trong Python gần gũi như lời nói hằng ngày:\n• **Rẽ nhiều nhánh (`if` / `elif` / `else`)**: Từ khóa `elif` là viết tắt gọn gàng của `else if` ('ngược lại, nếu...'). Kết hợp điều kiện dùng chữ tiếng Anh rõ ràng: `and` (và), `or` (hoặc), `not` (không).\n• **Vòng lặp `for` và `range(start, stop)`**: Hãy tưởng tượng `range(1, 5)` giống như tấm vé tàu ghi **'Đi từ ga số 1 và dừng lại TRƯỚC cửa ga số 5'** — tức là tàu chỉ ghé qua các ga **1, 2, 3, 4** (không bao giờ bước vào số `stop` là 5)!",
+        checkPrompt: "Bạn đã nhớ quy tắc đặc biệt nhất của `range(1, 5)`: 'Bắt đầu từ 1 và dừng lại SÁT TRƯỚC 5 (chỉ lấy 1, 2, 3, 4)' chưa?",
+        nextButtonLabel: "Đã hiểu 'range dừng trước vạch đích' — Đẩy tiếp phần Code Python →",
+      },
+      {
+        title: "2. Từ Ẩn dụ sang Code Python: Xếp loại bằng `elif` và tính tổng với `range`",
+        content: "Đoạn code dưới đây kiểm tra điểm bằng `if / elif / else` và dùng `range(1, 5)` để cộng `1 + 2 + 3 + 4`:",
+        code: `score = 8
+if score >= 8:
+    rank = "Gioi"
+elif score >= 5:
+    rank = "Dat"
+else:
+    rank = "Can co gang"
+
+total = 0
+for i in range(1, 5):
+    total += i
+
+print(f"Xep loai: {rank} | Tong = {total}")`,
+        codeNotes: [
+          "Vì score = 8 thỏa mãn ngay nhánh đầu tiên score >= 8, biến rank nhận giá trị \"Gioi\".",
+          "for i in range(1, 5): lần lượt cho i nhận các giá trị 1, 2, 3, 4 (dừng trước 5).",
+          "Sau 4 vòng lặp, total = 1 + 2 + 3 + 4 = 10.",
+        ],
+        codeOutput: "Xep loai: Gioi | Tong = 10",
+        checkPrompt: "Bạn đã thấy cách `for i in range(1, 5):` tự động tăng `i` qua `1, 2, 3, 4` rồi dừng lại ở tổng bằng `10` chưa?",
+        nextButtonLabel: "Đã hiểu Code Python — Đẩy tiếp phần Bắt bệnh (Debug) →",
+      },
+      {
+        title: "3. Quy tắc vàng bằng ngôn ngữ bình dân",
+        content: "Muốn lặp từ `1` đến hết số `n` trong Python, bạn luôn phải viết số kết thúc trong `range` lớn hơn 1 đơn vị: **`range(1, n + 1)`**!",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Bẫy thiếu mất số cuối cùng khi dùng `range(1, n)`",
+        content: "Đây là lỗi logic phổ biến số 1 khi viết vòng lặp `for` trong Python:\n\n❌ Code bị lỗi (Muốn tính tổng từ 1 đến 5 nhưng lại viết `range(1, 5)`):\ntotal = 0\nfor i in range(1, 5):  # LỖI LOGIC! Chỉ chạy 1, 2, 3, 4 — bị thiếu mất số 5!\n    total += i\nprint(total)           # In ra 10 thay vì 15!\n\n• Tại sao lỗi? Vì `range(start, stop)` luôn dừng lại **sát trước `stop`**. Khi viết `range(1, 5)`, vòng lặp dừng ngay khi chạm tới 5 nên số 5 bị bỏ quên!\n\n✅ Code sửa đúng (Viết `range(1, 6)` hoặc `range(1, n + 1)` để lấy đủ cả số 5):\ntotal = 0\nfor i in range(1, 6):  # Chạy đủ 1, 2, 3, 4, 5\n    total += i\nprint(total)           # In ra đúng 15!",
+        checkPrompt: "Bạn đã nắm vững mẹo 'Muốn chạy từ 1 đến 5 thì phải viết `range(1, 6)`' chưa?",
+      },
+    ];
+  }
+  if (/list|tuple|danh sách/.test(topicText)) {
+    return [
+      {
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Khay đồ tháo lắp được (List) và Hộp kính niêm phong (Tuple)'",
+        content: "Trong Python, khi cần lưu một dãy nhiều món đồ theo thứ tự (đánh số từ toa `0`, và đặc biệt có thể đếm ngược từ toa cuối bằng số âm `-1`), bạn có 2 lựa chọn:\n• **List (`[7, 8, 10]` — ngoặc vuông)**: Giống như một khay đựng đồ mở nắp — bạn có thể thoải mái thêm đồ vào cuối (`.append()`), lấy bớt ra hoặc đổi món đồ ở bất kỳ ngăn nào.\n• **Tuple (`(7, 8, 10)` — ngoặc tròn)**: Giống như hộp kính đã niêm phong — một khi đã tạo ra thì không ai có thể sửa hay xóa phần tử bên trong, giúp bảo vệ dữ liệu cố định (như tọa độ điểm, ngày sinh).",
+        checkPrompt: "Bạn đã phân biệt được `List [...]` (thêm/sửa/xóa thoải mái) với `Tuple (...)` (niêm phong cố định) và cách đếm ngược phần tử cuối bằng `[-1]` chưa?",
+        nextButtonLabel: "Đã hiểu ẩn dụ — Đẩy tiếp phần Code Python →",
+      },
+      {
+        title: "2. Từ Ẩn dụ sang Code Python: Thêm phần tử, lấy chỉ số âm `[-1]` và Cắt lát (Slicing)",
+        content: "Đoạn code dưới đây thêm điểm `10` vào cuối danh sách `scores`, lấy phần tử cuối bằng `scores[-1]` và cắt lát 2 phần tử đầu bằng `scores[0:2]`:",
+        code: `scores = [7, 8, 9]
+scores.append(10)
+
+first_two = scores[0:2]
+last_item = scores[-1]
+
+print("Danh sach:", scores)
+print("2 diem dau:", first_two, "| Diem cuoi:", last_item)`,
+        codeNotes: [
+          "scores.append(10) nối thêm số 10 vào cuối danh sách scores thành [7, 8, 9, 10].",
+          "scores[0:2] cắt lát từ chỉ số 0 đến sát chỉ số 2 (lấy scores[0] và scores[1], tức là [7, 8]).",
+          "scores[-1] lấy thẳng phần tử cuối cùng trong danh sách là 10 mà không cần đếm tổng độ dài.",
+        ],
+        codeOutput: "Danh sach: [7, 8, 9, 10]\n2 diem dau: [7, 8] | Diem cuoi: 10",
+        checkPrompt: "Bạn đã thấy sự tiện lợi của `.append()`, chỉ số âm `[-1]` và cắt lát `[0:2]` trong Python chưa?",
+        nextButtonLabel: "Đã hiểu Code Python — Đẩy tiếp phần Bắt bệnh (Debug) →",
+      },
+      {
+        title: "3. Quy tắc vàng bằng ngôn ngữ bình dân: 'Hai thẻ tên cùng buộc vào một cái giỏ'",
+        content: "Khi bạn viết `b = a` với một danh sách `a`, Python **không hề tạo ra chiếc giỏ thứ hai**, mà chỉ buộc thêm thẻ tên `b` vào chung chiếc giỏ `a`! Muốn tạo một chiếc giỏ bản sao độc lập hoàn toàn, bạn phải viết `b = a.copy()` (hoặc `b = a[:]`).",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Bẫy gán `b = a` làm sửa danh sách `b` thì danh sách gốc `a` cũng bị đổi theo!",
+        content: "Hãy xem căn bệnh ngầm nổi tiếng nhất khi làm việc với `List` trong Python:\n\n❌ Code bị lỗi (Tưởng `b = a` là tạo bản sao riêng):\na = [1, 2, 3]\nb = a          # CẢNH BÁO! Cả a và b đang cùng chỉ vào ĐÚNG 1 danh sách duy nhất!\nb.append(99)   # Bạn chỉ định thêm 99 vào b...\nprint(a)       # NHƯNG in a ra lại thấy [1, 2, 3, 99]! Danh sách gốc a đã bị làm hỏng!\n\n• Tại sao lỗi? Vì `b = a` chỉ dán thêm một chiếc nhãn tên `b` lên cùng danh sách mà `a` đang giữ. Mọi thay đổi qua `b` chính là thay đổi trực tiếp vào chiếc giỏ chung đó!\n\n✅ Code sửa đúng (Dùng `.copy()` để nhân bản ra một danh sách mới độc lập):\na = [1, 2, 3]\nb = a.copy()   # Tạo một chiếc giỏ mới có nội dung giống hệt a\nb.append(99)   # Chỉ thêm 99 vào giỏ b\nprint(a)       # Giỏ gốc a vẫn nguyên vẹn là [1, 2, 3]!",
+        checkPrompt: "Bạn đã hiểu vì sao `b = a` làm cả hai biến cùng trỏ vào một danh sách và vì sao phải dùng `b = a.copy()` khi muốn tạo bản sao độc lập chưa?",
+      },
+    ];
+  }
+  if (/dictionary|set|từ điển|tập hợp/.test(topicText)) {
+    return [
+      {
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Danh bạ điện thoại tra theo Tên (Dict) và Rổ lọc trùng lặp (Set)'",
+        content: "Khi dữ liệu không chỉ là một hàng dọc mà cần tra cứu theo tên gọi, Python cung cấp 2 công cụ cực mạnh:\n• **Dictionary (`{\"An\": 9, \"Binh\": 8}` — Từ điển)**: Giống hệt danh bạ điện thoại trên máy bạn — thay vì phải nhớ bạn An nằm ở dòng thứ mấy, bạn chỉ cần gõ đúng **Tên khóa (`\"An\"` - Key)** là lấy ra ngay **Điểm số (`9` - Value)** trong tích tắc!\n• **Set (`{1, 2, 3}` — Tập hợp)**: Giống như một chiếc rổ thần kỳ tự động loại bỏ mọi món đồ bị trùng — nếu bạn bỏ `{1, 2, 2, 3}` vào `Set`, nó chỉ giữ lại đúng `{1, 2, 3}`!",
+        checkPrompt: "Bạn đã hình dung được `Dictionary` (tra cứu theo cặp Khóa : Giá trị) và `Set` (tự động lọc bỏ các phần tử trùng nhau) chưa?",
+        nextButtonLabel: "Đã hiểu ẩn dụ — Đẩy tiếp phần Code Python →",
+      },
+      {
+        title: "2. Từ Ẩn dụ sang Code Python: Tra cứu từ điển an toàn và lọc trùng bằng Set",
+        content: "Chương trình dưới đây lưu điểm bằng `dict`, tra cứu an toàn bằng `.get()` và dùng `set` để đếm xem có bao nhiêu mức điểm khác nhau:",
+        code: `scores = {"An": 9, "Binh": 8}
+scores["Chi"] = 9
+
+an_score = scores.get("An", 0)
+dung_score = scores.get("Dung", 0)
+unique_scores = set(scores.values())
+
+print(f"An: {an_score}, Dung: {dung_score}")
+print("Cac muc diem duy nhat:", sorted(unique_scores))`,
+        codeNotes: [
+          "scores[\"Chi\"] = 9 thêm cặp khóa \"Chi\" : 9 vào từ điển.",
+          "scores.get(\"Dung\", 0) tìm khóa \"Dung\"; vì chưa có bạn Dũng trong danh bạ nên nó trả về số mặc định là 0 một cách êm thấm.",
+          "set(scores.values()) gom các điểm [9, 8, 9] lại và tự động lọc bỏ số 9 bị trùng, chỉ còn {8, 9}.",
+        ],
+        codeOutput: "An: 9, Dung: 0\nCac muc diem duy nhat: [8, 9]",
+        checkPrompt: "Bạn đã thấy cách `.get(\"Dung\", 0)` giúp tra cứu một khóa chưa tồn tại mà vẫn trả về `0` an toàn chưa?",
+        nextButtonLabel: "Đã hiểu Code Python — Đẩy tiếp phần Bắt bệnh (Debug) →",
+      },
+      {
+        title: "3. Quy tắc vàng bằng ngôn ngữ bình dân",
+        content: "Khi không chắc một cái tên (khóa) đã có trong Dictionary hay chưa, hãy ưu tiên dùng **`d.get(key, giá_trị_mặc_định)`** hoặc kiểm tra `if key in d:` trước khi mở ngoặc vuông `d[key]`.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Lỗi sập chương trình (`KeyError`) vì đòi mở khóa không tồn tại trong Từ điển",
+        content: "Hãy so sánh cách truy cập trực tiếp bằng ngoặc vuông `scores[\"Dung\"]` với `.get()`:\n\n❌ Code bị lỗi (Đòi lấy trực tiếp một khóa chưa có trong từ điển):\nscores = {\"An\": 9, \"Binh\": 8}\nprint(scores[\"Dung\"])  # LỖI SẬP CHƯƠNG TRÌNH (KeyError: 'Dung')!\n\n• Tại sao lỗi? Khi bạn viết `scores[\"Dung\"]`, Python tìm khắp từ điển không thấy khóa `\"Dung\"` đâu cả nên lập tức ném ra lỗi `KeyError` và dừng chương trình ngay tại dòng đó!\n\n✅ Code sửa đúng (Dùng `.get()` để nhận giá trị mặc định nếu không tìm thấy khóa):\nscores = {\"An\": 9, \"Binh\": 8}\nprint(scores.get(\"Dung\", \"Chua co diem\"))  # In ra \"Chua co diem\" an toàn tuyệt đối!",
+        checkPrompt: "Bạn đã phân biệt được khi nào `d[\"khóa\"]` gây lỗi `KeyError` và cách dùng `d.get(\"khóa\", mặc_định)` để phòng tránh chưa?",
+      },
+    ];
+  }
+  if (/hàm|def|return/.test(topicText)) {
+    return [
+      {
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Chiếc máy làm việc theo từ khóa def và Cửa trả hàng return'",
+        content: "Hàm trong Python cũng giống như một chiếc máy chế biến có gắn tên, được tạo ra bằng từ khóa **`def`** (define):\n• Bạn đưa nguyên liệu vào qua các tham số trong ngoặc tròn `def tinh_tong(a, b):`.\n• Quan trọng nhất: Chiếc máy phải có câu lệnh **`return`** để **đẩy sản phẩm hoàn thiện ra cửa nhận hàng**! Nếu trong thân hàm bạn chỉ dùng `print()` (chỉ chiếu hình ảnh sản phẩm lên màn hình tivi) mà quên lệnh `return`, thì tay người gọi hàm ở bên ngoài chỉ nhận về một chiếc khay trống rỗng mang giá trị **`None`**!",
+        checkPrompt: "Bạn đã phân biệt được `print()` (chỉ hiện chữ lên màn hình) với `return` (trả kết quả thật sự ra ngoài cho biến khác hứng lấy) chưa?",
+        nextButtonLabel: "Đã hiểu 'print vs. return' — Đẩy tiếp phần Code Python →",
+      },
+      {
+        title: "2. Từ Ẩn dụ sang Code Python: Viết hàm với `def`, tham số mặc định và `return`",
+        content: "Hàm `calc_total` dưới đây nhận giá tiền và thuế (mặc định là `10%` nếu không truyền vào), tính tổng rồi dùng `return` trả kết quả về:",
+        code: `def calc_total(price, tax_rate=0.1):
+    return price + (price * tax_rate)
+
+bill_1 = calc_total(100)
+bill_2 = calc_total(100, 0.2)
+
+print(f"Hoa don 1: {bill_1} | Hoa don 2: {bill_2}")`,
+        codeNotes: [
+          "def calc_total(price, tax_rate=0.1): định nghĩa hàm với tham số tax_rate có sẵn giá trị mặc định là 0.1.",
+          "Khi gọi calc_total(100), Python tự dùng tax_rate = 0.1 và return trả về 110.0 cho biến bill_1.",
+          "Khi gọi calc_total(100, 0.2), giá trị 0.2 ghi đè lên mặc định và trả về 120.0 cho biến bill_2.",
+        ],
+        codeOutput: "Hoa don 1: 110.0 | Hoa don 2: 120.0",
+        checkPrompt: "Bạn đã hiểu cách hoạt động của tham số mặc định `tax_rate=0.1` và lệnh `return` trong hàm Python chưa?",
+        nextButtonLabel: "Đã hiểu Code Python — Đẩy tiếp phần Bắt bệnh (Debug) →",
+      },
+      {
+        title: "3. Quy tắc vàng bằng ngôn ngữ bình dân",
+        content: "Nếu muốn lấy kết quả của hàm đem đi cộng trừ hay lưu vào biến khác, trong hàm **bắt buộc phải có `return kết_quả`**. Nếu quên `return`, hàm sẽ trả về `None` (rỗng).",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Lỗi dùng `print()` thay cho `return` làm biến nhận kết quả bị biến thành `None`!",
+        content: "Đây là lỗi kinh điển nhất của người mới học hàm trong Python:\n\n❌ Code bị lỗi (Trong hàm chỉ `print` mà quên `return`):\ndef gap_doi(x):\n    print(x * 2)      # Chỉ in số 10 lên màn hình chứ KHÔNG trả hàng ra ngoài!\n\nket_qua = gap_doi(5)  # ket_qua nhận về giá trị rỗng None!\nprint(ket_qua + 1)    # LỖI TypeError! Không thể lấy None cộng với 1!\n\n• Tại sao lỗi? Vì hàm `gap_doi(5)` không có dòng `return`, nên sau khi in số 10 lên màn hình, nó tự động trả về `None` cho biến `ket_qua`. Đến dòng dưới, `None + 1` lập tức gây sập chương trình!\n\n✅ Code sửa đúng (Dùng `return` để trả giá trị về cho biến `ket_qua`):\ndef gap_doi(x):\n    return x * 2      # Trả kết quả 10 ra ngoài hàm\n\nket_qua = gap_doi(5)  # ket_qua hứng được số 10\nprint(ket_qua + 1)    # In ra 11 chuẩn xác!",
+        checkPrompt: "Bạn đã thấy rõ vì sao quên `return` trong hàm sẽ khiến biến hứng kết quả nhận giá trị `None` và gây lỗi khi tính toán tiếp chưa?",
+      },
+    ];
+  }
+  if (/ngoại lệ|try|except|tệp|file/.test(topicText)) {
+    return [
+      {
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Lưới bảo hiểm try/except và Cửa tự động đóng with open'",
+        content: "Khi chương trình chạy thực tế, người dùng có thể nhập chữ `\"abc\"` vào ô tuổi hoặc mở một tệp chưa tồn tại:\n• **Khối `try / except`**: Giống như tấm lưới bảo hiểm của diễn viên nhào lộn — bạn đặt đoạn code có nguy cơ gặp sự cố vào trong `try:` (thử làm); nếu chẳng may trượt chân gặp lỗi (như `ValueError`, chia cho 0), chương trình sẽ rơi êm ái xuống tấm lưới `except:` để xử lý lịch sự chứ không bị sập màn hình đỏ!\n• **Cú pháp `with open(...) as f:`**: Giống như chiếc cửa có bản lề tự động đóng — ngay khi đọc/ghi tệp xong (kể cả khi gặp lỗi), Python tự động đóng tệp `f` an toàn mà bạn không bao giờ sợ quên `close()`!",
+        checkPrompt: "Bạn đã hình dung được 'Tấm lưới bảo hiểm `try / except`' và 'Cửa tự động đóng tệp `with open(...) as f:`' chưa?",
+        nextButtonLabel: "Đã hiểu ẩn dụ — Đẩy tiếp phần Code Python →",
+      },
+      {
+        title: "2. Từ Ẩn dụ sang Code Python: Bắt lỗi nhập liệu bằng `try / except`",
+        content: "Đoạn code dưới đây thử đổi chuỗi người dùng nhập sang số nguyên trong `try:`; nếu gặp chữ không hợp lệ, `except ValueError:` sẽ bắt lấy và gán giá trị an toàn:",
+        code: `raw_input = "ba_muoi"
+
+try:
+    age = int(raw_input)
+    print(f"Tuoi hop le: {age}")
+except ValueError:
+    age = 0
+    print("Du lieu khong phai so! Gan mac dinh age = 0")`,
+        codeNotes: [
+          "Trong khối try:, lệnh int(\"ba_muoi\") không đổi thành số được nên phát sinh lỗi ValueError.",
+          "Thay vì sập chương trình, Python nhảy ngay xuống nhánh except ValueError:.",
+          "Chương trình gán age = 0 và in thông báo thân thiện cho người dùng.",
+        ],
+        codeOutput: "Du lieu khong phai so! Gan mac dinh age = 0",
+        checkPrompt: "Bạn đã thấy cách `try / except ValueError` giữ cho chương trình tiếp tục chạy êm ái khi dữ liệu đầu vào bị sai định dạng chưa?",
+        nextButtonLabel: "Đã hiểu Code Python — Đẩy tiếp phần Bắt bệnh (Debug) →",
+      },
+      {
+        title: "3. Quy tắc vàng bằng ngôn ngữ bình dân",
+        content: "Khi bắt lỗi bằng `except`, hãy nêu rõ tên lỗi cần bắt (như `except ValueError:` hoặc `except ZeroDivisionError:`), và khi làm việc với tệp tin thì luôn luôn dùng `with open(..., encoding=\"utf-8\") as f:`.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Lỗi mở tệp không dùng `with` và quên đóng tệp khi xảy ra sự cố",
+        content: "Hãy so sánh cách mở tệp thủ công dễ rò rỉ tài nguyên với cách dùng `with open` chuẩn của Python:\n\n❌ Code dễ gặp lỗi (Mở tệp rời rạc, nếu dòng giữa bị lỗi thì `f.close()` không bao giờ được chạy):\nf = open(\"diem.txt\", \"w\", encoding=\"utf-8\")\nf.write(123)  # LỖI TypeError (write chỉ nhận chuỗi str)! Chương trình dừng ngay, tệp f bị treo chưa đóng!\nf.close()\n\n• Tại sao nguy hiểm? Thứ nhất, `f.write()` chỉ nhận chuỗi ký tự (`\"123\"`), truyền số `123` sẽ gây lỗi `TypeError`. Thứ hai, vì lỗi xảy ra trước dòng `f.close()`, tệp tin bị bỏ lửng không được đóng!\n\n✅ Code sửa đúng (Dùng `with open` tự động đóng tệp trong mọi tình huống và truyền chuỗi vào `write`):\nwith open(\"diem.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"Diem: 9\\n\")  # Khi ra khỏi khối with, tệp f tự động được đóng an toàn!",
+        checkPrompt: "Bạn đã nắm vững vì sao trong Python luôn nên dùng `with open(...) as f:` và truyền chuỗi `str` vào `f.write()` chưa?",
+      },
+    ];
+  }
+  if (/hướng đối tượng|oop|class|object/.test(topicText)) {
+    return [
+      {
+        title: "1. Ẩn dụ đời thường & Khái niệm: 'Khuôn bánh Trung Thu (Class) và Chiếc bánh thật (Object)'",
+        content: "Lập trình hướng đối tượng (OOP) nghe có vẻ to tát nhưng thực chất giống hệt việc làm bánh:\n• **`class Student:` (Lớp)**: Chính là **chiếc khuôn bánh bằng gỗ** hoặc bản vẽ thiết kế — nó quy định mọi học sinh đều có Tên (`name`), Điểm (`score`) và biết tự giới thiệu.\n• **`Object / Instance` (Đối tượng)**: Là **từng chiếc bánh thật** được đóng ra từ khuôn đó (như bạn `sv1 = Student(\"An\", 9.0)`, bạn `sv2 = Student(\"Binh\", 8.5)`).\n• **Hàm `__init__` và từ khóa `self`**: `__init__` là khâu nhào nhân bánh ngay lúc mới đóng khuôn; còn chữ **`self`** đơn giản nghĩa là **'chính bản thân tôi'** (giúp phân biệt điểm của tôi `self.score` với thông tin truyền từ ngoài vào).",
+        checkPrompt: "Bạn đã hiểu hình ảnh 'Khuôn bánh (`class`) — Chiếc bánh thật (`object`) — Tự gắn thông tin vào chính mình (`self.name = name`)' chưa?",
+        nextButtonLabel: "Đã hiểu 'Khuôn bánh & self' — Đẩy tiếp phần Code Python →",
+      },
+      {
+        title: "2. Từ Ẩn dụ sang Code Python: Tạo khuôn `class Student` và khởi tạo đối tượng",
+        content: "Đoạn code dưới đây thiết kế khuôn `Student`, tạo ra đối tượng `student_a` và gọi phương thức `.introduce()`:",
+        code: `class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def introduce(self):
+        return f"SV {self.name} dat {self.score} diem"
+
+student_a = Student("An", 9.0)
+print(student_a.introduce())`,
+        codeNotes: [
+          "def __init__(self, name, score): tự động chạy ngay khi ta gọi Student(\"An\", 9.0).",
+          "self.name = name gắn tên \"An\" vào chính đối tượng student_a đang được tạo.",
+          "Khi gọi student_a.introduce(), Python tự động truyền student_a vào vị trí của tham số self!",
+        ],
+        codeOutput: "SV An dat 9.0 diem",
+        checkPrompt: "Bạn đã thấy cách Python tự động truyền `student_a` vào tham số đầu tiên `self` khi gọi `student_a.introduce()` chưa?",
+        nextButtonLabel: "Đã hiểu Code Python — Đẩy tiếp phần Bắt bệnh (Debug) →",
+      },
+      {
+        title: "3. Quy tắc vàng bằng ngôn ngữ bình dân",
+        content: "Mọi hàm (phương thức) viết bên trong `class` để đối tượng sử dụng đều phải có **`self` đứng ở vị trí tham số đầu tiên** (`def ten_ham(self, ...):`), và khi lưu thuộc tính phải viết `self.ten_thuoc_tinh`.",
+      },
+      {
+        title: "4. Góc Debug bắt bệnh: Lỗi quên tham số `self` ở đầu phương thức trong `class` (`TypeError`)",
+        content: "Khi mới viết `class` trong Python, lỗi phổ biến nhất là quên viết `self` trong ngoặc tròn của phương thức:\n\n❌ Code bị lỗi (Quên chữ `self` trong `def say_hi():`):\nclass Student:\n    def say_hi():          # LỖI! Thiếu tham số đầu tiên self\n        print(\"Xin chao!\")\n\ns = Student()\ns.say_hi()                 # LỖI TypeError: Student.say_hi() takes 0 positional arguments but 1 was given!\n\n• Tại sao lỗi? Khi bạn gọi `s.say_hi()`, Python luôn tự động gửi chính đối tượng `s` vào làm đối số đầu tiên cho hàm `say_hi`. Vì bạn khai báo `def say_hi():` (không nhận tham số nào), Python báo lỗi 'Hàm nhận 0 tham số nhưng lại được truyền vào 1 đối tượng'!\n\n✅ Code sửa đúng (Luôn đặt `self` làm tham số đầu tiên của phương thức):\nclass Student:\n    def say_hi(self):\n        print(\"Xin chao!\")",
+        checkPrompt: "Bạn đã hiểu vì sao mọi phương thức của đối tượng trong `class` đều phải có `self` ở vị trí đầu tiên chưa? Cùng làm 3 câu kiểm tra ngắn nhé!",
+      },
     ];
   }
   return null;
@@ -1065,17 +1760,35 @@ int main(void) {
 
 function getStudyAnalogy(topic) {
   const normalizedTopic = topic.toLocaleLowerCase("vi");
+  if (/cú pháp|thụt lề/.test(normalizedTopic)) {
+    return "Hãy hình dung trang vở ghi bài: sau dấu hai chấm (:), các dòng lệnh con được viết lùi vào thẳng hàng (4 khoảng trắng) để tạo thành một nhóm thay vì dùng cặp ngoặc nhọn { }.";
+  }
+  if (/list|tuple/.test(normalizedTopic)) {
+    return "Hãy tưởng tượng List như một khay đựng đồ mở nắp có thể thêm/bớt phần tử thoải mái, còn Tuple như chiếc hộp kính đã niêm phong không thể sửa đổi sau khi tạo.";
+  }
+  if (/dictionary|set|từ điển/.test(normalizedTopic)) {
+    return "Hãy hình dung Dictionary như danh bạ điện thoại tra cứu cực nhanh theo Tên (Key) để lấy Số (Value), còn Set như chiếc rổ tự động lọc bỏ mọi phần tử bị trùng lặp.";
+  }
+  if (/hướng đối tượng|oop|class/.test(normalizedTopic)) {
+    return "Hãy hình dung Class như chiếc khuôn làm bánh quy định hình dáng, còn mỗi Object là một chiếc bánh thật được đóng ra từ khuôn đó với dữ liệu riêng gắn qua từ khóa self.";
+  }
+  if (/ngoại lệ|try|except/.test(normalizedTopic)) {
+    return "Hãy xem khối try/except như tấm lưới bảo hiểm giúp bắt lỗi an toàn mà không làm sập chương trình, còn with open(...) như chiếc cửa có bản lề tự động đóng tệp sau khi dùng xong.";
+  }
   if (/mảng|chuỗi/.test(normalizedTopic)) {
-    return "Hãy tưởng tượng một dãy ngăn kéo được đánh số từ 0. Mỗi ngăn giữ một giá trị; muốn lấy đúng giá trị, ta cần dùng nhãn của ngăn thay vì đếm theo cách nói hằng ngày.";
+    return "Hãy tưởng tượng một đoàn tàu hoặc dãy ngăn kéo được đánh số bắt đầu từ 0 (toa 0, toa 1, toa 2). Muốn lấy đúng món đồ, ta cần gọi đúng số hiệu toa từ 0 thay vì đếm từ 1 như thói quen hằng ngày.";
+  }
+  if (/con trỏ và hàm|swap/.test(normalizedTopic)) {
+    return "Hãy hình dung việc nhờ một người bạn (hàm swap) đổi đồ giữa hai chiếc tủ khóa kín: nếu chỉ đưa ảnh chụp món đồ (truyền giá trị thường), tủ thật ở nhà không đổi; bạn phải đưa tờ giấy ghi số phòng kèm chìa khóa (&x, &y) để bạn mình mở tận tủ (*a, *b) và tráo đồ bên trong.";
   }
   if (/con trỏ|pointer/.test(normalizedTopic)) {
-    return "Hãy hình dung một tấm thẻ ghi địa chỉ của căn nhà. Tấm thẻ không phải căn nhà hay đồ vật bên trong; nó giúp ta tìm đúng nơi đang cất giá trị.";
+    return "Hãy hình dung bộ nhớ RAM như một dãy tủ gửi đồ (locker): biến score = 8 là cất số 8 vào tủ; địa chỉ &score là số phòng dán trên cửa tủ (VD: phòng 104); con trỏ pointer là tờ giấy ghi lại số phòng 104 đó; còn *pointer là cầm tờ giấy đi tìm đúng phòng 104 và mở cửa tủ ra để xem hoặc thay bằng số 9.";
   }
   if (/hàm/.test(normalizedTopic)) {
-    return "Hãy xem hàm như một chiếc máy: đưa nguyên liệu vào, máy làm theo một quy trình, rồi trả kết quả để phần khác của chương trình sử dụng.";
+    return "Hãy xem hàm như một chiếc máy ép trái cây: đưa nguyên liệu đầu vào, máy tự chạy theo quy trình bên trong, rồi trả ra kết quả qua lệnh return để phần khác của chương trình sử dụng.";
   }
-  if (/vòng lặp/.test(normalizedTopic)) {
-    return "Hãy hình dung việc kiểm tra từng món trong một danh sách: mỗi lượt làm một việc, rồi phải có điều kiện dừng rõ ràng để không lặp mãi.";
+  if (/vòng lặp|cấu trúc điều khiển/.test(normalizedTopic)) {
+    return "Hãy hình dung rẽ nhánh như biển báo ở ngã ba đường, còn vòng lặp như chạy bộ quanh sân vận động: mỗi vòng làm một việc và luôn phải có vạch dừng rõ ràng để không chạy mãi.";
   }
   return "Hãy tưởng tượng mình đang giải một tình huống thật: xác định dữ kiện, chọn quy tắc phù hợp, làm từng bước rồi tự kiểm tra kết quả.";
 }
@@ -1110,8 +1823,12 @@ function createStudyLesson({
     }));
   if (material === quizTopics.cProgramming.material && !remediationContent) {
     sections = getCStudySections(topic) || sections;
+  } else if (material === quizTopics.pythonProgramming.material && !remediationContent) {
+    sections = getPythonStudySections(topic) || sections;
   } else if (material === quizTopics.antiUsWar.material && !remediationContent) {
     sections = getHistoryStudySections(topic) || sections;
+  } else if (material === quizTopics.geography.material && !remediationContent) {
+    sections = getGeographyStudySections(topic) || sections;
   }
   const retryPrompt = remediationIndex === 0
     ? ""
@@ -1168,22 +1885,22 @@ function getStudyQuiz(topicId, topic, phase) {
         answerIndex: 0,
       },
       {
-        question: "Mục tiêu quân sự chính của phía Pháp khi xây dựng tập đoàn cứ điểm Điện Biên Phủ là gì?",
+        question: "Chiến thuật tác chiến nào đã được quân và dân ta sử dụng tại Điện Biên Phủ để vô hiệu hóa ưu thế hỏa lực của Pháp?",
         options: [
-          "Giữ vị trí chiến lược ở Tây Bắc và buộc đối phương giao chiến theo cách có lợi cho Pháp",
-          "Mở đường biển từ Hà Nội vào Sài Gòn",
-          "Bảo vệ cuộc tổng tuyển cử thống nhất Việt Nam",
-          "Rút toàn bộ lực lượng khỏi Đông Dương ngay trong năm 1953",
+          "Chuyển sang phương châm 'Đánh chắc, tiến chắc', đào hệ thống giao thông hào bao vây lấn dũi và đưa pháo vào hầm trên sườn núi",
+          "Tập trung toàn bộ lực lượng đánh tổng lực trong một đêm duy nhất",
+          "Dùng hải quân phong tỏa đường biển vào lòng chảo Điện Biên",
+          "Rút toàn bộ lực lượng khỏi Tây Bắc để chuyển sang đấu tranh nghị trường",
         ],
         answerIndex: 0,
       },
       {
-        question: "Điều gì diễn ra vào ngày 7/5/1954 tại Điện Biên Phủ?",
+        question: "Điều gì diễn ra vào ngày 7/5/1954 tại Điện Biên Phủ và thiệt hại máy bay Pháp được History.com ghi nhận như thế nào?",
         options: [
-          "Sở chỉ huy tập đoàn cứ điểm bị đánh chiếm, chiến dịch kết thúc với thất bại của quân Pháp",
-          "Hiệp định Genève được ký kết",
-          "Quân đội Hoa Kỳ đổ bộ vào Đà Nẵng",
-          "Tổng tuyển cử thống nhất Việt Nam được tổ chức",
+          "Sở chỉ huy tập đoàn cứ điểm bị đánh chiếm, Pháp thất thủ (mất 62 máy bay và 167 chiếc bị hư hại)",
+          "Hiệp định Genève được ký kết ngay tại hầm chỉ huy Điện Biên Phủ",
+          "Quân đội Hoa Kỳ đổ bộ vào Đà Nẵng mở đầu chiến tranh cục bộ",
+          "Tổng tuyển cử thống nhất Việt Nam được tổ chức trên cả hai miền",
         ],
         answerIndex: 0,
       },
@@ -1191,32 +1908,32 @@ function getStudyQuiz(topicId, topic, phase) {
   } else if (topicId === "antiUsWar" && /đồng khởi/.test(topicText)) {
     questions = [
       { question: "Phong trào Đồng Khởi bùng lên tiêu biểu ở đâu và vào năm nào?", options: ["Bến Tre, năm 1960", "Điện Biên, năm 1954", "Hà Nội, năm 1946", "Sài Gòn, năm 1975"], answerIndex: 0 },
-      { question: "Phong trào Đồng Khởi diễn ra chủ yếu ở miền nào?", options: ["Miền Nam", "Miền Bắc", "Tây Bắc", "Toàn Đông Dương cùng lúc"], answerIndex: 0 },
-      { question: "Khi học về Đồng Khởi, mốc nào cần gắn với sự kiện tiêu biểu ở Bến Tre?", options: ["Năm 1960", "Năm 1954", "Năm 1968", "Năm 1973"], answerIndex: 0 },
+      { question: "Trong phong trào Đồng Khởi ở miền Nam, nhân dân ta đã sáng tạo phương thức đấu tranh nào làm tan rã hàng loạt đồn bốt địch?", options: ["Kết hợp đấu tranh chính trị với vũ trang ('Ba mũi giáp công': Chính trị, Quân sự, Binh vận) và 'Đội quân tóc dài'", "Chỉ dùng pháo hạng nặng và máy bay ném bom chiến lược", "Chỉ đàm phán ngoại giao tại Paris mà không nổi dậy", "Tập kết toàn bộ lực lượng ra miền Bắc"], answerIndex: 0 },
+      { question: "Khi học về Đồng Khởi (Bến Tre năm 1960), nhận định nào phản ánh đúng bản chất và thắng lợi của phong trào?", options: ["Là phong trào nổi dậy rộng khắp ở miền Nam làm tan rã bộ máy kìm kẹp cơ sở của địch và dẫn tới sự ra đời Mặt trận Dân tộc Giải phóng miền Nam Việt Nam", "Chỉ là một trận đánh đơn lẻ diễn ra trong một ngày tại một cứ điểm", "Là sự kiện kết thúc hoàn toàn chiến tranh tại miền Nam năm 1960", "Là hội nghị ký kết hiệp định đình chiến ở Đông Dương"], answerIndex: 0 },
     ];
   } else if (topicId === "antiUsWar" && /gen[eèê]ve/.test(topicText)) {
     questions = [
       { question: "Hiệp định Genève về Đông Dương được ký vào năm nào?", options: ["1954", "1960", "1968", "1973"], answerIndex: 0 },
-      { question: "Giới tuyến quân sự gần vĩ tuyến 17 theo Hiệp định Genève có ý nghĩa gì?", options: ["Phân chia vùng tập kết quân sự tạm thời, không phải biên giới quốc gia vĩnh viễn", "Biên giới quốc gia vĩnh viễn của Việt Nam", "Ranh giới giữa Việt Nam và Lào", "Tuyến đường rút quân Hoa Kỳ năm 1973"], answerIndex: 0 },
-      { question: "Hiệp định Genève dự kiến điều gì để thống nhất Việt Nam?", options: ["Tổng tuyển cử năm 1956", "Tổng tuyển cử năm 1976", "Ký Hiệp định Paris năm 1954", "Chiến dịch Hồ Chí Minh năm 1956"], answerIndex: 0 },
+      { question: "Giới tuyến quân sự gần vĩ tuyến 17 theo Hiệp định Genève có ý nghĩa pháp lý gì?", options: ["Phân chia vùng tập kết quân sự tạm thời, không phải biên giới quốc gia vĩnh viễn", "Biên giới quốc gia vĩnh viễn chia cắt hai nhà nước", "Ranh giới giữa Việt Nam và Lào", "Tuyến đường rút quân Hoa Kỳ năm 1973"], answerIndex: 0 },
+      { question: "Hiệp định Genève dự kiến điều gì để thống nhất Việt Nam và vì sao điều đó không diễn ra?", options: ["Dự kiến tổng tuyển cử năm 1956 nhưng không diễn ra do sự can thiệp của Mỹ và chính quyền Ngô Đình Diệm từ chối hiệp thương", "Dự kiến tổng tuyển cử năm 1976 và diễn ra đúng kế hoạch", "Ký Hiệp định Paris ngay trong năm 1954", "Tổ chức Chiến dịch Hồ Chí Minh năm 1956"], answerIndex: 0 },
     ];
   } else if (topicId === "antiUsWar" && /tết 1968|mậu thân|tổng tiến công.*tết/.test(topicText)) {
     questions = [
       { question: "Tổng tiến công và nổi dậy Tết Mậu Thân diễn ra vào năm nào?", options: ["1968", "1954", "1973", "1975"], answerIndex: 0 },
-      { question: "Đặc điểm nổi bật về phạm vi của cuộc Tổng tiến công Tết Mậu Thân là gì?", options: ["Diễn ra ở nhiều đô thị và địa bàn tại miền Nam", "Chỉ diễn ra tại Điện Biên Phủ", "Chỉ là một cuộc đàm phán ở Paris", "Diễn ra sau ngày chiến tranh kết thúc"], answerIndex: 0 },
-      { question: "Nhận định nào phân biệt đúng kết quả và tác động của Tết Mậu Thân?", options: ["Không đạt mọi mục tiêu quân sự dự kiến nhưng tạo tác động chính trị, truyền thông sâu rộng", "Đạt mọi mục tiêu quân sự và kết thúc chiến tranh ngay năm 1968", "Chỉ có tác động ở một địa phương, không ảnh hưởng tranh luận", "Là hiệp định quy định quân đội Hoa Kỳ rút năm 1973"], answerIndex: 0 },
+      { question: "Nét độc đáo về nghệ thuật quân sự của cuộc Tổng tiến công và nổi dậy Tết Mậu Thân 1968 là gì?", options: ["Bất ngờ tiến công đồng loạt vào hầu hết các đô thị, sào huyệt đầu não của địch ở miền Nam kết hợp lực lượng Biệt động thành", "Chỉ diễn ra tại một cứ điểm rừng núi ở Điện Biên Phủ", "Chỉ là một cuộc đàm phán ngoại giao ở Paris", "Diễn ra sau ngày chiến tranh đã kết thúc"], answerIndex: 0 },
+      { question: "Nhận định nào phân biệt đúng kết quả quân sự và tác động chiến lược của Tết Mậu Thân 1968?", options: ["Không đạt mọi mục tiêu quân sự dự kiến nhưng tạo tác động chính trị, truyền thông sâu rộng, làm lung lay ý chí xâm lược của Mỹ và buộc Mỹ ngồi vào bàn đàm phán", "Đạt mọi mục tiêu quân sự và kết thúc chiến tranh ngay năm 1968", "Chỉ có tác động ở một địa phương nhỏ, không ảnh hưởng tới nước Mỹ", "Là hiệp định quy định quân đội Hoa Kỳ rút năm 1973"], answerIndex: 0 },
     ];
   } else if (topicId === "antiUsWar" && /hiệp định paris|paris/.test(topicText)) {
     questions = [
       { question: "Hiệp định Paris về Việt Nam được ký vào ngày nào?", options: ["27/1/1973", "7/5/1954", "30/4/1975", "2/9/1945"], answerIndex: 0 },
-      { question: "Điều gì đúng về hệ quả của Hiệp định Paris?", options: ["Quân đội Hoa Kỳ rút khỏi Việt Nam, nhưng xung đột giữa các lực lượng Việt Nam còn tiếp diễn", "Chiến tranh tại miền Nam kết thúc ngay trong ngày ký", "Việt Nam thống nhất nhà nước ngay năm 1973", "Hiệp định được ký sau ngày 30/4/1975"], answerIndex: 0 },
-      { question: "Sau khi quân đội Hoa Kỳ rút theo Hiệp định Paris, điều gì tiếp tục diễn ra?", options: ["Xung đột giữa các lực lượng Việt Nam", "Chiến tranh tại miền Nam kết thúc ngay", "Tổng tuyển cử năm 1956 được tổ chức", "Chiến dịch Điện Biên Phủ bắt đầu"], answerIndex: 0 },
+      { question: "Thắng lợi quân sự vang dội nào cuối tháng 12/1972 đã đập tan cuộc tập kích B-52 của Mỹ và buộc Hoa Kỳ phải ký Hiệp định Paris?", options: ["Chiến thắng 'Điện Biên Phủ trên không' 12 ngày đêm tại Hà Nội, Hải Phòng", "Chiến dịch Biên giới thu đông năm 1950", "Phong trào Đồng Khởi Bến Tre năm 1960", "Chiến dịch Tây Nguyên tháng 3/1975"], answerIndex: 0 },
+      { question: "Điều gì đúng về hệ quả của Hiệp định Paris ngày 27/1/1973?", options: ["Quân đội Hoa Kỳ rút khỏi Việt Nam ('đánh cho Mỹ cút'), nhưng xung đột giữa các lực lượng Việt Nam còn tiếp diễn tới năm 1975", "Chiến tranh tại miền Nam kết thúc ngay trong ngày ký 27/1/1973", "Việt Nam thống nhất nhà nước ngay năm 1973", "Hiệp định được ký sau ngày 30/4/1975"], answerIndex: 0 },
     ];
   } else if (topicId === "antiUsWar" && getHistoryEventKey(topic) === "endWar") {
     questions = [
       { question: "Chiến dịch Hồ Chí Minh bắt đầu vào ngày nào?", options: ["26/4/1975", "27/1/1973", "7/5/1954", "10/3/1968"], answerIndex: 0 },
-      { question: "Sự kiện nào gắn với ngày 30/4/1975?", options: ["Lực lượng tiến công tiến vào Sài Gòn và Tổng thống Dương Văn Minh tuyên bố đầu hàng", "Hiệp định Paris được ký", "Phong trào Đồng Khởi bùng lên ở Bến Tre", "Hiệp định Genève được ký"], answerIndex: 0 },
-      { question: "Việc thống nhất nhà nước Việt Nam được thực hiện vào năm nào?", options: ["1976", "1973", "1968", "1954"], answerIndex: 0 },
+      { question: "Thứ tự 3 chiến dịch lớn trong cuộc Tổng tiến công và nổi dậy mùa Xuân 1975 và sự kiện ngày 30/4/1975 là gì?", options: ["Tây Nguyên → Huế–Đà Nẵng → Hồ Chí Minh; ngày 30/4/1975 lực lượng tiến công tiến vào Sài Gòn và Tổng thống Dương Văn Minh tuyên bố đầu hàng", "Hồ Chí Minh → Tây Nguyên → Điện Biên Phủ; ký Hiệp định Paris ngày 30/4", "Đồng Khởi → Mậu Thân → Genève", "Huế–Đà Nẵng → Điện Biên Phủ → Tây Nguyên"], answerIndex: 0 },
+      { question: "Sau khi chiến tranh tại miền Nam kết thúc ngày 30/4/1975, việc thống nhất đất nước về mặt nhà nước được hoàn thành vào năm nào?", options: ["1976", "1973", "1968", "1954"], answerIndex: 0 },
     ];
   } else if (topicId === "antiUsWar") {
     questions = [
@@ -1226,81 +1943,141 @@ function getStudyQuiz(topicId, topic, phase) {
     ];
   } else if (topicId === "geography" && /khí hậu/.test(topicText)) {
     questions = [
-      { question: "Đặc điểm khí hậu chung của Việt Nam là gì?", options: ["Nhiệt đới ẩm gió mùa", "Ôn đới lục địa quanh năm", "Hoang mạc khô nóng", "Hàn đới băng tuyết"], answerIndex: 0 },
-      { question: "Yếu tố nào góp phần làm khí hậu Việt Nam khác nhau giữa các vùng?", options: ["Vĩ độ, độ cao và ảnh hưởng của biển", "Chỉ có kinh độ", "Chỉ có hoạt động đô thị", "Khoảng cách tới xích đạo là như nhau"], answerIndex: 0 },
-      { question: "Cách nào phù hợp khi so sánh khí hậu Bắc và Nam Việt Nam?", options: ["Xét khác biệt mùa và ảnh hưởng vị trí địa lý", "Cho rằng mọi nơi có mùa đông giống nhau", "Chỉ dựa vào một ngày thời tiết", "Bỏ qua độ cao địa hình"], answerIndex: 0 },
+      { question: "[Khái niệm] Đặc điểm khí hậu chung của Việt Nam là gì và thuật ngữ 'biên độ nhiệt năm' có nghĩa là gì?", options: ["Nhiệt đới ẩm gió mùa; biên độ nhiệt năm là mức chênh lệch giữa nhiệt độ trung bình tháng nóng nhất và tháng lạnh nhất", "Ôn đới lục địa quanh năm; biên độ nhiệt là lượng mưa trung bình", "Hoang mạc khô nóng; biên độ nhiệt là độ cao của núi", "Hàn đới băng tuyết quanh năm"], answerIndex: 0 },
+      { question: "[Tư duy Nhân – Quả] Tại sao miền Bắc Việt Nam có mùa đông lạnh và biên độ nhiệt năm lớn, trong khi miền Nam nóng quanh năm?", options: ["Vì miền Bắc ở vĩ độ cao hơn nên đón trực tiếp gió mùa Đông Bắc lạnh, còn gió này khi xuống phía Nam bị suy yếu và bị dãy Bạch Mã chặn lại", "Vì miền Bắc nằm ngay trên đường xích đạo còn miền Nam ở gần Bắc Cực", "Chỉ do hoạt động giao thông ở các đô thị tạo ra", "Vì miền Bắc không giáp biển còn miền Nam giáp biển"], answerIndex: 0 },
+      { question: "[Vận dụng & Bản đồ] Tại sao sườn Đông dãy Trường Sơn (miền Trung) lại chịu hiện tượng gió Tây khô nóng (gió Lào) vào đầu mùa hạ?", options: ["Do khối khí Tây Nam từ vịnh Bắc Bộ / Ấn Độ Dương vượt dãy Trường Sơn bị trút mưa ở sườn Tây rồi biến tính trở nên khô nóng khi tràn xuống sườn Đông (hiệu ứng phơn)", "Do gió mùa Đông Bắc thổi trực tiếp từ biển vào giữa mùa hè", "Do miền Trung chỉ có đồng bằng châu thổ rộng lớn không có núi", "Do ảnh hưởng của băng tan từ vùng cực"], answerIndex: 0 },
     ];
   } else if (topicId === "geography" && /dân cư/.test(topicText)) {
     questions = [
-      { question: "Dân cư Việt Nam phân bố như thế nào?", options: ["Không đồng đều giữa các vùng", "Chia đều tuyệt đối trên lãnh thổ", "Chỉ sống ở miền núi", "Chỉ tập trung dọc biên giới"], answerIndex: 0 },
-      { question: "Khu vực nào thường tập trung đông dân hơn?", options: ["Đồng bằng và đô thị", "Đỉnh núi cao", "Rừng sâu ít đường giao thông", "Mọi khu vực đều như nhau"], answerIndex: 0 },
-      { question: "Dân số đông vừa tạo nguồn lao động, vừa đặt ra yêu cầu gì?", options: ["Phát triển việc làm và hạ tầng phù hợp", "Ngừng cung cấp dịch vụ y tế", "Không cần quy hoạch đô thị", "Giảm nhu cầu giáo dục về không"], answerIndex: 0 },
+      { question: "[Khái niệm] Sự khác biệt cốt lõi giữa 'gia tăng dân số tự nhiên' và 'gia tăng dân số cơ học' là gì?", options: ["Gia tăng tự nhiên là chênh lệch giữa tỷ suất sinh và tử; còn gia tăng cơ học là chênh lệch giữa nhập cư và xuất cư (di cư)", "Hai khái niệm hoàn toàn giống nhau, chỉ tính số trẻ em sinh ra", "Gia tăng tự nhiên chỉ tính ở đô thị, gia tăng cơ học chỉ tính ở miền núi", "Gia tăng cơ học là diện tích đất nông nghiệp chia cho dân số"], answerIndex: 0 },
+      { question: "[Tư duy Nhân – Quả] Tại sao Đồng bằng sông Hồng, Đông Nam Bộ và Đồng bằng sông Cửu Long lại tập trung đông dân cư nhất cả nước?", options: ["Do hội tụ điều kiện tự nhiên thuận lợi (địa hình phẳng, đất phù sa, nguồn nước) và kinh tế phát triển (đô thị, công nghiệp, dịch vụ tạo nhiều việc làm hút lao động)", "Vì các vùng này toàn bộ là núi đá vôi cao trên 2.000m", "Vì ở miền núi bị cấm làm nông nghiệp", "Do dân số được chia đều tuyệt đối theo diện tích từng tỉnh"], answerIndex: 0 },
+      { question: "[Vận dụng thực tế] Dân số đông và mật độ dân số quá cao ở các đô thị lớn đặt ra bài toán Nhân – Quả nào cần giải quyết?", options: ["Vừa tạo nguồn nhân lực và thị trường tiêu thụ lớn, vừa gây sức ép lên việc làm, hạ tầng giao thông, nhà ở, y tế, giáo dục và môi trường", "Làm giảm hoàn toàn nhu cầu sử dụng điện, nước và bệnh viện", "Khiến các đô thị không cần quy hoạch giao thông", "Xóa bỏ hoàn toàn sự đa dạng văn hóa giữa các dân tộc"], answerIndex: 0 },
     ];
   } else if (topicId === "geography") {
     questions = [
-      { question: "Địa hình Việt Nam có đặc điểm nổi bật nào?", options: ["Đồi núi chiếm phần lớn diện tích, chủ yếu là đồi núi thấp", "Toàn bộ lãnh thổ là đồng bằng", "Không có đồng bằng ven biển", "Chỉ có núi cao phủ băng"], answerIndex: 0 },
-      { question: "Hai đồng bằng châu thổ lớn của Việt Nam là gì?", options: ["Đồng bằng sông Hồng và đồng bằng sông Cửu Long", "Đồng bằng Tây Nguyên và Đông Bắc", "Đồng bằng Hoàng Liên Sơn và Trường Sơn", "Đồng bằng sông Đà và sông Mã"], answerIndex: 0 },
-      { question: "Khi phân tích một vấn đề địa lý, cách làm nào phù hợp?", options: ["Xác định vị trí, đặc điểm và mối liên hệ giữa các yếu tố", "Nêu kết luận mà không xem xét vị trí", "Khái quát mọi vùng giống hệt nhau", "Chỉ kể tên địa danh"], answerIndex: 0 },
+      { question: "[Khái niệm] Đặc điểm nổi bật của địa hình Việt Nam và hướng nghiêng chính của địa hình nước ta là gì?", options: ["Đồi núi chiếm phần lớn diện tích (chủ yếu là đồi núi thấp dưới 1.000m); địa hình nghiêng theo hướng Tây Bắc – Đông Nam", "Toàn bộ lãnh thổ là đồng bằng phẳng tuyệt đối; nghiêng từ Đông sang Tây", "Chủ yếu là núi cao phủ băng trên 4.000m", "Không có đồng bằng châu thổ và không giáp biển"], answerIndex: 0 },
+      { question: "[Tư duy Nhân – Quả] Tại sao Đồng bằng sông Hồng và Đồng bằng sông Cửu Long trở thành hai vựa lúa lớn nhất, còn miền Trung lại mạnh về kinh tế biển (cảng nước sâu, thủy sản)?", options: ["Hai đồng bằng châu thổ có diện tích rộng và đất phù sa sông màu mỡ; còn miền Trung đồng bằng hẹp nhiều cát do núi sát biển nhưng bờ biển sâu, nhiều vũng vịnh kín gió", "Vì miền Trung không có biển còn hai đồng bằng châu thổ toàn là núi cao", "Vì Đồng bằng sông Cửu Long có mùa đông băng tuyết lạnh giá", "Chỉ do thói quen ngẫu nhiên, không liên quan đến địa hình hay đất đai"], answerIndex: 0 },
+      { question: "[Đọc Bản đồ / Atlat] Khi phân tích một vùng địa lý được khoanh tròn trên bản đồ Atlat, quy trình tư duy nào giúp tránh học vẹt?", options: ["Xác định vị trí & giới hạn lãnh thổ → phân tích điều kiện tự nhiên & tài nguyên → giải thích mối quan hệ Nhân – Quả với dân cư và ngành kinh tế đặc trưng", "Học thuộc lòng số liệu rời rạc mà không cần nhìn vị trí trên bản đồ", "Khái quát mọi vùng trên cả nước đều có địa hình và kinh tế giống hệt nhau", "Chỉ đọc tên tỉnh thành mà bỏ qua địa hình, khí hậu và sông ngòi"], answerIndex: 0 },
     ];
   } else if (topicId === "cProgramming" && /cấu trúc chương trình/.test(topicText)) {
     questions = [
       { question: "Hàm nào là điểm bắt đầu thực thi của một chương trình C thông thường?", options: ["main", "printf", "include", "sizeof"], answerIndex: 0 },
-      { question: "Vai trò của #include <stdio.h> trong ví dụ dùng printf là gì?", options: ["Khai báo giao diện thư viện nhập/xuất chuẩn", "Bắt đầu vòng lặp", "Cấp phát bộ nhớ cho sum", "Kết thúc hàm main"], answerIndex: 0 },
-      { question: "Trong chương trình mẫu, return 0 thường biểu thị điều gì?", options: ["Chương trình kết thúc bình thường", "Phép cộng cho kết quả bằng 0", "Bắt đầu đọc đầu vào", "Khai báo biến kiểu int"], answerIndex: 0 },
+      { question: "[Debug C] Đoạn code sau có lỗi gì khiến kết quả in ra bị sai không đoán trước được?\nint main(void) {\n    int a;\n    int b = 7;\n    printf(\"%d\", a + b);\n    return 0;\n}", options: ["Biến cục bộ a chưa được khởi tạo giá trị nên chứa giá trị rác (garbage value) trong RAM", "Hàm main không được phép khai báo hai biến int", "printf không thể in tổng của hai biến", "return 0 làm xóa giá trị của biến b trước khi in"], answerIndex: 0 },
+      { question: "[Debug C] Tại sao đoạn code `int main(void); { printf(\"Hi\"); return 0; }` lại bị trình biên dịch báo lỗi cú pháp?", options: ["Dấu chấm phẩy `;` đặt ngay sau `int main(void)` làm kết thúc khai báo hàm sớm, khiến khối `{ ... }` phía sau bị tách rời", "Vì thiếu thư viện `<string.h>`", "Vì hàm `main` bắt buộc phải trả về kiểu `float`", "Vì `return 0` không được có dấu chấm phẩy"], answerIndex: 0 },
     ];
   } else if (topicId === "cProgramming" && /thư viện chuẩn|standard librar/.test(topicText)) {
     questions = [
       { question: "Header nào khai báo printf trong C?", options: ["stdio.h", "string.h", "stdlib.h", "ctype.h"], answerIndex: 0 },
-      { question: "Header string.h thường khai báo hàm nào trong ví dụ bài học?", options: ["strlen", "malloc", "printf", "fopen"], answerIndex: 0 },
-      { question: "Vai trò chính của header khi gọi hàm thư viện là gì?", options: ["Cung cấp khai báo để trình biên dịch kiểm tra cách gọi hàm", "Tự chạy hàm ngay khi chương trình bắt đầu", "Thay thế hoàn toàn bước liên kết", "Tạo giá trị trả về mà không cần gọi hàm"], answerIndex: 0 },
+      { question: "[Debug C] Đoạn code nhập số nguyên sau đây bị sập (crash) khi chạy. Lỗi nằm ở đâu và sửa thế nào?\n#include <stdio.h>\nint main(void) {\n    int age = 0;\n    scanf(\"%d\", age);\n    return 0;\n}", options: ["Thiếu toán tử lấy địa chỉ `&` trong `scanf`: phải sửa thành `scanf(\"%d\", &age);` để truyền địa chỉ biến `age`", "Phải đổi `#include <stdio.h>` thành `#include <math.h>`", "Biến `age` không được khởi tạo bằng 0 trước khi gọi `scanf`", "Phải đổi `%d` thành `%s` cho kiểu `int`"], answerIndex: 0 },
+      { question: "[Debug C] Với `const char s[] = \"C\";`, sự khác biệt giữa `strlen(s)` (trong `string.h`) và `sizeof(s)` là gì?", options: ["`strlen(s)` trả về 1 (số ký tự trước `'\\0'`), còn `sizeof(s)` trả về 2 (tính cả byte kết thúc chuỗi `'\\0'`)", "`strlen(s)` trả về 2, còn `sizeof(s)` trả về 1", "Cả hai luôn trả về 0", "`strlen` tự động cấp phát thêm bộ nhớ cho mảng `s`"], answerIndex: 0 },
     ];
   } else if (topicId === "cProgramming" && /biến|kiểu dữ liệu/.test(topicText)) {
     questions = [
       { question: "Kiểu int thường dùng để biểu diễn loại giá trị nào?", options: ["Số nguyên", "Chuỗi ký tự C", "Địa chỉ web", "Tệp đang mở"], answerIndex: 0 },
-      { question: "Nếu chia hai int và cần kết quả có phần thập phân, cần làm gì?", options: ["Chuyển ít nhất một toán hạng sang kiểu số thực trước khi chia", "Dùng thêm dấu chấm phẩy", "Đổi tên biến", "Dùng toán tử địa chỉ &"], answerIndex: 0 },
-      { question: "sizeof cho biết điều gì?", options: ["Kích thước tính bằng byte trên môi trường đang chạy", "Giá trị lớn nhất mọi kiểu trên mọi hệ thống", "Số dòng của chương trình", "Địa chỉ tệp thực thi"], answerIndex: 0 },
+      { question: "[Debug C] Lập trình viên viết `double avg = (double)(7 / 2);` và mong đợi `avg` bằng `3.5`, nhưng kết quả lại ra `3.0`. Vì sao và sửa thế nào?", options: ["Do `7 / 2` là phép chia hai số `int` nên bị cắt phần thập phân thành `3` trước khi ép kiểu; cần sửa thành `(double)7 / 2` hoặc `7.0 / 2`", "Do kiểu `double` trong C chỉ lưu được số nguyên", "Do thiếu toán tử `&` trước số 7", "Do phép chia trong C luôn làm tròn xuống 0"], answerIndex: 0 },
+      { question: "[Debug C] Khi cần biết kích thước thực tế (số byte) của một kiểu hoặc biến trên hệ thống đang chạy để tránh lỗi tràn bộ nhớ, ta dùng toán tử nào?", options: ["sizeof (ví dụ `sizeof(int)` hoặc `sizeof *ptr`)", "strlen", "malloc", "return"], answerIndex: 0 },
+    ];
+  } else if (topicId === "cProgramming" && /con trỏ và hàm|swap/.test(topicText)) {
+    questions = [
+      { question: "[Ẩn dụ & Bản chất] Tại sao muốn hàm `swap` đổi được giá trị của hai biến `x, y` trong `main`, ta phải truyền địa chỉ `swap(&x, &y)` cho hai con trỏ `int *a, int *b`?", options: ["Vì cần đưa 'số phòng' (`&x, &y`) để hàm dùng `*a, *b` mở đúng hai chiếc tủ gốc và tráo đổi giá trị bên trong; truyền bình thường chỉ gửi bản sao", "Vì hàm trong C không nhận được số nguyên `int`", "Vì dấu `&` giúp tự động cộng hai số `x` và `y`", "Vì `main` không thể tự khai báo biến"], answerIndex: 0 },
+      { question: "[Debug C] Trong hàm `void swap(int *a, int *b)`, nếu lập trình viên viết `int *temp = a; a = b; b = temp;` thì chuyện gì xảy ra với hai biến `x, y` ở hàm `main`?", options: ["Hai biến `x, y` ở `main` KHÔNG HỀ ĐỔI CHỖ, vì code đó chỉ đổi số phòng ghi trên 2 tờ giấy nháp `a, b` chứ chưa dùng `*a, *b` để mở tủ đổi đồ bên trong", "Hai biến `x, y` đổi chỗ thành công như bình thường", "Chương trình bị xóa sạch mã nguồn", "Hai biến `x, y` tự động biến thành 0"], answerIndex: 0 },
+      { question: "[Debug C] Tại sao hàm `int* taoDiem(void) { int s = 10; return &s; }` lại là một lỗi nghiêm trọng (trả về số phòng của chiếc tủ tạm)?", options: ["Vì biến `s` chỉ là 'chiếc tủ dựng tạm' bên trong hàm, ngay khi hàm kết thúc thì tủ `s` bị dỡ bỏ, khiến tờ giấy địa chỉ trả về chỉ vào nơi không còn tồn tại (Con trỏ treo)", "Vì không được dùng dấu `&` cho biến `s`", "Vì số 10 là số chẵn nên không trả về được", "Vì hàm không được phép có lệnh `return`"], answerIndex: 0 },
     ];
   } else if (topicId === "cProgramming" && /con trỏ|pointer/.test(topicText)) {
     questions = [
-      { question: "Con trỏ trong C lưu trữ điều gì?", options: ["Địa chỉ của một đối tượng", "Tên của một hàm bất kỳ", "Luôn là một chuỗi ký tự", "Kích thước của ổ cứng"], answerIndex: 0 },
-      { question: "Toán tử nào dùng để truy cập giá trị thông qua con trỏ?", options: ["*", "&", "%", "#"], answerIndex: 0 },
-      { question: "Khi nào được phép giải tham chiếu một con trỏ?", options: ["Khi nó trỏ tới vùng nhớ hợp lệ", "Ngay cả khi chưa khởi tạo", "Sau khi vùng nhớ đã được giải phóng", "Khi giá trị con trỏ là bất kỳ"], answerIndex: 0 },
+      { question: "[Ẩn dụ Tủ đồ Locker] Trong hình ảnh ví von bộ nhớ RAM như dãy tủ đồ, biến con trỏ `int *pointer = &score;` đóng vai trò là gì?", options: ["Là tờ giấy ghi lại 'số phòng / địa chỉ' (`&score`) của chiếc tủ `score`", "Là tên của một hàm thư viện chuẩn", "Là một chuỗi văn bản dài cố định", "Là dung lượng ổ cứng máy tính"], answerIndex: 0 },
+      { question: "[Đọc hiểu Code C] Cho `int score = 8; int *pointer = &score; *pointer = 9;`. Sau khi chạy xong 3 lệnh này, giá trị trong tủ `score` bằng bao nhiêu và vì sao?", options: ["`score` bằng `9`, vì `*pointer = 9` đã cầm tờ giấy tìm đúng phòng của `score` và mở tủ thay số 8 bằng số 9", "`score` vẫn bằng `8`, vì `*pointer` chỉ sửa trên tờ giấy nháp", "`score` bằng `17` (cộng 8 với 9)", "Chương trình báo lỗi không biên dịch được"], answerIndex: 0 },
+      { question: "[Debug C] Đoạn code ngắn của người mới học dưới đây mắc lỗi gì khiến chương trình bị sập ngay khi chạy?\nint *pointer = NULL;\n*pointer = 100;", options: ["Cầm 'tờ giấy trắng' (`pointer = NULL`, chưa ghi số phòng của chiếc tủ có thật nào) mà đã dùng `*pointer = 100` để đòi mở tủ cất đồ", "Không được phép cất số `100` vào biến kiểu `int`", "Dấu `*` chỉ dùng được cho phép nhân hai số", "Bắt buộc phải đặt tên biến là `score` mới chạy được"], answerIndex: 0 },
     ];
   } else if (topicId === "cProgramming" && /hàm/.test(topicText)) {
     questions = [
       { question: "Hàm trong C giúp ích chính yếu điều gì?", options: ["Chia chương trình thành các phần có nhiệm vụ rõ ràng", "Tự động kiểm tra mọi lỗi logic", "Thay thế hoàn toàn kiểu dữ liệu", "Cấp phát bộ nhớ mà không cần khai báo"], answerIndex: 0 },
-      { question: "C truyền đối số vào hàm theo cách nào?", options: ["Theo giá trị", "Luôn theo tham chiếu", "Theo tên biến toàn cục", "Không truyền được đối số"], answerIndex: 0 },
-      { question: "Muốn hàm thay đổi dữ liệu của bên gọi, thường làm gì?", options: ["Truyền địa chỉ thông qua con trỏ", "Chỉ đổi tên tham số", "Dùng printf", "Bỏ kiểu trả về"], answerIndex: 0 },
+      { question: "[Debug C] Tại sao sau khi chạy đoạn code sau, biến `x` trong `main` vẫn bằng 5 mà không tăng lên 15?\nvoid addTen(int a) { a = a + 10; }\nint main(void) { int x = 5; addTen(x); }", options: ["Vì C truyền đối số theo giá trị (pass-by-value), hàm `addTen` chỉ sửa bản sao `a`; muốn sửa `x` phải truyền địa chỉ `addTen(&x)` với tham số `int *a`", "Vì tên tham số `a` khác tên biến `x`", "Vì hàm `void` không được phép thực hiện phép cộng", "Vì biến `x` chưa được khai báo là toàn cục"], answerIndex: 0 },
+      { question: "[Debug C] Để sửa hàm hoán đổi hai số `void swap(int *a, int *b)` hoạt động đúng, thân hàm phải viết như thế nào?", options: ["`int temp = *a; *a = *b; *b = temp;` (hoán đổi giá trị tại địa chỉ mà `a` và `b` trỏ tới)", "`int *temp = a; a = b; b = temp;` (chỉ đổi chỗ hai con trỏ cục bộ)", "`*a = *b; *b = *a;` (làm mất giá trị ban đầu của `*a`)", "`return a + b;`"], answerIndex: 0 },
     ];
   } else if (topicId === "cProgramming" && /cấu trúc điều khiển|vòng lặp|rẽ nhánh/.test(topicText)) {
     questions = [
       { question: "Cấu trúc nào dùng để lựa chọn nhánh theo điều kiện?", options: ["if / else", "include", "sizeof", "typedef"], answerIndex: 0 },
-      { question: "Vòng lặp do-while có đặc điểm nào?", options: ["Thân vòng lặp chạy ít nhất một lần", "Không bao giờ kiểm tra điều kiện", "Luôn chạy đúng hai lần", "Chỉ dùng được với mảng"], answerIndex: 0 },
-      { question: "Cần làm gì để vòng lặp while không chạy vô hạn ngoài ý muốn?", options: ["Đảm bảo điều kiện dừng có thể đạt được", "Xóa mọi cập nhật biến", "Đặt điều kiện luôn đúng", "Thay while bằng #include"], answerIndex: 0 },
+      { question: "[Debug C] Đoạn code kiểm tra điểm dưới đây luôn in ra `\"Diem tuyet doi!\"` ngay cả khi `score = 3`. Lỗi nằm ở đâu?\nint score = 3;\nif (score = 10) {\n    puts(\"Diem tuyet doi!\");\n}", options: ["Dùng nhầm toán tử gán `=` thay vì toán tử so sánh bằng `==` trong `if (score = 10)`, làm `score` bị gán thành 10 (khác 0 nên luôn đúng)", "Hàm `puts` luôn chạy bất kể điều kiện `if` đúng hay sai", "Kiểu `int` không so sánh được với số 10", "Thiếu từ khóa `else` nên `if` luôn đúng"], answerIndex: 0 },
+      { question: "[Debug C] Đoạn code vòng lặp sau đây mắc lỗi gì?\nint i = 0;\nwhile (i < 5);\n{\n    printf(\"%d \", i);\n    i++;\n}", options: ["Dấu chấm phẩy `;` đặt ngay sau `while (i < 5);` tạo thân vòng lặp rỗng làm `i` không bao giờ tăng, gây treo máy (vòng lặp vô hạn)", "Biến `i` không được bắt đầu từ 0", "Trong `while` không được dùng `printf`", "Điều kiện `i < 5` bị sai cú pháp"], answerIndex: 0 },
     ];
   } else if (topicId === "cProgramming" && /mảng|chuỗi/.test(topicText)) {
     questions = [
       { question: "Chỉ số của phần tử đầu tiên trong mảng C là bao nhiêu?", options: ["0", "1", "-1", "Tùy giá trị phần tử"], answerIndex: 0 },
-      { question: "C có tự kiểm tra biên mảng khi truy cập không?", options: ["Không, chương trình phải tự bảo đảm chỉ số hợp lệ", "Có, luôn tự sửa mọi chỉ số sai", "Có, nhưng chỉ với mảng char", "Chỉ kiểm tra khi dùng printf"], answerIndex: 0 },
-      { question: "Chuỗi kiểu C kết thúc bằng ký tự nào?", options: ["Ký tự null '\\0'", "Dấu cách", "Dấu phẩy", "Ký tự xuống dòng bắt buộc"], answerIndex: 0 },
+      { question: "[Debug C] Tìm lỗi tràn biên mảng (Off-by-one) trong đoạn code tính tổng sau:\nint a[3] = {7, 8, 10};\nint sum = 0;\nfor (int i = 0; i <= 3; i++) {\n    sum += a[i];\n}", options: ["Điều kiện `i <= 3` làm vòng lặp truy cập `a[3]` vượt ngoài biên mảng (chỉ số hợp lệ của `a[3]` chỉ là 0, 1, 2); phải sửa thành `i < 3`", "Mảng `a[3]` bắt buộc phải đánh chỉ số từ `i = 1`", "Toán tử `+=` không dùng được với phần tử mảng", "Biến `sum` phải khởi tạo bằng 3"], answerIndex: 0 },
+      { question: "[Debug C] Tại sao khai báo chuỗi `char name[3] = \"An!\";` rồi gọi `printf(\"%s\", name);` lại gây lỗi đọc tràn bộ nhớ?", options: ["Vì chuỗi `\"An!\"` gồm 3 ký tự nên cần mảng tối thiểu 4 phần tử (`char name[4]`) để chứa thêm ký tự kết thúc chuỗi `'\\0'`", "Vì mảng `char` không lưu được dấu chấm than `!`", "Vì `printf` không hỗ trợ in mảng `char`", "Vì kích thước mảng trong C luôn phải là số chẵn"], answerIndex: 0 },
     ];
   } else if (topicId === "cProgramming" && /struct|cấu trúc dữ liệu/.test(topicText)) {
     questions = [
       { question: "struct hữu ích nhất khi nào?", options: ["Khi cần gom các trường có liên quan, có thể khác kiểu, thành một bản ghi", "Khi cần tự động kiểm tra biên mảng", "Khi muốn mọi biến có cùng một giá trị", "Khi cần thay thế mọi hàm"], answerIndex: 0 },
-      { question: "Với biến Student student, cách nào truy cập trường age?", options: ["student.age", "student->age", "student&age", "student*age"], answerIndex: 0 },
-      { question: "Nếu Student *record là con trỏ hợp lệ tới struct, cách nào truy cập score?", options: ["record->score", "record.score", "record&score", "record*score"], answerIndex: 0 },
+      { question: "[Debug C] Cho `Student s = {\"An\", 18, 8.5f}; Student *p = &s;`. Dòng code `printf(\"%.1f\", p.score);` báo lỗi biên dịch vì sao?", options: ["Vì `p` là con trỏ tới struct nên phải dùng toán tử mũi tên `p->score` (hoặc `(*p).score`) chứ không dùng dấu chấm `p.score`", "Vì con trỏ không thể trỏ tới biến `struct`", "Vì trường `score` kiểu `float` không thể in bằng `printf`", "Vì phải viết `p&score`"], answerIndex: 0 },
+      { question: "[Debug C] Muốn viết hàm `void capNhatDiem(Student *sv, float diemMoi)` để sửa trực tiếp điểm của hồ sơ gốc, câu lệnh nào trong hàm là đúng?", options: ["`sv->score = diemMoi;`", "`sv.score = diemMoi;`", "`*sv = diemMoi;`", "`&sv->score = diemMoi;`"], answerIndex: 0 },
     ];
   } else if (topicId === "cProgramming" && /bộ nhớ động|malloc|calloc/.test(topicText)) {
     questions = [
       { question: "malloc có thể trả về giá trị nào khi cấp phát thất bại?", options: ["NULL", "Luôn trả về địa chỉ hợp lệ", "Số byte đã cấp phát", "Ký tự '\\0'"], answerIndex: 0 },
-      { question: "Cần làm gì trước khi dùng vùng nhớ trả về từ malloc?", options: ["Kiểm tra con trỏ khác NULL", "Gọi free hai lần", "Ép địa chỉ thành int", "Đóng stdin"], answerIndex: 0 },
-      { question: "Sau khi gọi free(pointer), điều nào đúng?", options: ["Không được tiếp tục truy cập vùng nhớ đó", "Có thể đọc mãi không giới hạn", "Vùng nhớ tự biến thành mảng", "Phải gọi free lần hai"], answerIndex: 0 },
+      { question: "[Debug C] Đoạn code cấp phát mảng 5 số nguyên sau đây có 2 lỗi nguy hiểm nào?\nint *arr = malloc(5);\narr[0] = 10;\nfree(arr);\nprintf(\"%d\\n\", arr[0]);", options: ["(1) Cấp phát thiếu nhân kích thước kiểu (`malloc(5 * sizeof *arr)` thay vì `malloc(5)`), và (2) Truy cập `arr[0]` sau khi đã `free(arr)` (Use-after-free)", "Gọi `free(arr)` quá ít lần (phải gọi `free` 5 lần cho 5 phần tử)", "Hàm `malloc` không được gán cho con trỏ `int *`", "Không được gán `arr[0] = 10` trước khi gọi `free`"], answerIndex: 0 },
+      { question: "[Debug C] Điều gì xảy ra nếu hàm cấp phát `int *p = malloc(100 * sizeof *p);` nhưng kết thúc hàm mà quên gọi `free(p)`?", options: ["Gây rò rỉ bộ nhớ (Memory Leak) vì vùng nhớ trên Heap không được trả lại cho hệ thống", "Trình biên dịch tự động báo lỗi cú pháp và từ chối biên dịch", "Vùng nhớ đó tự động chuyển thành biến toàn cục", "Chương trình chạy nhanh gấp đôi"], answerIndex: 0 },
     ];
   } else if (topicId === "cProgramming" && /tệp|file/.test(topicText)) {
     questions = [
       { question: "Nếu fopen thất bại, giá trị trả về cần kiểm tra là gì?", options: ["NULL", "EOF luôn luôn", "0 ký tự trong tệp", "Một chuỗi rỗng"], answerIndex: 0 },
-      { question: "Chế độ fopen \"a\" thường có nghĩa gì?", options: ["Nối thêm dữ liệu vào cuối tệp", "Ghi đè nội dung cũ", "Xóa tệp và chỉ đọc", "Đóng tệp ngay lập tức"], answerIndex: 0 },
-      { question: "Sau khi thao tác xong với FILE*, nên gọi hàm nào?", options: ["fclose", "free", "sizeof", "continue"], answerIndex: 0 },
+      { question: "[Debug C] Đoạn code đọc tệp dưới đây có nguy cơ bị crash ngay tại `fscanf` vì sao?\nFILE *f = fopen(\"data.txt\", \"r\");\nint x;\nfscanf(f, \"%d\", &x);\nfclose(f);", options: ["Thiếu bước kiểm tra `if (f == NULL)` ngay sau `fopen`; nếu tệp `data.txt` không tồn tại thì `f` là `NULL` và `fscanf` sẽ gây lỗi", "Chế độ `\"r\"` sẽ xóa sạch tệp `data.txt`", "Hàm `fscanf` không được dùng dấu `&` trước biến `x`", "Phải gọi `fclose(f)` trước khi gọi `fscanf`"], answerIndex: 0 },
+      { question: "[Debug C] Một bạn muốn ghi nối thêm điểm mới vào cuối tệp `lichsu.txt` mà không làm mất dữ liệu cũ, nhưng lại viết `fopen(\"lichsu.txt\", \"w\")`. Hậu quả là gì và sửa thế nào?", options: ["Chế độ `\"w\"` sẽ xóa trắng toàn bộ nội dung cũ của tệp; phải sửa thành chế độ `\"a\"` (append) để nối thêm vào cuối tệp", "Chế độ `\"w\"` chỉ cho phép đọc chứ không cho phép ghi", "Tệp sẽ tự động bị đổi tên", "Phải dùng `free(f)` thay cho `fclose(f)`"], answerIndex: 0 },
+    ];
+  } else if (topicId === "pythonProgramming" && /cú pháp|thụt lề/.test(topicText)) {
+    questions = [
+      { question: "[Ẩn dụ Vở ghi bài] Trong Python, thay vì dùng cặp ngoặc nhọn `{ }` như C, điều gì bắt buộc phải có để gom các câu lệnh con vào bên trong câu lệnh `if score >= 5:`?", options: ["Lùi đầu dòng (thụt lề / indentation, chuẩn 4 khoảng trắng) cho các dòng lệnh con ngay bên dưới dấu hai chấm `:`", "Đặt dấu chấm phẩy `;` ở cuối mỗi dòng lệnh", "Viết toàn bộ chương trình trên một dòng duy nhất", "Khai báo `#include <stdio.h>` ở đầu bài"], answerIndex: 0 },
+      { question: "[Đọc hiểu Code Python] Trong đoạn code:\nscore = 8\nif score >= 5:\n    print(\"Dat\")\nprint(\"Xong\")\nTại sao dòng `print(\"Xong\")` lúc nào cũng được in ra ngay cả khi `score = 3`?", options: ["Vì `print(\"Xong\")` viết sát lề trái (không thụt lề), nên nó nằm ngoài khối `if` và luôn được chạy tiếp theo", "Vì Python luôn chạy mọi lệnh từ dưới lên trên", "Vì `score = 3` lớn hơn `5`", "Vì hàm `print` bỏ qua mọi điều kiện"], answerIndex: 0 },
+      { question: "[Debug Python] Đoạn code sau báo lỗi `IndentationError: expected an indented block` ngay khi chạy:\nif score >= 5:\nprint(\"Chuc mung!\")\nNguyên nhân và cách sửa đúng là gì?", options: ["Dòng `print(\"Chuc mung!\")` nằm ngay sau dấu `:` của `if` nhưng quên lùi đầu dòng; cần thụt vào 4 khoảng trắng trước `print`", "Thiếu dấu chấm phẩy `;` sau chữ `print(\"Chuc mung!\")`", "Trong Python không được phép dùng dấu `>=`", "Phải đổi `print` thành `printf`"], answerIndex: 0 },
+    ];
+  } else if (topicId === "pythonProgramming" && /biến|kiểu dữ liệu/.test(topicText)) {
+    questions = [
+      { question: "[Ẩn dụ Thẻ tên] Khác với ngôn ngữ C, sự khác biệt giữa phép chia `7 / 2` và `7 // 2` trong Python 3 là gì?", options: ["`7 / 2` trả về số thực `3.5` (giữ phần lẻ), còn `7 // 2` trả về phần nguyên `3`", "Cả hai đều trả về `3` như trong C", "`7 / 2` trả về `3`, còn `7 // 2` là viết chú thích", "`7 // 2` dùng để tính lũy thừa 7 mũ 2"], answerIndex: 0 },
+      { question: "[Debug Python] Người học viết đoạn code sau và gặp lỗi `TypeError: can only concatenate str (not \"int\") to str`:\nage = \"18\"\nprint(age + 1)\nTại sao bị lỗi và sửa thế nào?", options: ["Vì `\"18\"` đang là chuỗi chữ (`str`) nên không cộng trực tiếp với số `1` được; phải đổi thành số bằng `int(age) + 1`", "Vì Python không có phép cộng `+`", "Vì số `18` quá lớn đối với kiểu `int`", "Vì tên biến không được đặt là `age`"], answerIndex: 0 },
+      { question: "[Bản chất Kiểu động] Trong Python, điều gì xảy ra khi ta viết `x = 10` ở dòng 1 rồi viết `x = \"Xin chao\"` ở dòng 2?", options: ["Hợp lệ hoàn toàn: chiếc 'thẻ tên' `x` được tháo khỏi số nguyên `10` (`int`) và gắn sang chuỗi `\"Xin chao\"` (`str`)", "Báo lỗi biên dịch vì `x` đã cố định là kiểu `int`", "Chương trình tự động xóa biến `x`", "Giá trị của `x` trở thành `None`"], answerIndex: 0 },
+    ];
+  } else if (topicId === "pythonProgramming" && /chuỗi|f-string|string/.test(topicText)) {
+    questions = [
+      { question: "[Ẩn dụ Khuôn điền chỗ trống] Với `name = \"An\"` và `score = 9.5`, cách viết `f-string` nào dưới đây tạo ra chuỗi `\"An dat 9.5 diem\"` gọn và chuẩn nhất?", options: ["`f\"{name} dat {score} diem\"`", "`\"{name} dat {score} diem\"` (thiếu chữ `f` ở đầu)", "`f\"(name) dat (score) diem\"`", "`\"%d dat %s diem\"`"], answerIndex: 0 },
+      { question: "[Debug Python] Tại sao đoạn code sửa chữ cái đầu tiên dưới đây lại làm sập chương trình với lỗi `TypeError: 'str' object does not support item assignment`?\nword = \"python\"\nword[0] = \"P\"", options: ["Vì chuỗi (`str`) trong Python là bất biến ('dòng chữ khắc trên gỗ' - immutable), không cho phép sửa trực tiếp 1 ký tự tại `word[0]`; phải tạo chuỗi mới `word = \"P\" + word[1:]`", "Vì chỉ số đầu tiên của chuỗi trong Python phải là `word[1]`", "Vì chữ `\"P\"` viết hoa không nằm trong bảng chữ cái Python", "Vì biến `word` chưa được khai báo kiểu `char`"], answerIndex: 0 },
+      { question: "[Vận dụng Chuỗi] Khi người dùng nhập tên có dính khoảng trắng thừa ở hai đầu như `\"   an nguyen   \"`, kết hợp phương thức nào giúp làm sạch thành `\"An Nguyen\"`?", options: ["`raw_name.strip().title()`", "`raw_name.split().lower()`", "`raw_name.append()`", "`sizeof(raw_name)`"], answerIndex: 0 },
+    ];
+  } else if (topicId === "pythonProgramming" && /cấu trúc điều khiển|vòng lặp|rẽ nhánh|range/.test(topicText)) {
+    questions = [
+      { question: "[Ẩn dụ Vé tàu range] Trong Python, vòng lặp `for i in range(1, 5):` sẽ lần lượt cho biến `i` nhận những giá trị nào?", options: ["`1, 2, 3, 4` (bắt đầu từ `1` và dừng lại SÁT TRƯỚC `5`, không lấy số `5`)", "`1, 2, 3, 4, 5`", "`0, 1, 2, 3, 4, 5`", "`1, 5`"], answerIndex: 0 },
+      { question: "[Debug Python] Một bạn muốn tính tổng các số từ `1` đến `5` (`1+2+3+4+5 = 15`) nhưng đoạn code sau chỉ ra kết quả bằng `10`:\ntotal = 0\nfor i in range(1, 5):\n    total += i\nLỗi logic nằm ở đâu và sửa thế nào?", options: ["`range(1, 5)` dừng trước số 5 nên bị thiếu mất số 5; phải sửa thành `range(1, 6)` để chạy đủ từ 1 đến 5", "Phải đổi `total += i` thành `total = i`", "Biến `total` ban đầu phải gán bằng `5`", "Vòng lặp `for` trong Python không cộng được số nguyên"], answerIndex: 0 },
+      { question: "[Cú pháp Rẽ nhánh] Khi cần kiểm tra nhiều nhánh điều kiện liên tiếp trong Python ('ngược lại, nếu...'), ta dùng từ khóa nào và kết hợp điều kiện bằng chữ gì?", options: ["Dùng từ khóa `elif` và các từ khóa logic `and`, `or`, `not`", "Dùng `else if` và ký hiệu `&&`, `||` như trong C", "Dùng `elseif` và dấu chấm phẩy `;`", "Dùng `#ifdef`"], answerIndex: 0 },
+    ];
+  } else if (topicId === "pythonProgramming" && /list|tuple|danh sách/.test(topicText)) {
+    questions = [
+      { question: "[Ẩn dụ Khay đồ & Hộp kính] Cho danh sách `scores = [7, 8, 9, 10]`. Biểu thức `scores[-1]` và phép cắt lát `scores[0:2]` trả về kết quả gì?", options: ["`scores[-1]` trả về phần tử cuối là `10`; `scores[0:2]` trả về `[7, 8]` (từ chỉ số 0 đến sát chỉ số 2)", "`scores[-1]` báo lỗi; `scores[0:2]` trả về `[7, 8, 9]`", "`scores[-1]` trả về `7`; `scores[0:2]` trả về `10`", "Cả hai đều trả về `None`"], answerIndex: 0 },
+      { question: "[Debug Python] Hãy tìm nguyên nhân căn bệnh ngầm trong đoạn code sau:\na = [1, 2, 3]\nb = a\nb.append(99)\nprint(a)  # In ra [1, 2, 3, 99]!", options: ["Phép gán `b = a` không tạo bản sao mới mà chỉ buộc thêm thẻ tên `b` vào cùng chiếc giỏ danh sách `a`; muốn tạo bản sao độc lập phải viết `b = a.copy()` (hoặc `b = a[:]`) ", "Hàm `print(a)` bị lỗi in nhầm sang biến `b`", "Phương thức `.append(99)` luôn thêm số 99 vào mọi biến trong chương trình", "Danh sách `a` trong Python không cho phép chứa 3 số"], answerIndex: 0 },
+      { question: "[So sánh List & Tuple] Khi nào bạn nên dùng `Tuple` `(10, 20)` thay vì `List` `[10, 20]`?", options: ["Khi dữ liệu là cố định (như tọa độ điểm, cấu hình hằng số) và bạn muốn niêm phong để tránh bị sửa đổi nhầm trong lúc chương trình chạy", "Khi cần dùng `.append()` để thêm hàng trăm phần tử mới liên tục", "Khi cần sắp xếp lại các phần tử tại chỗ bằng `.sort()`", "Khi muốn xóa bớt phần tử đầu tiên"], answerIndex: 0 },
+    ];
+  } else if (topicId === "pythonProgramming" && /dictionary|set|từ điển|tập hợp/.test(topicText)) {
+    questions = [
+      { question: "[Ẩn dụ Danh bạ & Rổ lọc trùng] Kết quả của tập hợp `set([9, 8, 9, 10, 8])` là gì và `Dictionary` dùng để làm gì?", options: ["`set` tự động lọc bỏ các số trùng nhau chỉ giữ lại `{8, 9, 10}`; còn `Dictionary` lưu các cặp `khóa: giá_trị` để tra cứu nhanh theo khóa", "`set` giữ nguyên cả 5 số `[9, 8, 9, 10, 8]`; còn `Dictionary` chỉ lưu số nguyên", "`set` cộng tổng các số lại; `Dictionary` là tên gọi khác của vòng lặp", "Cả hai đều báo lỗi cú pháp"], answerIndex: 0 },
+      { question: "[Debug Python] Đoạn code tra cứu điểm dưới đây bị sập ngay lập tức với lỗi `KeyError: 'Dung'`:\nscores = {\"An\": 9, \"Binh\": 8}\nprint(scores[\"Dung\"])\nCách sửa nào giúp tra cứu an toàn mà không bị sập?", options: ["Dùng phương thức `.get()` với giá trị mặc định: `scores.get(\"Dung\", 0)` (hoặc kiểm tra `if \"Dung\" in scores:` trước)", "Đổi ngoặc vuông `scores[\"Dung\"]` thành ngoặc tròn `scores(\"Dung\")`", "Dùng toán tử mũi tên `scores->Dung`", "Gọi `free(scores)` trước khi `print`"], answerIndex: 0 },
+      { question: "[Bẫy cú pháp Python] Nếu bạn viết `x = {}` trong Python thì `x` là kiểu dữ liệu gì, và làm sao để tạo một tập hợp (`set`) rỗng?", options: ["`{}` tạo ra một Từ điển (`dict`) rỗng; muốn tạo tập hợp (`set`) rỗng bắt buộc phải viết `set()`", "`{}` tạo ra `set` rỗng; còn `dict()` tạo ra danh sách", "`{}` báo lỗi cú pháp vì không có phần tử bên trong", "`{}` tạo ra một Tuple rỗng"], answerIndex: 0 },
+    ];
+  } else if (topicId === "pythonProgramming" && /hàm|def|return/.test(topicText)) {
+    questions = [
+      { question: "[Ẩn dụ Cửa trả hàng return] Trong Python, từ khóa nào dùng để định nghĩa hàm và chuyện gì xảy ra nếu hàm không có câu lệnh `return`?", options: ["Dùng từ khóa `def`; nếu không có `return`, hàm tự động trả về giá trị rỗng `None`", "Dùng từ khóa `void`; nếu không có `return`, hàm trả về số `0`", "Dùng từ khóa `function`; nếu thiếu `return` sẽ báo lỗi cú pháp không chạy được", "Dùng từ khóa `main`"], answerIndex: 0 },
+      { question: "[Debug Python] Tại sao đoạn code dưới đây lại bị lỗi `TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'` ở dòng cuối?\ndef gap_doi(x):\n    print(x * 2)\nket_qua = gap_doi(5)\nprint(ket_qua + 1)", options: ["Vì hàm `gap_doi` chỉ dùng `print(x * 2)` để hiện lên màn hình mà quên `return x * 2`, khiến `ket_qua` nhận giá trị `None`", "Vì Python không cho phép nhân `x * 2` bên trong hàm", "Vì không được truyền số `5` vào hàm", "Vì tên biến không được có dấu gạch dưới `_`"], answerIndex: 0 },
+      { question: "[Tham số mặc định] Với hàm `def calc_total(price, tax_rate=0.1): return price + price * tax_rate`, lời gọi `calc_total(100)` và `calc_total(100, 0.2)` lần lượt trả về bao nhiêu?", options: ["`110.0` (dùng mức thuế mặc định `0.1`) và `120.0` (dùng mức thuế mới `0.2` truyền vào)", "Cả hai đều trả về `110.0`", "Báo lỗi thiếu tham số ở lời gọi đầu tiên `calc_total(100)`", "Trả về `100` và `200`"], answerIndex: 0 },
+    ];
+  } else if (topicId === "pythonProgramming" && /ngoại lệ|try|except|tệp|file/.test(topicText)) {
+    questions = [
+      { question: "[Ẩn dụ Lưới bảo hiểm] Khi người dùng nhập chuỗi `\"ba_muoi\"` vào hàm `int(\"ba_muoi\")`, làm thế nào để chương trình bắt được lỗi `ValueError` và xử lý êm ái mà không bị sập?", options: ["Đặt lệnh chuyển đổi trong khối `try:` và bắt lỗi bằng `except ValueError:`", "Dùng câu lệnh `#include <stdlib.h>`", "Kiểm tra `if int == NULL:`", "Dùng vòng lặp `while True:` không điều kiện dừng"], answerIndex: 0 },
+      { question: "[Debug Python] Tại sao đoạn code ghi tệp dưới đây vừa bị lỗi `TypeError`, vừa làm tệp `diem.txt` không được đóng lại?\nf = open(\"diem.txt\", \"w\", encoding=\"utf-8\")\nf.write(123)\nf.close()", options: ["Vì `f.write()` chỉ nhận chuỗi `str` (`\"123\"`) nên truyền số `123` gây lỗi ngay dòng 2 làm dòng `f.close()` bị bỏ qua; cần dùng `with open(...) as f:` và truyền chuỗi", "Vì chế độ `\"w\"` không cho phép ghi vào tệp", "Vì Python không hỗ trợ bảng mã `utf-8`", "Vì phải gọi `f.close()` trước khi gọi `f.write()`"], answerIndex: 0 },
+      { question: "[Thực hành tốt nhất] Ưu điểm lớn nhất của việc mở tệp bằng `with open(\"data.txt\", \"r\", encoding=\"utf-8\") as f:` là gì?", options: ["Python tự động đóng tệp `f` an toàn ngay khi ra khỏi khối `with`, kể cả khi có lỗi bất ngờ xảy ra bên trong", "Tệp được tự động xóa khỏi ổ cứng sau khi đọc", "Giúp bỏ qua mọi lỗi cú pháp trong toàn bộ chương trình", "Không cần truyền tên tệp vào hàm `open`"], answerIndex: 0 },
+    ];
+  } else if (topicId === "pythonProgramming" && /hướng đối tượng|oop|class|object/.test(topicText)) {
+    questions = [
+      { question: "[Ẩn dụ Khuôn bánh & Chiếc bánh] Trong lập trình hướng đối tượng Python, `class`, `object` và phương thức `__init__` đóng vai trò gì?", options: ["`class` là khuôn mẫu thiết kế, `object` là đối tượng cụ thể tạo ra từ khuôn, còn `__init__` tự động khởi tạo các thuộc tính ban đầu cho đối tượng", "`class` là một vòng lặp, `object` là một tệp văn bản, còn `__init__` dùng để xóa bộ nhớ", "`__init__` chỉ chạy khi chương trình kết thúc", "`class` chỉ chứa được một biến duy nhất"], answerIndex: 0 },
+      { question: "[Debug Python] Đoạn code dưới đây báo lỗi `TypeError: Student.say_hi() takes 0 positional arguments but 1 was given` khi gọi `s.say_hi()`. Vì sao và sửa thế nào?\nclass Student:\n    def say_hi():\n        print(\"Xin chao!\")\ns = Student()\ns.say_hi()", options: ["Phương thức `say_hi` trong `class` bị thiếu tham số đầu tiên `self` (Python luôn tự truyền đối tượng `s` vào vị trí đầu tiên); phải sửa thành `def say_hi(self):`", "Khi gọi hàm không được viết dấu ngoặc tròn `s.say_hi()`", "Không được đặt tên lớp viết hoa chữ cái đầu `Student`", "Phải dùng mũi tên `s->say_hi()`"], answerIndex: 0 },
+      { question: "[Đọc hiểu Code OOP] Trong phương thức `def __init__(self, name, score): self.name = name`, dòng lệnh `self.name = name` có tác dụng gì?", options: ["Gắn giá trị tham số `name` vừa truyền vào thành thuộc tính `.name` của chính đối tượng (`self`) đang được tạo", "Xóa biến `name` khỏi bộ nhớ", "So sánh xem `self.name` có bằng `name` hay không", "Tạo một biến toàn cục cho mọi tệp Python"], answerIndex: 0 },
     ];
   } else {
     questions = [
@@ -1578,8 +2355,9 @@ export function createQuizRouter({
         antiUsWar: "Lịch sử",
         geography: "Địa lý",
         cProgramming: "Lập trình C",
+        pythonProgramming: "Lập trình Python",
       }[topicId];
-      lesson.title = topicId === "cProgramming"
+      lesson.title = topicId === "cProgramming" || topicId === "pythonProgramming"
         ? `${subjectTitle}: Tìm hiểu về ${focusTopic}`
         : `${subjectTitle}: ${focusTopic}`;
     }
