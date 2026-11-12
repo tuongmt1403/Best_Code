@@ -10,9 +10,8 @@ import { createAvatarProfile } from "./avatar-profile.js";
 import { createMiniGame } from "./mini-game/game.js";
 import { generateMiniGameQuizWithOllama } from "./mini-game/ollama.js";
 import { createQuizRouter } from "./quiz-web/quiz.js";
-import { reviewWithClaude } from "./ai-review.js";
+import { reviewWithGroq } from "./ai-review.js";
 import { fetchWithGeminiKeyFallback, getGeminiApiKeys } from "./gemini-api.js";
-import { fetchWithClaudeKeyFallback, getClaudeApiKeys } from "./claude-api.js";
 import { fetchWithGroqKeyFallback, getGroqApiKeys } from "./groq-api.js";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
@@ -238,9 +237,7 @@ app.get("/api/history/status", (_req, res) => {
 });
 
 const geminiApiKeys = getGeminiApiKeys();
-const claudeApiKeys_server = getClaudeApiKeys();
 const groqApiKeys_server = getGroqApiKeys();
-const claudeModel_server = process.env.CLAUDE_MODEL || process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
 const groqModel_server = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 const geminiModel = process.env.GEMINI_MODEL || "gemini-flash-lite-latest";
 const geminiModels = [...new Set([
@@ -253,9 +250,6 @@ if (geminiApiKeys.length === 0) {
   console.error("Thiếu Gemini API key. Hãy thêm GEMINI_API_KEY vào tệp .env.");
 } else {
   console.log(`Đã nạp ${geminiApiKeys.length} Gemini API key.`);
-}
-if (claudeApiKeys_server.length > 0) {
-  console.log(`Đã nạp ${claudeApiKeys_server.length} Claude API key.`);
 }
 if (groqApiKeys_server.length > 0) {
   console.log(`Đã nạp ${groqApiKeys_server.length} Groq API key.`);
@@ -329,9 +323,12 @@ async function generateMiniGameQuestions({
       };
     } catch (error) {
       console.error("Mini-game Ollama generation failed:", error.message);
-      throw Object.assign(error, { userMessage: error.message });
+      if (geminiApiKeys.length === 0) {
+        throw Object.assign(error, { userMessage: error.message });
+      }
     }
-  } else {
+  }
+  if (!generated) {
     if (geminiApiKeys.length === 0) throw new Error("Chưa cấu hình Gemini API key cho chế độ này.");
     try {
       const { response } = await fetchWithGeminiKeyFallback({
@@ -383,12 +380,11 @@ async function generateMiniGameQuestions({
   }
 
     let review = { status: "unavailable", issues: [] };
-  if (claudeApiKeys_server.length > 0 || groqApiKeys_server.length > 0) {
+  if (groqApiKeys_server.length > 0) {
     try {
-      review = await reviewWithClaude({
-        apiKeys: claudeApiKeys_server,
-        groqApiKeys: groqApiKeys_server,
-        model: claudeModel_server,
+      review = await reviewWithGroq({
+        apiKeys: groqApiKeys_server,
+        model: groqModel_server,
         task: isObstacleMode
           ? "Kiểm tra câu hỏi có chính xác, rõ ràng không; kiểm tra từng hàng ngang có liên hệ hợp lý với từ khóa ẩn và câu trung tâm có phù hợp không. Chỉ nêu lỗi cụ thể, không suy đoán."
           : isOlympiaMode
@@ -406,14 +402,14 @@ async function generateMiniGameQuestions({
         signal: AbortSignal.timeout(8_000),
       });
     } catch (error) {
-      console.error("Mini-game Claude/Groq review failed:", error.message);
+      console.error("Mini-game Groq review failed:", error.message);
     }
   } else {
-    console.error("Mini-game Claude/Groq review skipped: no API key is configured.");
+    console.error("Mini-game Groq review skipped: no API key is configured.");
   }
 
   if (review.status !== "verified") {
-    console.warn("Mini-game Claude/Groq review returned a warning:", review.issues);
+    console.warn("Mini-game Groq review returned a warning:", review.issues);
   }
   return {
     questions: generated.questions,
@@ -428,7 +424,6 @@ app.use(createQuizRouter({
   baseUrl: process.env.OLLAMA_BASE_URL,
   model: process.env.OLLAMA_MODEL,
   geminiApiKeys,
-  claudeApiKeys: claudeApiKeys_server,
   groqApiKeys: groqApiKeys_server,
 }));
 const historyFile = path.join(projectDir, "history-data.json");
@@ -578,93 +573,47 @@ function normalizeAssistantName(reply) {
     .replace(/\b(Tên (?:của mình|của tôi|của em) là\s+)(?:Mai|Luka|Luca|Lua|Lúa)\b/giu, "$1Lụa")
     .trim();
 }
-async function generateClaudeReply(messages, historyContext, mode, chatStyle, reviewIssues = []) {
+async function generateGroqReply(messages, historyContext, mode, chatStyle, reviewIssues = []) {
+  if (groqApiKeys_server.length === 0) throw new Error("GROQ_API_KEY chưa được cấu hình.");
   const correctionInstruction = reviewIssues.length
     ? `\n\nBản trả lời trước có các vấn đề cần sửa: ${reviewIssues.join("; ")}. Hãy tạo lại câu trả lời, sửa rõ các vấn đề này và kiểm tra sự thật trước khi trả lời.`
     : "";
-  let claudeError;
-  if (claudeApiKeys_server.length > 0) {
-    try {
-      const { response } = await fetchWithClaudeKeyFallback({
-        apiKeys: claudeApiKeys_server,
-        timeoutMs: 15_000,
-        url: "https://api.anthropic.com/v1/messages",
-        init: {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          signal: AbortSignal.timeout(25_000),
-          body: JSON.stringify({
-            model: claudeModel_server,
-            system: `${buildSystemInstruction(historyContext, mode, chatStyle)}${correctionInstruction}`,
-            messages: messages.slice(-20).map(({ role, content }) => ({
-              role,
-              content: content.slice(0, 8_000),
-            })),
-            temperature: 0.2,
-            max_tokens: mode === "voice" ? 300 : 1000,
-          }),
-        },
-      });
-      const data = await response.json().catch(() => null);
-      if (!response.ok) {
-        const error = new Error(`Claude chat failed with status ${response.status}`);
-        error.status = response.status;
-        throw error;
-      }
-      const content = data?.content
-        ?.map((part) => (part?.type === "text" ? String(part.text || "") : ""))
-        .join("")
-        .trim();
-      const cleanedReply = normalizeAssistantName(content || "");
-      if (!cleanedReply) throw new Error("Claude chat returned no content.");
-      return cleanedReply;
-    } catch (error) {
-      claudeError = error;
-    }
-  }
-
-  if (groqApiKeys_server.length > 0) {
-    const { response } = await fetchWithGroqKeyFallback({
-      apiKeys: groqApiKeys_server,
-      timeoutMs: 15_000,
-      url: "https://api.groq.com/openai/v1/chat/completions",
-      init: {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        signal: AbortSignal.timeout(25_000),
-        body: JSON.stringify({
-          model: groqModel_server,
-          messages: [
-            {
-              role: "system",
-              content: `${buildSystemInstruction(historyContext, mode, chatStyle)}${correctionInstruction}`,
-            },
-            ...messages.slice(-20).map(({ role, content }) => ({
-              role,
-              content: content.slice(0, 8_000),
-            })),
-          ],
-          temperature: 0.2,
-          max_completion_tokens: mode === "voice" ? 300 : 1000,
-        }),
+  const { response } = await fetchWithGroqKeyFallback({
+    apiKeys: groqApiKeys_server,
+    timeoutMs: 15_000,
+    url: "https://api.groq.com/openai/v1/chat/completions",
+    init: {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    });
-    const data = await response.json().catch(() => null);
-    if (!response.ok) {
-      const error = new Error(`Groq chat failed with status ${response.status}`);
-      error.status = response.status;
-      throw error;
-    }
-    const cleanedReply = normalizeAssistantName(data?.choices?.[0]?.message?.content || "");
-    if (!cleanedReply) throw new Error("Groq chat returned no content.");
-    return cleanedReply;
+      signal: AbortSignal.timeout(25_000),
+      body: JSON.stringify({
+        model: groqModel_server,
+        messages: [
+          {
+            role: "system",
+            content: `${buildSystemInstruction(historyContext, mode, chatStyle)}${correctionInstruction}`,
+          },
+          ...messages.slice(-20).map(({ role, content }) => ({
+            role,
+            content: content.slice(0, 8_000),
+          })),
+        ],
+        temperature: 0.2,
+        max_completion_tokens: mode === "voice" ? 300 : 1000,
+      }),
+    },
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error = new Error(`Groq chat failed with status ${response.status}`);
+    error.status = response.status;
+    throw error;
   }
-
-  throw claudeError || new Error("CLAUDE_API_KEY và GROQ_API_KEY chưa được cấu hình.");
+  const cleanedReply = normalizeAssistantName(data?.choices?.[0]?.message?.content || "");
+  if (!cleanedReply) throw new Error("Groq chat returned no content.");
+  return cleanedReply;
 }
 
 
@@ -783,50 +732,48 @@ app.post("/api/chat", async (req, res) => {
 
     if (!reply) {
     try {
-      reply = await generateClaudeReply(claudeMessages, historyContext, mode, chatStyle);
+      reply = await generateGroqReply(claudeMessages, historyContext, mode, chatStyle);
       let fallbackReview;
       try {
-        fallbackReview = await reviewWithClaude({
-          apiKeys: claudeApiKeys_server,
-          groqApiKeys: groqApiKeys_server,
-          model: claudeModel_server,
+        fallbackReview = await reviewWithGroq({
+          apiKeys: groqApiKeys_server,
+          model: groqModel_server,
           task: "Rà soát nghiêm ngặt câu trả lời dự phòng: kiểm tra tính đúng sự thật và liên quan; xác định tiền đề người dùng sai có được đính chính trước khi trả lời không. Đặc biệt, không chấp nhận kết luận sai chỉ vì người dùng yêu cầu giải thích vì sao nó đúng. Nếu có vấn đề cụ thể, ghi rõ cách sửa trong issues.",
           question: attachmentQuestion,
           answer: reply,
           context: JSON.stringify({ historyContext }),
         });
       } catch (error) {
-        console.error("Claude fallback review failed:", error.message);
+        console.error("Groq fallback review failed:", error.message);
         const issue = error.status === 429
-          ? "Claude đang giới hạn lượt gọi (HTTP 429); câu trả lời chưa được rà soát."
+          ? "Groq đang giới hạn lượt gọi (HTTP 429); câu trả lời chưa được rà soát."
           : error.status === 401
-            ? "Claude từ chối API key (HTTP 401); câu trả lời chưa được rà soát."
-            : "Claude không thể rà soát câu trả lời.";
-        fallbackReview = { status: "unavailable", model: claudeModel_server, issues: [issue] };
+            ? "Groq từ chối API key (HTTP 401); câu trả lời chưa được rà soát."
+            : "Groq không thể rà soát câu trả lời.";
+        fallbackReview = { status: "unavailable", model: groqModel_server, issues: [issue] };
       }
 
       if (["concern", "uncertain"].includes(fallbackReview.status) && fallbackReview.issues.length) {
         try {
-          reply = await generateClaudeReply(claudeMessages, historyContext, mode, chatStyle, fallbackReview.issues);
-          fallbackReview = await reviewWithClaude({
-            apiKeys: claudeApiKeys_server,
-            groqApiKeys: groqApiKeys_server,
-            model: claudeModel_server,
+          reply = await generateGroqReply(claudeMessages, historyContext, mode, chatStyle, fallbackReview.issues);
+          fallbackReview = await reviewWithGroq({
+            apiKeys: groqApiKeys_server,
+            model: groqModel_server,
             task: "Kiểm tra lại câu trả lời đã được sửa: xác minh tính đúng sự thật, liên quan, và việc đính chính tiền đề sai của người dùng. Không bỏ qua mâu thuẫn với sự thật chỉ vì câu trả lời nghe có vẻ hợp lý.",
             question: attachmentQuestion,
             answer: reply,
             context: JSON.stringify({ historyContext, previousIssues: fallbackReview.issues }),
           });
         } catch (error) {
-          console.error("Claude fallback correction/review failed:", error.message);
+          console.error("Groq fallback correction/review failed:", error.message);
           const issue = error.status === 429
-            ? "Claude đang giới hạn lượt gọi (HTTP 429); chưa thể xác nhận câu trả lời sau khi sửa."
+            ? "Groq đang giới hạn lượt gọi (HTTP 429); chưa thể xác nhận câu trả lời sau khi sửa."
             : error.status === 401
-              ? "Claude từ chối API key (HTTP 401); chưa thể xác nhận câu trả lời sau khi sửa."
+              ? "Groq từ chối API key (HTTP 401); chưa thể xác nhận câu trả lời sau khi sửa."
               : "Không thể hoàn tất việc sửa và rà soát lại câu trả lời.";
           fallbackReview = {
             status: "concern",
-            model: claudeModel_server,
+            model: groqModel_server,
             issues: [...fallbackReview.issues, issue].slice(0, 5),
           };
         }
@@ -838,22 +785,22 @@ app.post("/api/chat", async (req, res) => {
         suggestions,
         verification: {
           status: fallbackReview.status,
-          provider: "Anthropic/Claude",
-          model: claudeModel_server,
+          provider: "Groq",
+          model: groqModel_server,
           reason: geminiFailure,
           issues: fallbackReview.issues,
           fallback: true,
         },
       });
     } catch (error) {
-      console.error("Claude chat fallback failed:", error.message);
+      console.error("Groq chat fallback failed:", error.message);
       if (error.status === 429) {
-        return res.status(429).json({ error: `${geminiFailure} Claude đang giới hạn lượt gọi (HTTP 429); hãy đợi rồi thử lại.` });
+        return res.status(429).json({ error: `${geminiFailure} Groq đang giới hạn lượt gọi (HTTP 429); hãy đợi rồi thử lại.` });
       }
       if (error.status === 401) {
-        return res.status(502).json({ error: `${geminiFailure} Claude từ chối API key (HTTP 401); hãy kiểm tra CLAUDE_API_KEY.` });
+        return res.status(502).json({ error: `${geminiFailure} Groq từ chối API key (HTTP 401); hãy kiểm tra GROQ_API_KEY.` });
       }
-      return res.status(502).json({ error: `${geminiFailure} Claude dự phòng cũng không khả dụng.` });
+      return res.status(502).json({ error: `${geminiFailure} Groq dự phòng cũng không khả dụng.` });
     }
   }
 
@@ -865,18 +812,17 @@ app.post("/api/chat", async (req, res) => {
       .map(({ role, content }) => ({ role, content: content.slice(0, 1_000) }));
     let verification;
     try {
-      verification = await reviewWithClaude({
-        apiKeys: claudeApiKeys_server,
-        groqApiKeys: groqApiKeys_server,
-        model: claudeModel_server,
+      verification = await reviewWithGroq({
+        apiKeys: groqApiKeys_server,
+        model: groqModel_server,
         task: "Rà soát câu trả lời chat: đúng với dữ kiện có căn cứ, liên quan câu hỏi, không lặp câu trả lời gần đây; kiểm tra tiền đề/thông tin người dùng đưa ra có sai rõ ràng không và câu trả lời đã lịch sự sửa lỗi trước khi trả lời hay chưa.",
         question: attachmentQuestion,
         answer: reply,
         context: JSON.stringify({ recentConversation, historyContext }),
       });
     } catch (error) {
-      console.error("Claude chat review failed:", error.message);
-      verification = { status: "unavailable", model: claudeModel_server, issues: [] };
+      console.error("Groq chat review failed:", error.message);
+      verification = { status: "unavailable", model: groqModel_server, issues: [] };
     }
 
     const suggestions = await findRelatedResources(latestQuestion);

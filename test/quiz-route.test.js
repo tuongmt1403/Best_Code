@@ -317,21 +317,21 @@ test("answers clarification from the current lesson and routes out-of-scope ques
   const prompts = [];
   globalThis.fetch = async (url, options = {}) => {
     if (String(url).startsWith("http://127.0.0.1:")) return originalFetch(url, options);
-    if (String(url).startsWith("https://api.anthropic.com/")) {
+    if (String(url).startsWith("https://api.groq.com/")) {
       const requestBody = JSON.parse(options.body);
-      prompts.push(requestBody.messages[0].content);
+      prompts.push(requestBody.messages[1].content);
       const clarification = prompts.length === 1
         ? { inScope: true, answer: "Khí hậu Việt Nam mang tính nhiệt đới ẩm gió mùa." }
         : { inScope: false, answer: "Câu hỏi này vượt ra ngoài nội dung khí hậu đang học." };
       return Response.json({
-        content: [{ type: "text", text: JSON.stringify(clarification) }],
+        choices: [{ message: { content: JSON.stringify(clarification) } }],
       });
     }
     throw new Error(`Unexpected external request: ${String(url)}`);
   };
   const app = express();
   app.use(express.json());
-  app.use(createQuizRouter({ claudeApiKeys: ["test-claude-key"] }));
+  app.use(createQuizRouter({ groqApiKeys: ["test-groq-key"] }));
   const server = app.listen(0);
 
   try {
@@ -605,14 +605,14 @@ test("builds foundation, practice, and advanced roadmap steps from quiz performa
   }
 });
 
-test("generates a C programming quiz with Ollama when Claude is rate-limited and QuizAPI denies creation", async () => {
+test("generates a C programming quiz with Ollama when Groq is rate-limited and QuizAPI denies creation", async () => {
   const originalFetch = globalThis.fetch;
-  const previousClaudeKey = process.env.CLAUDE_API_KEY;
+  const previousGroqKey = process.env.GROQ_API_KEY;
   const previousQuizApiKey = process.env.QUIZAPI_IO_KEY;
-  const previousClaudeModel = process.env.CLAUDE_MODEL;
-  process.env.CLAUDE_API_KEY = "test-claude-key";
+  const previousGroqModel = process.env.GROQ_MODEL;
+  process.env.GROQ_API_KEY = "test-groq-key";
   process.env.QUIZAPI_IO_KEY = "test-quizapi-key";
-  process.env.CLAUDE_MODEL = "claude-test";
+  process.env.GROQ_MODEL = "groq-test";
 
   const generatedQuiz = [{
     question: "Chỉ số đầu tiên của một mảng trong C là bao nhiêu?",
@@ -628,7 +628,7 @@ test("generates a C programming quiz with Ollama when Claude is rate-limited and
       return originalFetch(url, options);
     }
     externalRequests.push({ url: String(url), method: options.method });
-    if (String(url).startsWith("https://api.anthropic.com/")) {
+    if (String(url).startsWith("https://api.groq.com/")) {
       return Response.json({ error: { message: "rate limited" } }, { status: 429 });
     }
     if (String(url).startsWith("http://localhost:11434/api/tags")) {
@@ -693,12 +693,12 @@ test("generates a C programming quiz with Ollama when Claude is rate-limited and
   } finally {
     await new Promise((resolve) => server.close(resolve));
     globalThis.fetch = originalFetch;
-    if (previousClaudeKey === undefined) delete process.env.CLAUDE_API_KEY;
-    else process.env.CLAUDE_API_KEY = previousClaudeKey;
+    if (previousGroqKey === undefined) delete process.env.GROQ_API_KEY;
+    else process.env.GROQ_API_KEY = previousGroqKey;
     if (previousQuizApiKey === undefined) delete process.env.QUIZAPI_IO_KEY;
     else process.env.QUIZAPI_IO_KEY = previousQuizApiKey;
-    if (previousClaudeModel === undefined) delete process.env.CLAUDE_MODEL;
-    else process.env.CLAUDE_MODEL = previousClaudeModel;
+    if (previousGroqModel === undefined) delete process.env.GROQ_MODEL;
+    else process.env.GROQ_MODEL = previousGroqModel;
   }
 });
 
