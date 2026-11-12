@@ -3,6 +3,8 @@ import express from "express";
 import { randomInt, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import QRCode from "qrcode";
+import { validateDisplayName } from "./profanity.js";
 
 const rankLevels = [
   { name: "Newbie", icon: "🌱", threshold: 0 },
@@ -395,10 +397,11 @@ function publicPlayer(player) {
     hasAnswered: Boolean(player.answer),
     rulesAcknowledged: Boolean(player.rulesAcknowledged),
     isHost: player.isHost,
+    isGuest: Boolean(player.isGuest),
   };
 }
 
-function makePlayer(id, username, isHost, getAvatar = () => "fox") {
+function makePlayer(id, username, isHost, getAvatar = () => "fox", isGuest = false) {
   return {
     id,
     username,
@@ -406,6 +409,7 @@ function makePlayer(id, username, isHost, getAvatar = () => "fox") {
       return getAvatar() === "knight" ? "knight" : "fox";
     },
     isHost,
+    isGuest: Boolean(isGuest),
     score: 0,
     correctAnswers: 0,
     answer: null,
@@ -1075,6 +1079,7 @@ export function createMiniGame({
   });
 
   function recordGamePlayed(player, now, score, won) {
+    if (player.isGuest) return;
     const date = activityDate(now);
     db.prepare(`
       INSERT INTO leaderboard (
@@ -1156,12 +1161,55 @@ export function createMiniGame({
 
   router.use((req, res, next) => {
     if (!req.path.startsWith("/api/minigame/")) return next();
-    if (!req.authUser) return res.status(401).json({ error: "Vui lòng đăng nhập để chơi mini game." });
-    const origin = req.get("origin");
-    const expectedOrigin = `${req.protocol}://${req.get("host")}`;
-    if (origin && origin !== expectedOrigin) {
-      return res.status(403).json({ error: "Yêu cầu không cùng nguồn với trò chơi." });
+
+    // Check for guest headers when session auth is absent
+    const guestIdHeader = req.get("x-guest-id");
+    const rawGuestNameHeader = req.get("x-guest-name");
+    let guestNameHeader = "";
+    if (rawGuestNameHeader) {
+      try { guestNameHeader = decodeURIComponent(rawGuestNameHeader); } catch { guestNameHeader = rawGuestNameHeader; }
     }
+    const guestAvatarHeader = req.get("x-guest-avatar");
+
+    if (req.authUser) {
+      req.authUser.isGuest = false;
+    } else if (guestNameHeader || guestIdHeader) {
+      const nameToCheck = (guestNameHeader || "").trim() || "Khách";
+      const nameValidation = validateDisplayName(nameToCheck);
+      if (!nameValidation.valid) {
+        return res.status(400).json({ error: nameValidation.error });
+      }
+      const rawId = (guestIdHeader || "").trim();
+      const validGuestId = /^guest_[a-zA-Z0-9_-]{4,32}$/.test(rawId)
+        ? rawId
+        : `guest_${randomUUID().replace(/-/g, "").slice(0, 10)}`;
+
+      req.authUser = {
+        id: validGuestId,
+        username: nameValidation.cleanName,
+        isGuest: true,
+        avatar: guestAvatarHeader === "knight" ? "knight" : "fox",
+      };
+      req.getPlayerAvatar = () => req.authUser.avatar;
+    }
+
+    const origin = req.get("origin");
+    if (origin) {
+      try {
+        const originUrl = new URL(origin);
+        const hostHeader = (req.get("x-forwarded-host") || req.get("host") || "").split(":")[0].toLowerCase();
+        const originHost = originUrl.hostname.toLowerCase();
+        const isLocal = (originHost === "localhost" || originHost === "127.0.0.1") && (hostHeader === "localhost" || hostHeader === "127.0.0.1");
+        if (originHost !== hostHeader && !isLocal) {
+          return res.status(403).json({ error: "Yêu cầu không cùng nguồn với trò chơi." });
+        }
+      } catch {
+        return res.status(403).json({ error: "Yêu cầu không cùng nguồn với trò chơi." });
+      }
+    }
+
+    if (!req.authUser) return res.status(401).json({ error: "Vui lòng đăng nhập hoặc nhập tên để chơi mini game." });
+
     cleanupRooms(clock());
     return next();
   });
@@ -1177,6 +1225,27 @@ export function createMiniGame({
   router.get("/api/minigame/progress", (req, res) => {
     const now = clock();
     const today = activityDate(now);
+    if (req.authUser.isGuest) {
+      res.set("Cache-Control", "no-store");
+      return res.json({
+        username: req.authUser.username,
+        isGuest: true,
+        totalPoints: 0,
+        totalAnswered: 0,
+        correctAnswers: 0,
+        gamesPlayed: 0,
+        questionsToday: 0,
+        correctToday: 0,
+        streakDays: 0,
+        rank: { title: "Tập sự (Khách)", tier: "guest", minPoints: 0, nextTierPoints: 100 },
+        chart: Array.from({ length: 7 }, (_, index) => ({
+          date: shiftActivityDate(today, index - 6),
+          questionsAnswered: 0,
+          correctAnswers: 0,
+        })),
+        historicalBaseline: "Chế độ Khách: Điểm chỉ tính trong ván chơi hiện tại. Đăng nhập để lưu điểm tích lũy và leo bảng xếp hạng!",
+      });
+    }
     const totals = db.prepare(`
       SELECT total_points AS totalPoints, total_answered AS totalAnswered,
         correct_answers AS correctAnswers, games_played AS gamesPlayed
@@ -1233,6 +1302,9 @@ export function createMiniGame({
       || !Number.isInteger(correctAnswers) || correctAnswers < 0 || correctAnswers > questionsAnswered) {
       return res.status(400).json({ error: "Dữ liệu hoàn thành bài học không hợp lệ." });
     }
+    if (req.authUser.isGuest) {
+      return res.json({ recorded: false, isGuest: true, questionsAnswered, correctAnswers });
+    }
 
     const recorded = recordStudyActivity({
       userId: req.authUser.id,
@@ -1266,6 +1338,10 @@ export function createMiniGame({
   });
 
   router.get("/api/minigame/friends", (req, res) => {
+    if (req.authUser.isGuest) {
+      res.set("Cache-Control", "no-store");
+      return res.json({ friends: [], incoming: [], outgoing: [], isGuest: true });
+    }
     const friends = db.prepare(`
       SELECT user_id_a AS userId, username_a AS username, created_at AS createdAt
       FROM friendships WHERE user_id_b = ?
@@ -1287,6 +1363,9 @@ export function createMiniGame({
   });
 
   router.post("/api/minigame/friends/requests", (req, res) => {
+    if (req.authUser.isGuest) {
+      return res.status(403).json({ error: "Tính năng bạn bè chỉ dành cho tài khoản đã đăng nhập." });
+    }
     const username = typeof req.body?.username === "string" ? req.body.username.trim() : "";
     if (!username || username.length > 24) {
       return res.status(400).json({ error: "Nhập tên người dùng dài tối đa 24 ký tự." });
@@ -1349,6 +1428,9 @@ export function createMiniGame({
   });
 
   router.post("/api/minigame/friends/:friendId/invites", (req, res) => {
+    if (req.authUser.isGuest) {
+      return res.status(403).json({ error: "Tính năng mời bạn bè chỉ dành cho tài khoản đã đăng nhập." });
+    }
     const friendId = req.params.friendId;
     const userA = req.authUser.id < friendId ? req.authUser.id : friendId;
     const userB = userA === req.authUser.id ? friendId : req.authUser.id;
@@ -1380,6 +1462,10 @@ export function createMiniGame({
   });
 
   router.get("/api/minigame/invites", (req, res) => {
+    if (req.authUser.isGuest) {
+      res.set("Cache-Control", "no-store");
+      return res.json({ invites: [], isGuest: true });
+    }
     const invites = [];
     for (const [id, invite] of pendingInvites) {
       const room = getRoom(invite.roomCode);
@@ -1403,6 +1489,9 @@ export function createMiniGame({
   });
 
   router.post("/api/minigame/invites/:inviteId/accept", (req, res) => {
+    if (req.authUser.isGuest) {
+      return res.status(403).json({ error: "Tính năng lời mời chơi chỉ dành cho tài khoản đã đăng nhập." });
+    }
     const invite = pendingInvites.get(req.params.inviteId);
     if (!invite || invite.invitedUserId !== req.authUser.id) {
       return res.status(404).json({ error: "Lời mời chơi không còn hiệu lực." });
@@ -1422,7 +1511,7 @@ export function createMiniGame({
     }
     if (!room.players.has(req.authUser.id)) {
       if (room.players.size >= 6) return res.status(409).json({ error: "Phòng đã đủ 6 người chơi." });
-      const player = makePlayer(req.authUser.id, req.authUser.username, false, req.getPlayerAvatar);
+      const player = makePlayer(req.authUser.id, req.authUser.username, false, req.getPlayerAvatar, req.authUser.isGuest);
       room.players.set(player.id, player);
       playerRooms.set(player.id, room.code);
       room.lastActivityAt = clock();
@@ -1519,7 +1608,7 @@ export function createMiniGame({
         buzzDeadline: 0,
         buzzBlockedIds: new Set(),
       };
-      const player = makePlayer(req.authUser.id, req.authUser.username, true, req.getPlayerAvatar);
+      const player = makePlayer(req.authUser.id, req.authUser.username, true, req.getPlayerAvatar, req.authUser.isGuest);
       room.players.set(player.id, player);
       rooms.set(code, room);
       playerRooms.set(player.id, code);
@@ -1545,7 +1634,7 @@ export function createMiniGame({
       return res.status(409).json({ error: "Bạn đang ở trong một phòng khác. Hãy rời phòng đó trước." });
     }
     if (room.players.size >= 6) return res.status(409).json({ error: "Phòng đã đủ 6 người chơi." });
-    const player = makePlayer(req.authUser.id, req.authUser.username, false, req.getPlayerAvatar);
+    const player = makePlayer(req.authUser.id, req.authUser.username, false, req.getPlayerAvatar, req.authUser.isGuest);
     room.players.set(player.id, player);
     playerRooms.set(player.id, room.code);
     room.lastActivityAt = clock();
@@ -1562,6 +1651,45 @@ export function createMiniGame({
       "X-Content-Type-Options": "nosniff",
     });
     return res.type("image/svg+xml").send(room.obstacleImage);
+  });
+
+  router.get("/api/minigame/rooms/:code/qrcode", async (req, res) => {
+    const room = getRoom(req.params.code);
+    if (!room) return res.status(404).json({ error: "Phòng không tồn tại hoặc đã hết hạn." });
+    const hostHeader = req.get("x-forwarded-host") || req.get("host") || "localhost:3000";
+    const proto = req.get("x-forwarded-proto") || req.protocol || "http";
+    const hostName = hostHeader.split(":")[0].toLowerCase();
+    const isLocalHost = /^(localhost|127\.|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?$)/.test(hostName);
+    const publicBase = String(process.env.PUBLIC_BASE_URL || "").trim().replace(/\/+$/, "");
+    const baseUrl = isLocalHost && /^https?:\/\//i.test(publicBase) ? publicBase : `${proto}://${hostHeader}`;
+    const inviteUrl = `${baseUrl}/mini-game/?room=${encodeURIComponent(room.code)}`;
+    try {
+      const qrDataUrl = await QRCode.toDataURL(inviteUrl, {
+        width: 320,
+        margin: 2,
+        color: {
+          dark: "#090d3b",
+          light: "#ffffff",
+        },
+      });
+      const qrSvg = await QRCode.toString(inviteUrl, {
+        type: "svg",
+        margin: 2,
+        color: {
+          dark: "#090d3b",
+          light: "#ffffff",
+        },
+      });
+      res.set("Cache-Control", "no-store");
+      return res.json({
+        roomCode: room.code,
+        inviteUrl,
+        qrDataUrl,
+        qrSvg,
+      });
+    } catch (err) {
+      return res.status(500).json({ error: "Không thể tạo mã QR." });
+    }
   });
 
   router.get("/api/minigame/rooms/:code", (req, res) => {

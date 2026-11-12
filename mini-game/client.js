@@ -1,3 +1,5 @@
+import { validateDisplayName } from "/mini-game/profanity.js";
+
 const content = document.querySelector("#game-content");
 const leaderboardList = document.querySelector("#leaderboard-list");
 const liveStatus = document.querySelector("#game-live-status");
@@ -22,6 +24,17 @@ let olympiaAudioUrl = "";
 let olympiaRecognition = null;
 let speechRevealTimer = null;
 const speechRevealProgress = new Map();
+
+// Guest user state
+let guestId = localStorage.getItem("minigame_guest_id");
+if (!guestId) {
+  guestId = "guest_" + Math.random().toString(36).slice(2, 10);
+  localStorage.setItem("minigame_guest_id", guestId);
+}
+let guestName = localStorage.getItem("minigame_guest_name") || "Bạn Mới";
+let guestAvatar = localStorage.getItem("minigame_guest_avatar") || "fox";
+let isGuestUser = true;
+let userProgress = null;
 
 function node(tag, className, text) {
   const element = document.createElement(tag);
@@ -55,13 +68,19 @@ document.querySelector("#music-toggle")?.addEventListener("click", () => {
 });
 
 async function request(url, options = {}) {
+  const customHeaders = { ...(options.headers || {}) };
+  if (!customHeaders["x-guest-name"]) {
+    customHeaders["x-guest-id"] = guestId;
+    customHeaders["x-guest-name"] = encodeURIComponent(guestName || "Khách");
+    customHeaders["x-guest-avatar"] = guestAvatar;
+  }
   const response = await fetch(url, {
     credentials: "same-origin",
     cache: "no-store",
     ...options,
     headers: {
       ...(options.body ? { "Content-Type": "application/json" } : {}),
-      ...options.headers,
+      ...customHeaders,
     },
   });
   const data = await response.json().catch(() => ({}));
@@ -70,7 +89,11 @@ async function request(url, options = {}) {
 }
 
 async function loadSocialData() {
-  socialData = await request("/api/minigame/friends");
+  try {
+    socialData = await request("/api/minigame/friends");
+  } catch {
+    socialData = { friends: [], incoming: [], outgoing: [], isGuest: true };
+  }
   return socialData;
 }
 
@@ -210,6 +233,268 @@ function createSetupField(labelText, control) {
   return label;
 }
 
+const qrCodeCache = new Map();
+
+async function fetchRoomQr(code) {
+  if (qrCodeCache.has(code)) return qrCodeCache.get(code);
+  try {
+    const res = await request(`/api/minigame/rooms/${encodeURIComponent(code)}/qrcode`);
+    qrCodeCache.set(code, res);
+    return res;
+  } catch {
+    return null;
+  }
+}
+
+function openQrModal(snapshot, qrDataUrl, inviteUrl) {
+  const existing = document.querySelector(".qr-modal-overlay");
+  if (existing) existing.remove();
+
+  const overlay = node("div", "qr-modal-overlay");
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+
+  const card = node("div", "qr-modal-card");
+  const head = node("div", "qr-modal-head");
+  head.append(node("h3", "qr-modal-title", `📱 Mã QR Phòng: ${snapshot.code}`));
+  const closeBtn = node("button", "qr-scanner-close", "✕");
+  closeBtn.type = "button";
+  closeBtn.setAttribute("aria-label", "Đóng");
+  head.append(closeBtn);
+
+  const imgBox = node("div", "qr-modal-imgbox");
+  const img = node("img", "qr-modal-img");
+  img.src = qrDataUrl;
+  img.alt = `Mã QR vào phòng ${snapshot.code}`;
+  imgBox.append(img);
+
+  const desc = node("p", "qr-modal-desc", "Dùng camera điện thoại hoặc Zalo quét mã QR này để bạn bè vào phòng ngay lập tức!");
+
+  const actions = node("div", "qr-modal-actions");
+  const downloadBtn = node("button", "room-copy", "📥 Tải ảnh mã QR");
+  downloadBtn.type = "button";
+  downloadBtn.addEventListener("click", () => {
+    const a = document.createElement("a");
+    a.href = qrDataUrl;
+    a.download = `Ma_Phong_${snapshot.code}_QR.png`;
+    a.click();
+  });
+
+  const copyLinkBtn = node("button", "room-copy", "Sao chép liên kết");
+  copyLinkBtn.type = "button";
+  copyLinkBtn.addEventListener("click", async () => {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(inviteUrl);
+      copyLinkBtn.textContent = "Đã sao chép!";
+      setTimeout(() => { if (copyLinkBtn.isConnected) copyLinkBtn.textContent = "Sao chép liên kết"; }, 1500);
+    }
+  });
+
+  actions.append(downloadBtn, copyLinkBtn);
+  card.append(head, imgBox, desc, actions);
+  overlay.append(card);
+  document.body.append(overlay);
+
+  function close() {
+    overlay.remove();
+    document.removeEventListener("keydown", onEsc);
+  }
+  function onEsc(e) { if (e.key === "Escape") close(); }
+  document.addEventListener("keydown", onEsc);
+  closeBtn.addEventListener("click", close);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+}
+
+function openQrScanner(onCodeDetected) {
+  const existing = document.querySelector(".qr-scanner-overlay");
+  if (existing) existing.remove();
+
+  const overlay = node("div", "qr-scanner-overlay");
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+
+  const card = node("div", "qr-scanner-card");
+  const head = node("div", "qr-scanner-head");
+  head.append(node("h3", "qr-scanner-title", "📷 Quét mã QR vào phòng"));
+  const closeBtn = node("button", "qr-scanner-close", "✕");
+  closeBtn.type = "button";
+  closeBtn.setAttribute("aria-label", "Đóng");
+  head.append(closeBtn);
+
+  const viewport = node("div", "qr-scanner-viewport");
+  const video = node("video", "qr-scanner-video");
+  video.setAttribute("playsinline", "true");
+  video.setAttribute("autoplay", "true");
+  video.muted = true;
+
+  const reticle = node("div", "qr-scanner-reticle");
+  reticle.append(
+    node("span", "qr-reticle-corner top-left"),
+    node("span", "qr-reticle-corner top-right"),
+    node("span", "qr-reticle-corner bottom-left"),
+    node("span", "qr-reticle-corner bottom-right"),
+    node("span", "qr-scan-laser")
+  );
+  viewport.append(video, reticle);
+
+  const status = node("p", "qr-scanner-status", "Đang khởi động camera...");
+
+  const actions = node("div", "qr-scanner-actions");
+  const fileLabel = node("label", "qr-file-label");
+  const fileInput = node("input", "qr-file-input");
+  fileInput.type = "file";
+  fileInput.accept = "image/*";
+  fileInput.hidden = true;
+  fileLabel.append("📁 Tải ảnh mã QR từ máy", fileInput);
+  actions.append(fileLabel);
+
+  card.append(head, viewport, status, actions);
+  overlay.append(card);
+  document.body.append(overlay);
+
+  let mediaStream = null;
+  let scanning = true;
+  let animId = null;
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+  function cleanup() {
+    scanning = false;
+    if (animId) cancelAnimationFrame(animId);
+    if (mediaStream) {
+      mediaStream.getTracks().forEach((track) => track.stop());
+      mediaStream = null;
+    }
+    overlay.remove();
+    document.removeEventListener("keydown", onKeyDown);
+  }
+
+  function onKeyDown(e) { if (e.key === "Escape") cleanup(); }
+  document.addEventListener("keydown", onKeyDown);
+  closeBtn.addEventListener("click", cleanup);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) cleanup(); });
+
+  function extractRoomCode(rawText) {
+    if (!rawText || typeof rawText !== "string") return null;
+    const trimmed = rawText.trim();
+    const matchParam = trimmed.match(/[?&]room=([A-Za-z0-9]{6})/i);
+    if (matchParam) return matchParam[1].toUpperCase();
+    const matchPath = trimmed.match(/\/rooms?\/([A-Za-z0-9]{6})/i);
+    if (matchPath) return matchPath[1].toUpperCase();
+    if (/^[A-Za-z0-9]{6}$/.test(trimmed)) return trimmed.toUpperCase();
+    return null;
+  }
+
+  function handleDetectedCode(raw) {
+    const code = extractRoomCode(raw);
+    if (!code) {
+      status.textContent = "Mã QR đã quét không chứa mã phòng mini game hợp lệ.";
+      return;
+    }
+    status.textContent = `✓ Đã quét mã thành công: ${code}! Đang vào phòng...`;
+    status.classList.add("success");
+    if (navigator.vibrate) navigator.vibrate(100);
+    window.setTimeout(() => {
+      cleanup();
+      onCodeDetected(code);
+    }, 400);
+  }
+
+  const barcodeDetector = ("BarcodeDetector" in window)
+    ? new window.BarcodeDetector({ formats: ["qr_code"] })
+    : null;
+
+  function requestScan() {
+    if (!scanning) return;
+    animId = requestAnimationFrame(scanFrame);
+  }
+
+  async function scanFrame() {
+    if (!scanning) return;
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      if (barcodeDetector) {
+        try {
+          const barcodes = await barcodeDetector.detect(video);
+          if (barcodes?.length > 0 && barcodes[0].rawValue) {
+            handleDetectedCode(barcodes[0].rawValue);
+            return;
+          }
+        } catch {}
+      }
+      if (window.jsQR) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const qr = window.jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "dontInvert"
+        });
+        if (qr && qr.data) {
+          handleDetectedCode(qr.data);
+          return;
+        }
+      }
+    }
+    requestScan();
+  }
+
+  async function startCamera() {
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Trình duyệt không hỗ trợ Camera API.");
+      }
+      mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      video.srcObject = mediaStream;
+      await video.play();
+      status.textContent = "Hướng camera vào mã QR phòng để quét tự động.";
+      requestScan();
+    } catch {
+      status.textContent = "Không thể mở camera. Bạn có thể bấm nút bên dưới để chọn ảnh mã QR từ máy.";
+    }
+  }
+
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    status.textContent = "Đang phân tích hình ảnh...";
+    try {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = async () => {
+        URL.revokeObjectURL(url);
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        ctx.drawImage(img, 0, 0);
+        let found = null;
+        if (barcodeDetector) {
+          try {
+            const detected = await barcodeDetector.detect(canvas);
+            if (detected?.length > 0) found = detected[0].rawValue;
+          } catch {}
+        }
+        if (!found && window.jsQR) {
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const qr = window.jsQR(imgData.data, imgData.width, imgData.height);
+          if (qr?.data) found = qr.data;
+        }
+        if (found) {
+          handleDetectedCode(found);
+        } else {
+          status.textContent = "Không tìm thấy mã QR trong ảnh vừa chọn. Vui lòng thử ảnh khác.";
+        }
+      };
+      img.onerror = () => { status.textContent = "Không đọc được tệp hình ảnh."; };
+      img.src = url;
+    } catch {
+      status.textContent = "Lỗi khi xử lý hình ảnh.";
+    }
+  });
+
+  startCamera();
+}
+
 function renderSetup() {
   stopRoomPolling();
   stopGameMusic();
@@ -219,7 +504,8 @@ function renderSetup() {
 
   const heading = node("h2", "setup-heading", "Vào cuộc chơi");
   const copy = node("p", "setup-copy", "Tạo phòng mới hoặc nhập mã bạn bè gửi cho bạn. Tối đa 6 người cùng chơi.");
-  const accountHint = node("p", "game-hint", "Mỗi người cần tài khoản riêng và phải mở đúng cùng địa chỉ máy chủ của trò chơi. Hai tab cùng trình duyệt dùng chung tài khoản; nếu dùng chung máy, mở cửa sổ ẩn danh cho người thứ hai. Khi chơi từ thiết bị khác, hãy dùng địa chỉ IP hoặc tên miền của máy chủ, không dùng localhost.");
+
+  const identityContainer = node("div", "identity-container");
   const form = node("form", "setup-form");
   const topicSelect = node("select");
   topicSelect.name = "topicId";
@@ -290,22 +576,129 @@ function renderSetup() {
   codeInput.addEventListener("input", () => { codeInput.value = codeInput.value.toUpperCase(); });
   const joinButton = node("button", "secondary-action", "Vào phòng");
   joinButton.type = "submit";
-  joinForm.append(codeInput, joinButton);
-  content.append(heading, copy, accountHint, form, divider, joinForm, node("p", "game-error"));
+  const scanQrButton = node("button", "secondary-action scan-qr-button", "📷 Quét mã QR");
+  scanQrButton.type = "button";
+  scanQrButton.title = "Quét mã QR bằng Camera hoặc tải ảnh QR";
+
+  if (isGuestUser) {
+    const guestCard = node("div", "guest-profile-card");
+    const guestHeader = node("div", "guest-card-header");
+    guestHeader.append(node("span", "guest-badge-pill", "👤 Chế độ Khách (Chơi ngay không cần tạo tài khoản)"));
+    guestCard.append(guestHeader);
+
+    const guestInputGroup = node("div", "guest-input-group");
+    const label = node("label", "guest-label", "Tên hiển thị của bạn trong phòng:");
+    label.htmlFor = "guest-nickname-input";
+
+    const inputRow = node("div", "guest-input-row");
+    const nameInput = node("input", "guest-input");
+    nameInput.id = "guest-nickname-input";
+    nameInput.type = "text";
+    nameInput.maxLength = 20;
+    nameInput.placeholder = "Nhập tên bạn (VD: Minh Tuấn, Lan Anh...)";
+    nameInput.value = guestName || "";
+
+    const avatarToggle = node("div", "guest-avatar-toggle");
+    const foxBtn = node("button", `guest-avatar-btn${guestAvatar === "fox" ? " selected" : ""}`, "🦊");
+    foxBtn.type = "button";
+    foxBtn.title = "Avatar Cáo Lửa";
+    const knightBtn = node("button", `guest-avatar-btn${guestAvatar === "knight" ? " selected" : ""}`, "⚔️");
+    knightBtn.type = "button";
+    knightBtn.title = "Avatar Hiệp Sĩ AI";
+
+    foxBtn.addEventListener("click", () => {
+      guestAvatar = "fox";
+      localStorage.setItem("minigame_guest_avatar", "fox");
+      foxBtn.classList.add("selected");
+      knightBtn.classList.remove("selected");
+    });
+    knightBtn.addEventListener("click", () => {
+      guestAvatar = "knight";
+      localStorage.setItem("minigame_guest_avatar", "knight");
+      knightBtn.classList.add("selected");
+      foxBtn.classList.remove("selected");
+    });
+    avatarToggle.append(foxBtn, knightBtn);
+    inputRow.append(nameInput, avatarToggle);
+
+    const warningBox = node("div", "profanity-warning-box", "⚠️ Tên chứa từ ngữ không phù hợp thuần phong mỹ tục. Vui lòng chọn tên lịch sự để cùng chơi vui vẻ với bạn bè!");
+    warningBox.hidden = true;
+
+    const validateInput = () => {
+      const val = nameInput.value.trim();
+      if (!val) {
+        warningBox.textContent = "Vui lòng nhập tên hiển thị để vào phòng chơi.";
+        warningBox.hidden = false;
+        nameInput.classList.add("input-invalid");
+        createButton.disabled = true;
+        joinButton.disabled = true;
+        return false;
+      }
+      const check = validateDisplayName(val);
+      if (!check.valid) {
+        warningBox.textContent = check.error;
+        warningBox.hidden = false;
+        nameInput.classList.add("input-invalid");
+        createButton.disabled = true;
+        joinButton.disabled = true;
+        return false;
+      }
+      warningBox.hidden = true;
+      nameInput.classList.remove("input-invalid");
+      createButton.disabled = false;
+      joinButton.disabled = false;
+      guestName = check.cleanName;
+      localStorage.setItem("minigame_guest_name", guestName);
+      return true;
+    };
+
+    nameInput.addEventListener("input", validateInput);
+    guestInputGroup.append(label, inputRow, warningBox);
+
+    const perksNote = node("p", "guest-account-perks-note");
+    perksNote.innerHTML = '⭐ <em>Khi đăng nhập tài khoản, bạn sẽ mở thêm các đặc quyền: Lưu BXH vĩnh viễn, thăng cấp Danh hiệu và kết bạn. <a href="/dangKy_dangNhap/">Đăng nhập / Đăng ký</a></em>';
+    guestCard.append(guestInputGroup, perksNote);
+    identityContainer.append(guestCard);
+
+    // Initial check on load
+    if (guestName) validateInput();
+  } else {
+    const accountCard = node("div", "guest-profile-card");
+    const accountHeader = node("div", "guest-card-header");
+    accountHeader.append(node("span", "guest-badge-pill", `🌟 Tài khoản: ${guestName || "Thành viên"}`));
+    accountCard.append(accountHeader);
+    const accountInfo = node("p", "guest-account-perks-note", `Cấp bậc: ${userProgress?.rank?.title || "Tập sự"} · Điểm tích lũy: ${userProgress?.totalPoints || 0} điểm · Chuỗi streak: ${userProgress?.streakDays || 0} ngày.`);
+    accountCard.append(accountInfo);
+    identityContainer.append(accountCard);
+  }
+
+  scanQrButton.addEventListener("click", () => {
+    openQrScanner(async (code) => {
+      codeInput.value = code;
+      joinButton.disabled = true;
+      setError("");
+      try {
+        await request(`/api/minigame/rooms/${encodeURIComponent(code)}/join`, {
+          method: "POST",
+          body: "{}",
+        });
+        enterRoom(code);
+      } catch (error) {
+        setError(error.message);
+        joinButton.disabled = false;
+      }
+    });
+  });
+  const joinActions = node("div", "join-form-actions");
+  joinActions.append(joinButton, scanQrButton);
+  joinForm.append(codeInput, joinActions);
+  content.append(heading, copy, identityContainer, form, divider, joinForm, node("p", "game-error"));
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     createButton.disabled = true;
     const originalButtonText = createButton.textContent;
-    createButton.textContent = modeSelect.value === "picture"
-      ? "✨ Đang tạo phòng..."
-      : modeSelect.value === "obstacle"
-        ? "✨ AI đang tạo câu hỏi và tự vẽ tranh..."
-        : modeSelect.value === "olympia"
-          ? "✨ AI đang tạo câu hỏi Olympia..."
-      : modeSelect.value === "quiz"
-        ? "✨ Ollama đang tạo câu hỏi..."
-        : `✨ AI đang tạo ${countSelect.value} câu...`;
+    createButton.textContent = "⚡ Đang tạo phòng (< 3s)...";
     setError("");
     try {
       const room = await request("/api/minigame/rooms", {
@@ -362,7 +755,7 @@ function renderPlayerList(players) {
     avatar.alt = `${player.username} đã chọn avatar`;
     identity.append(avatar);
     const name = node("span", "player-name", player.username);
-    name.append(node("small", "player-tag", `${player.isHost ? "Người tạo phòng · " : ""}${player.rulesAcknowledged ? "Đã hiểu luật ✓" : "Chưa đọc luật"}`));
+    name.append(node("small", "player-tag", `${player.isHost ? "Người tạo phòng · " : ""}${player.isGuest ? "Khách · " : ""}${player.rulesAcknowledged ? "Đã hiểu luật ✓" : "Chưa đọc luật"}`));
     identity.append(name);
     item.append(identity, node("span", "leaderboard-score", "● Đang ở đây"));
     list.append(item);
@@ -372,17 +765,84 @@ function renderPlayerList(players) {
 
 function renderLobby(snapshot) {
   const heading = node("h2", "setup-heading", "Phòng chờ");
+  const guestBanner = isGuestUser
+    ? node("div", "lobby-guest-notice", "🎮 Bạn đang chơi ở chế độ Khách. Điểm vẫn được tính trong ván này; đăng nhập tài khoản để lưu thành tích vào BXH vĩnh viễn!")
+    : null;
   const codeLabel = node("span", "room-code-label", "MÃ PHÒNG");
   codeLabel.append(node("strong", "room-code", snapshot.code));
   const copyCodeButton = node("button", "room-copy", "Sao chép mã");
   copyCodeButton.type = "button";
   const copyInviteButton = node("button", "room-copy", "Sao chép liên kết");
   copyInviteButton.type = "button";
+  const qrButton = node("button", "room-copy", "📱 Mã QR phòng");
+  qrButton.type = "button";
+  const scanAnotherButton = node("button", "room-copy", "📷 Quét QR khác");
+  scanAnotherButton.type = "button";
+  scanAnotherButton.addEventListener("click", () => {
+    openQrScanner(async (code) => {
+      try {
+        await leaveRoom();
+        await request(`/api/minigame/rooms/${encodeURIComponent(code)}/join`, {
+          method: "POST",
+          body: "{}",
+        });
+        enterRoom(code);
+      } catch (err) {
+        setError(err.message);
+      }
+    });
+  });
   const copyActions = node("div", "room-copy-actions");
-  copyActions.append(copyCodeButton, copyInviteButton);
+  copyActions.append(copyCodeButton, copyInviteButton, qrButton, scanAnotherButton);
   const copyStatus = node("span", "room-copy-status");
   const codeRow = node("div", "room-code-row");
   codeRow.append(codeLabel, copyActions);
+
+  const qrCard = node("section", "room-qr-card");
+  const qrInner = node("div", "room-qr-inner");
+  const qrImgWrap = node("div", "room-qr-imgwrap");
+  const qrImg = node("img", "room-qr-thumb");
+  qrImg.alt = `Mã QR vào phòng ${snapshot.code}`;
+  qrImgWrap.append(qrImg);
+
+  const qrDetails = node("div", "room-qr-details");
+  const qrTitle = node("h3", "room-qr-heading", "📱 Quét mã QR để vào phòng");
+  const qrDesc = node("p", "room-qr-copy", "Bạn bè dùng Camera điện thoại hoặc Zalo quét mã này để tham gia phòng tức thì.");
+  const qrCardActions = node("div", "room-qr-card-actions");
+
+  const zoomBtn = node("button", "secondary-action room-qr-action-btn", "🔍 Phóng to QR");
+  zoomBtn.type = "button";
+  const downloadCardBtn = node("button", "secondary-action room-qr-action-btn", "📥 Tải ảnh QR");
+  downloadCardBtn.type = "button";
+
+  qrCardActions.append(zoomBtn, downloadCardBtn);
+  qrDetails.append(qrTitle, qrDesc, qrCardActions);
+  qrInner.append(qrImgWrap, qrDetails);
+  qrCard.append(qrInner);
+
+  const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${snapshot.code}`;
+  let publicInviteUrl = inviteUrl;
+
+  fetchRoomQr(snapshot.code).then((qrRes) => {
+    if (qrRes?.inviteUrl) publicInviteUrl = qrRes.inviteUrl;
+    if (qrRes?.qrDataUrl) {
+      qrImg.src = qrRes.qrDataUrl;
+      const openModal = () => openQrModal(snapshot, qrRes.qrDataUrl, qrRes.inviteUrl || inviteUrl);
+      zoomBtn.addEventListener("click", openModal);
+      qrButton.addEventListener("click", openModal);
+      qrImgWrap.addEventListener("click", openModal);
+      downloadCardBtn.addEventListener("click", () => {
+        const a = document.createElement("a");
+        a.href = qrRes.qrDataUrl;
+        a.download = `Ma_Phong_${snapshot.code}_QR.png`;
+        a.click();
+      });
+    } else {
+      qrCard.hidden = true;
+    }
+  }).catch(() => {
+    qrCard.hidden = true;
+  });
   const info = node("p", "room-info", snapshot.mode === "olympia"
     ? `${snapshot.topic} · 1 câu mở đầu 25 giây + ${snapshot.questionCount} câu nhánh giành chuông · tối đa 6 người`
     : snapshot.mode === "obstacle"
@@ -501,8 +961,10 @@ function renderLobby(snapshot) {
   const hint = node("p", "game-hint", "Gửi mã phòng cho bạn bè. Mỗi người cần đăng nhập tài khoản riêng trên trình duyệt hoặc thiết bị riêng; hai tab cùng trình duyệt sẽ dùng chung tài khoản đang đăng nhập.");
   content.replaceChildren(
     heading,
+    ...(guestBanner ? [guestBanner] : []),
     codeRow,
     copyStatus,
+    qrCard,
     info,
     ...(reviewWarning ? [reviewWarning] : []),
     playersHeading,
@@ -554,8 +1016,7 @@ function renderLobby(snapshot) {
     copyRoomText(snapshot.code, `Mã ${snapshot.code} đã được sao chép.`, copyCodeButton);
   });
   copyInviteButton.addEventListener("click", () => {
-    const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${snapshot.code}`;
-    copyRoomText(inviteUrl, "Liên kết mời đã được sao chép.", copyInviteButton);
+    copyRoomText(publicInviteUrl, "Liên kết mời đã được sao chép.", copyInviteButton);
   });
 }
 
@@ -1463,6 +1924,16 @@ async function leaveRoom() {
 
 async function initialize() {
   try {
+    try {
+      userProgress = await request("/api/minigame/progress");
+      isGuestUser = Boolean(userProgress?.isGuest);
+      if (!isGuestUser && userProgress?.username) {
+        guestName = userProgress.username;
+      }
+    } catch {
+      isGuestUser = true;
+    }
+
     await Promise.all([loadTopics(), loadLeaderboard(), loadSocialData()]);
     renderSetup();
     const inviteCode = query.get("room");

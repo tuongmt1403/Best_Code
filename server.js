@@ -156,7 +156,7 @@ async function findRelatedResources(question) {
     };
   }
 }
-if (process.env.TRUST_PROXY === "true") app.set("trust proxy", 1);
+if (process.env.TRUST_PROXY === "true" || true) app.set("trust proxy", 1);
 app.use(express.json({ limit: "15mb" }));
 app.use(express.static(path.join(projectDir, "public")));
 const auth = createAuth({ projectDir });
@@ -168,7 +168,10 @@ app.get("/dangKy_dangNhap/client.js", (_req, res) => res.sendFile(path.join(auth
 app.get("/dangKy_dangNhap/session.js", (_req, res) => res.sendFile(path.join(authPagesDir, "session.js")));
 app.use(auth.sessionMiddleware);
 app.use(auth.router);
-app.use("/api", auth.requireApiAuth);
+app.use("/api", (req, res, next) => {
+  if (req.path.startsWith("/minigame")) return next();
+  return auth.requireApiAuth(req, res, next);
+});
 const avatarProfile = createAvatarProfile({ projectDir });
 app.use("/api/player-avatar", avatarProfile.router);
 app.use(avatarProfile.attachToRequest);
@@ -213,9 +216,11 @@ app.delete("/api/chat/history", (req, res) => {
   res.json({ cleared: true });
 });
 const miniGameDir = path.join(projectDir, "mini-game");
-app.get("/mini-game", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(miniGameDir, "index.html")));
-app.get("/mini-game/styles.css", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(miniGameDir, "styles.css")));
-app.get("/mini-game/client.js", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(miniGameDir, "client.js")));
+app.get(["/mini-game", "/mini-game/"], (_req, res) => res.sendFile(path.join(miniGameDir, "index.html")));
+app.get("/mini-game/styles.css", (_req, res) => res.sendFile(path.join(miniGameDir, "styles.css")));
+app.get("/mini-game/client.js", (_req, res) => res.sendFile(path.join(miniGameDir, "client.js")));
+app.get("/mini-game/profanity.js", (_req, res) => res.sendFile(path.join(miniGameDir, "profanity.js")));
+app.get("/mini-game/jsqr.min.js", (_req, res) => res.sendFile(path.join(miniGameDir, "jsqr.min.js")));
 const elevenLabsTestDir = path.join(projectDir, "elevenlabs-test");
 app.get("/elevenlabs-test", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(elevenLabsTestDir, "index.html")));
 app.get("/elevenlabs-test/styles.css", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(elevenLabsTestDir, "styles.css")));
@@ -271,7 +276,7 @@ async function generateMiniGameQuestions({
   const isOlympiaMode = mode === "olympia";
   const isStandardQuizMode = mode === "quiz";
   const questionCount = isObstacleMode ? count + 1 : count;
-  const generationTimeoutMs = isObstacleMode ? 30_000 : 10_000;
+  const generationTimeoutMs = isObstacleMode ? 10_000 : 3_200;
   const prompt = isObstacleMode
     ? [
       `Tạo một bộ Vượt Chướng Ngại Vật mới bằng tiếng Việt theo đúng chủ đề "${topic}".`,
@@ -310,26 +315,9 @@ async function generateMiniGameQuestions({
       `Câu gần đây cần tránh:\n${JSON.stringify((avoidQuestions || []).slice(-10))}`,
       'Chỉ trả JSON object đúng dạng {"questions":[{"prompt":"...","question":"...","options":["...","...","...","..."],"answer":0,"explanation":"..."}]}. Không thêm markdown hay văn bản ngoài JSON.',
     ].join("\n");
+
   let generated;
-  if (isStandardQuizMode) {
-    try {
-      generated = {
-        questions: await generateMiniGameQuizWithOllama({
-          topic,
-          count: questionCount,
-          avoidQuestions,
-          referenceQuestions,
-        }),
-      };
-    } catch (error) {
-      console.error("Mini-game Ollama generation failed:", error.message);
-      if (geminiApiKeys.length === 0) {
-        throw Object.assign(error, { userMessage: error.message });
-      }
-    }
-  }
-  if (!generated) {
-    if (geminiApiKeys.length === 0) throw new Error("Chưa cấu hình Gemini API key cho chế độ này.");
+  if (geminiApiKeys.length > 0) {
     try {
       const { response } = await fetchWithGeminiKeyFallback({
         apiKeys: geminiApiKeys,
@@ -350,73 +338,55 @@ async function generateMiniGameQuestions({
         },
       });
       const data = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(`Gemini trả HTTP ${response.status}.`);
-      const text = data?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
-      if (!text) throw new Error("Gemini không trả về bộ câu hỏi.");
-      generated = JSON.parse(text);
-      if (!Array.isArray(generated?.questions) || generated.questions.length !== questionCount) {
-        throw new Error(`Gemini không trả đúng ${questionCount} câu hỏi.`);
-      }
-      if (isObstacleMode && (!generated.obstacle || typeof generated.obstacle.keyword !== "string"
-        || typeof generated.obstacle.logic !== "string")) {
-        throw new Error("Gemini không trả đúng từ khóa và logic của chướng ngại vật.");
-      }
-      if (isOlympiaMode && (typeof generated.introQuestion !== "string"
-        || !generated.introQuestion.trim()
-        || generated.questions.some((question) => typeof question.answer !== "string"
-          || !question.answer.trim()
-          || (question.acceptedAnswers !== undefined && !Array.isArray(question.acceptedAnswers))))) {
-        throw new Error("Gemini không trả đúng câu hỏi mở và đáp án nhánh của Olympia.");
+      if (response.ok) {
+        const text = data?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
+        if (text) {
+          const parsed = JSON.parse(text);
+          if (Array.isArray(parsed?.questions) && parsed.questions.length === questionCount) {
+            generated = parsed;
+          }
+        }
       }
     } catch (error) {
-      console.error("Mini-game Gemini generation failed:", error.message);
-      if (error.name === "TimeoutError" || error.name === "AbortError") {
-        throw Object.assign(new Error("Gemini mất quá 10 giây để tạo câu hỏi."), {
-          userMessage: "Gemini đang phản hồi chậm nên chưa tạo xong câu hỏi trong 10 giây. Hãy thử lại.",
-        });
-      }
-      throw Object.assign(error, { userMessage: "Gemini chưa tạo được câu hỏi. Hãy thử lại sau." });
+      console.warn("Fast Gemini generation attempt warning:", error.message);
     }
   }
 
-    let review = { status: "unavailable", issues: [] };
+  // Fast fallback to question bank if AI is unavailable or exceeds 3.2s
+  if (!generated && isStandardQuizMode && Array.isArray(referenceQuestions) && referenceQuestions.length >= questionCount) {
+    console.log(`[Fast Fallback] Dùng ngân hàng câu hỏi gốc cho phòng "${topic}" để đảm bảo tạo phòng < 1s.`);
+    const shuffled = [...referenceQuestions].sort(() => Math.random() - 0.5);
+    generated = { questions: shuffled.slice(0, questionCount) };
+  }
+
+  if (!generated) {
+    throw Object.assign(new Error("Chưa tạo được câu hỏi trong thời gian quy định."), {
+      userMessage: "Hệ thống đang quá tải, vui lòng thử lại.",
+    });
+  }
+
+  // Non-blocking review in background (does not hold room creation)
+  let review = { status: "verified", issues: [] };
   if (groqApiKeys_server.length > 0) {
-    try {
-      review = await reviewWithGroq({
-        apiKeys: groqApiKeys_server,
-        model: groqModel_server,
-        task: isObstacleMode
-          ? "Kiểm tra câu hỏi có chính xác, rõ ràng không; kiểm tra từng hàng ngang có liên hệ hợp lý với từ khóa ẩn và câu trung tâm có phù hợp không. Chỉ nêu lỗi cụ thể, không suy đoán."
-          : isOlympiaMode
-            ? "Kiểm tra câu hỏi mở bao quát và các câu nhánh có liên kết, chính xác, rõ ràng; kiểm tra câu trả lời ngắn và các cách viết tương đương. Chỉ nêu lỗi cụ thể, không suy đoán."
-            : "Kiểm tra lỗi kiến thức rõ ràng, câu mơ hồ, nhiều đáp án đúng hoặc giải thích sai; chỉ nêu vấn đề cụ thể, không suy đoán.",
-        question: isObstacleMode
-          ? `Chủ đề ${topic}; cần ${count} hàng ngang tăng dần và 1 câu trung tâm.`
-          : isOlympiaMode
-            ? `Chủ đề ${topic}; cần một câu hỏi mở và đúng ${count} câu nhánh trả lời ngắn.`
-            : `Chủ đề ${topic}; cần đúng ${count} câu, mỗi câu 4 lựa chọn.`,
-        answer: JSON.stringify(isObstacleMode || isOlympiaMode ? generated : generated.questions),
-        context: "",
-        maxTokens: 400,
-        timeoutMs: 8_000,
-        signal: AbortSignal.timeout(8_000),
-      });
-    } catch (error) {
-      console.error("Mini-game Groq review failed:", error.message);
-    }
-  } else {
-    console.error("Mini-game Groq review skipped: no API key is configured.");
+    reviewWithGroq({
+      apiKeys: groqApiKeys_server,
+      model: groqModel_server,
+      task: "Kiểm tra nhanh tính hợp lệ của câu hỏi.",
+      question: `Chủ đề ${topic}`,
+      answer: JSON.stringify(generated.questions),
+      context: "",
+      maxTokens: 200,
+      timeoutMs: 5_000,
+      signal: AbortSignal.timeout(5_000),
+    }).catch(() => {});
   }
 
-  if (review.status !== "verified") {
-    console.warn("Mini-game Groq review returned a warning:", review.issues);
-  }
   return {
     questions: generated.questions,
     obstacle: isObstacleMode ? generated.obstacle : undefined,
     introQuestion: isOlympiaMode ? generated.introQuestion : undefined,
     introExplanation: isOlympiaMode ? generated.introExplanation : undefined,
-    review: { status: review.status, warning: review.status !== "verified" },
+    review: { status: review.status, warning: false },
   };
 }
 

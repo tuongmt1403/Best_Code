@@ -983,3 +983,90 @@ test("two separately authenticated accounts can join the same room", async () =>
   assert.equal(start.status, 200);
   assert.equal((await start.json()).phase, "playing");
 });
+
+test("generates room QR code data and SVG for waiting room", async () => {
+  temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "hoc-ma-choi-minigame-qr-"));
+  game = createMiniGame({ projectDir: temporaryDirectory });
+  await startServer();
+
+  const created = await api("/api/minigame/rooms", "player-a", "POST", {
+    topicId: "english",
+    questionCount: 5,
+    mode: "picture",
+  });
+  assert.equal(created.status, 201);
+  const room = await created.json();
+
+  const qrResponse = await api(`/api/minigame/rooms/${room.code}/qrcode`, "player-a", "GET");
+  assert.equal(qrResponse.status, 200);
+  const qrBody = await qrResponse.json();
+  assert.equal(qrBody.roomCode, room.code);
+  assert.match(qrBody.inviteUrl, new RegExp(`\\?room=${room.code}`));
+  assert.match(qrBody.qrDataUrl, /^data:image\/png;base64,/);
+  assert.match(qrBody.qrSvg, /<svg/);
+});
+
+test("guests can play mini-game without account, profanity is blocked, and account perks are protected", async () => {
+  temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "hoc-ma-choi-minigame-guest-"));
+  game = createMiniGame({ projectDir: temporaryDirectory });
+  await startServer();
+
+  // Profane name is rejected with 400
+  const profane = await fetch(`${baseUrl}/api/minigame/rooms`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-guest-name": "thang d.m may",
+      "x-guest-id": "guest_bad_user",
+    },
+    body: JSON.stringify({ topicId: "english", questionCount: 5, mode: "picture" }),
+  });
+  assert.equal(profane.status, 400);
+  const profaneBody = await profane.json();
+  assert.match(profaneBody.error, /thuần phong mỹ tục/i);
+
+  // Polite guest can create room
+  const politeGuest = await fetch(`${baseUrl}/api/minigame/rooms`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-guest-name": encodeURIComponent("Bạn Mới 2026"),
+      "x-guest-id": "guest_good_user",
+      "x-guest-avatar": "fox",
+    },
+    body: JSON.stringify({ topicId: "english", questionCount: 5, mode: "picture" }),
+  });
+  assert.equal(politeGuest.status, 201);
+  const room = await politeGuest.json();
+  assert.equal(room.players[0].username, "Bạn Mới 2026");
+  assert.equal(room.players[0].isGuest, true);
+
+  // Another polite guest can join the room
+  const joinGuest = await fetch(`${baseUrl}/api/minigame/rooms/${room.code}/join`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-guest-name": encodeURIComponent("Chiến Binh Cáo"),
+      "x-guest-id": "guest_join_user",
+      "x-guest-avatar": "knight",
+    },
+    body: JSON.stringify({}),
+  });
+  assert.equal(joinGuest.status, 200);
+  const joined = await joinGuest.json();
+  assert.equal(joined.players.length, 2);
+  assert.equal(joined.players[1].username, "Chiến Binh Cáo");
+  assert.equal(joined.players[1].isGuest, true);
+
+  // Guest friend request is restricted (403)
+  const guestFriendReq = await fetch(`${baseUrl}/api/minigame/friends/requests`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-guest-name": encodeURIComponent("Bạn Mới 2026"),
+      "x-guest-id": "guest_good_user",
+    },
+    body: JSON.stringify({ username: "player-a" }),
+  });
+  assert.equal(guestFriendReq.status, 403);
+});
