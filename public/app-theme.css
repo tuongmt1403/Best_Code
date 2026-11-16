@@ -427,15 +427,37 @@ body.app-page .app-page-content .study-learning p,
 body.app-page .app-page-content .tutor-roadmap-panel > p,
 body.app-page .app-page-content .tutor-roadmap-item small { color:#b8b5d8; }
 body.app-page .app-page-content .study-lesson-note,
+.study-lesson-note {
+  border: 2px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.2) !important;
+}
+body.app-page .app-page-content .study-lesson-note h3,
+.study-lesson-note h3 {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  font-weight: 850 !important;
+}
+body.app-page .app-page-content .study-lesson-section h4,
+.study-lesson-section h4 {
+  color: #1e40af !important;
+  -webkit-text-fill-color: #1e40af !important;
+  font-weight: 800 !important;
+}
+body.app-page .app-page-content .study-lesson-section p,
+.study-lesson-section p {
+  color: #1e293b !important;
+  -webkit-text-fill-color: #1e293b !important;
+  font-size: 1.02rem !important;
+  line-height: 1.75 !important;
+  font-weight: 550 !important;
+}
 body.app-page .app-page-content .study-comprehension {
   border-color:#514b83;
   color:#f3f1ff;
   background:#171642;
 }
-body.app-page .app-page-content .study-lesson-note h3,
-body.app-page .app-page-content .study-lesson-section h4 { color:#d5c9ff; }
-body.app-page .app-page-content .study-lesson-section p,
-body.app-page .app-page-content .study-lesson-source { color:#e0def4; }
 body.app-page .app-page-content .study-code-notes { color:#e0def4; }
 body.app-page .app-page-content .study-code-output { color:#234534; background:#eef8f1; }
 body.app-page .app-page-content .study-code-output strong { color:#286847; }
@@ -451,15 +473,32 @@ body.app-page .app-page-content .study-assessment-question { color:#f3f1ff; }
 body.app-page .app-page-content .study-assessment-progress,
 body.app-page .app-page-content .study-assessment-feedback { color:#e0def4; }
 body.app-page .app-page-content .study-assessment-options button[aria-pressed="true"] { background:#373064 !important; }
+body.app-page .app-page-content .study-learning .tutor-message.assistant .tutor-bubble,
+body.app-page .app-page-content .study-learning .tutor-message.assistant .tutor-bubble p,
+body.app-page .app-page-content .tutor-bubble,
+body.app-page .app-page-content .tutor-bubble p {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  font-weight: 650 !important;
+  font-size: 1.05rem !important;
+  line-height: 1.65 !important;
+}
 body.app-page .app-page-content .study-learning .tutor-message.assistant .tutor-bubble {
-  border-color:#d6c27f;
-  color:#292d48;
-  background:#fff8df;
+  border: 2px solid #3b82f6 !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  border-radius: 18px 18px 18px 6px !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08) !important;
+  padding: 14px 18px !important;
 }
 body.app-page .app-page-content .study-learning .tutor-message.assistant.sad .tutor-bubble {
-  border-color:#e4b9bf;
-  color:#54262d;
-  background:#fff0f1;
+  border: 2px solid #ef4444 !important;
+  color: #7f1d1d !important;
+  background: #fff0f1 !important;
+}
+body.app-page .app-page-content .study-learning .tutor-message.assistant.sad .tutor-bubble p {
+  color: #7f1d1d !important;
+  -webkit-text-fill-color: #7f1d1d !important;
 }
 body.app-page .app-page-content .study-clarification textarea {
   border-color:#62549b;
@@ -644,6 +683,68 @@ body.app-page.minigame-page .timer-pill {
   background:#38bdf8;
 }
 body.app-page .game-columns.obstacle-mode-active .game-card { border-color:#8b5cf680; }
+
+/* High contrast overrides for mini-game text to ensure maximum readability */
+body.app-page.minigame-page .olympia-caption,
+body.minigame-page .olympia-caption {
+  background: #fff8df !important;
+  border: 3px solid #0f172a !important;
+}
+body.app-page.minigame-page .olympia-caption-label,
+body.minigame-page .olympia-caption-label {
+  color: #0369a1 !important;
+  -webkit-text-fill-color: #0369a1 !important;
+  font-weight: 900 !important;
+}
+body.app-page.minigame-page .olympia-caption-text,
+body.minigame-page .olympia-caption-text,
+body.app-page.minigame-page .game-card .olympia-caption-text,
+body.minigame-page .game-card .olympia-caption-text,
+body.app-page .game-card .olympia-caption-text {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  font-weight: 850 !important;
+}
+body.app-page.minigame-page .obstacle-row-status,
+body.minigame-page .obstacle-row-status {
+  background: #ffffff !important;
+  border-color: #0f172a !important;
+}
+body.app-page.minigame-page .obstacle-row-status span,
+body.minigame-page .obstacle-row-status span,
+body.app-page.minigame-page .game-card .obstacle-row-status span,
+body.minigame-page .game-card .obstacle-row-status span {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  font-weight: 800 !important;
+}
+body.app-page.minigame-page .obstacle-row-status strong,
+body.minigame-page .obstacle-row-status strong,
+body.app-page.minigame-page .game-card .obstacle-row-status strong,
+body.minigame-page .game-card .obstacle-row-status strong {
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+  font-weight: 800 !important;
+}
+body.app-page.minigame-page .obstacle-row-status.revealed,
+body.minigame-page .obstacle-row-status.revealed {
+  background: #f0fdf4 !important;
+  border-color: #16a34a !important;
+}
+body.app-page.minigame-page .obstacle-row-status.revealed span,
+body.minigame-page .obstacle-row-status.revealed span,
+body.app-page.minigame-page .game-card .obstacle-row-status.revealed span,
+body.minigame-page .game-card .obstacle-row-status.revealed span {
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+}
+body.app-page.minigame-page .obstacle-row-status.revealed strong,
+body.minigame-page .obstacle-row-status.revealed strong,
+body.app-page.minigame-page .game-card .obstacle-row-status.revealed strong,
+body.minigame-page .game-card .obstacle-row-status.revealed strong {
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
+}
 
 @media(max-width:900px) {
   body.app-page .app-shell { grid-template-columns:minmax(0,1fr); gap:10px; }

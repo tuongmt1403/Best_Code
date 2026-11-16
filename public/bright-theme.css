@@ -566,9 +566,28 @@ body:has(#topic-screen) button:hover:not(:disabled) {
   background: var(--play-blue);
 }
 
-.tutor-bubble, .tutor-illustration {
+.tutor-bubble {
+  border: 2px solid var(--play-ink) !important;
+  border-radius: 18px 18px 18px 6px !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  background: #ffffff !important;
+  box-shadow: 3px 3px 0 var(--play-ink) !important;
+  padding: 14px 18px !important;
+}
+
+.tutor-bubble p {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  font-size: 1.05rem !important;
+  font-weight: 650 !important;
+  line-height: 1.65 !important;
+  margin: 0 !important;
+}
+
+.tutor-illustration {
   border: 2px solid var(--play-ink);
-  border-radius: 13px;
+  border-radius: 16px;
   color: var(--play-ink);
   background: #fff8df;
 }
@@ -1070,9 +1089,70 @@ body.minigame-page .obstacle-row-status {
   cursor: pointer;
 }
 
-body.minigame-page .obstacle-row-status span {
+body.minigame-page .obstacle-row-status span,
+body.minigame-page .obstacle-row-status .obstacle-row-name {
   color: #0f172a !important;
-  font-weight: 700;
+  -webkit-text-fill-color: #0f172a !important;
+  font-weight: 800;
+}
+
+body.minigame-page .obstacle-theme-hint-box {
+  margin: 0 0 16px;
+  padding: 16px 20px;
+  border: 2px solid #f59e0b;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.28));
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.25);
+  text-align: left;
+}
+body.minigame-page .obstacle-theme-hint-label {
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #fbbf24 !important;
+  -webkit-text-fill-color: #fbbf24 !important;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+body.minigame-page .obstacle-theme-hint-text {
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.55;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  margin: 0 0 6px 0;
+}
+body.minigame-page .obstacle-theme-hint-sub {
+  display: block;
+  font-size: 0.78rem;
+  color: #fde68a !important;
+  -webkit-text-fill-color: #fde68a !important;
+}
+body.minigame-page .obstacle-theme-badge {
+  margin: 12px 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+body.minigame-page .obstacle-theme-badge-title {
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #fbbf24 !important;
+  -webkit-text-fill-color: #fbbf24 !important;
+}
+body.minigame-page .obstacle-theme-badge .obstacle-theme-hint-text {
+  font-size: 0.88rem;
+  font-weight: 750;
+  color: #e2e8f0 !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
+  margin: 0;
 }
 
 body.minigame-page .obstacle-row-status:disabled {

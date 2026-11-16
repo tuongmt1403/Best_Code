@@ -224,12 +224,33 @@ body.minigame-page {
 .olympia-caption { width: min(100%, 820px); padding: clamp(18px,3vw,30px); border: 3px solid #0f172a; border-radius: 22px; background: #fff8df; box-shadow: 4px 4px 0 #0f172a; text-align: left; }
 .olympia-caption-label { display: block; margin-bottom: 10px; color: #0369a1 !important; font-size: .78rem; font-weight: 950; letter-spacing: .12em; }
 .olympia-caption-text { margin: 0; color: #0f172a !important; -webkit-text-fill-color: #0f172a !important; font-size: clamp(1.2rem,3vw,1.85rem); font-weight: 850; line-height: 1.55; overflow-wrap: anywhere; }
-.obstacle-row-status { display: grid; grid-template-columns: 31px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 8px 12px; border: 2px solid #0f172a; border-radius: 10px; background: #ffffff; color: #0f172a; font: inherit; cursor: pointer; text-align: left; }
-.obstacle-row-status span { color: #0f172a !important; font-weight: 800 !important; }
-.obstacle-row-status strong { color: #475569 !important; font-weight: 800 !important; }
-.obstacle-row-status.revealed { border-color: #16a34a; background: #f0fdf4; }
-.obstacle-row-status.revealed span { color: #14532d !important; }
-.obstacle-row-status.revealed strong { color: #15803d !important; font-weight: 900; }
+.obstacle-row-status { display: grid; grid-template-columns: 31px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 8px 12px; border: 2px solid #0f172a; border-radius: 10px; background: #ffffff !important; color: #0f172a !important; font: inherit; cursor: pointer; text-align: left; }
+.obstacle-row-status span, .obstacle-row-status .obstacle-row-name { color: #0f172a !important; -webkit-text-fill-color: #0f172a !important; font-weight: 800 !important; }
+.obstacle-row-status strong, .obstacle-row-status .obstacle-row-answer { color: #475569 !important; -webkit-text-fill-color: #475569 !important; font-weight: 800 !important; }
+.obstacle-row-status.revealed { border-color: #16a34a !important; background: #f0fdf4 !important; }
+.obstacle-row-status.revealed span, .obstacle-row-status.revealed .obstacle-row-name { color: #14532d !important; -webkit-text-fill-color: #14532d !important; }
+.obstacle-row-status.revealed strong, .obstacle-row-status.revealed .obstacle-row-answer { color: #15803d !important; -webkit-text-fill-color: #15803d !important; font-weight: 900 !important; }
+
+/* Obstacle Puzzle Board & Piece Grid */
+.obstacle-picture-board { position: relative; width: min(100%, 380px); aspect-ratio: 1; margin: 0 auto 14px; border: 3px solid #0f172a; border-radius: 20px; overflow: hidden; background: #0b132b; box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
+.obstacle-ai-image { display: block; width: 100%; height: 100%; object-fit: cover; }
+.obstacle-piece-grid { position: absolute; inset: 0; z-index: 2; display: grid; gap: 2px; }
+.obstacle-piece { position: relative; width: 100%; height: 100%; min-width: 0; min-height: 0; display: grid; place-items: center; border: 2px solid rgba(255, 255, 255, 0.4); background: linear-gradient(135deg, #1e293b, #0f172a); color: #fbbf24; font-size: 1.8rem; font-weight: 900; cursor: pointer; transition: opacity 0.4s ease, transform 0.2s ease, background 0.2s ease; }
+.obstacle-piece:hover:not(:disabled) { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; transform: scale(0.98); }
+.obstacle-piece.opened { opacity: 0 !important; pointer-events: none !important; }
+.obstacle-piece.closed { opacity: 0.35 !important; background: #475569 !important; cursor: not-allowed; }
+.obstacle-piece-center { position: absolute; z-index: 4; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 36%; height: 36%; border-radius: 50%; border: 3px solid #facc15; background: linear-gradient(135deg, #dc2626, #991b1b); box-shadow: 0 0 24px rgba(220, 38, 38, 0.7), inset 0 2px 4px rgba(255, 255, 255, 0.4); color: #fff; font-size: 2.2rem; font-weight: 1000; display: grid; place-items: center; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.obstacle-piece-center:hover:not(:disabled) { transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 35px rgba(250, 204, 21, 0.9); }
+.obstacle-piece-center.opened { opacity: 0 !important; pointer-events: none !important; }
+
+/* Thematic Hint Box & Badges */
+.obstacle-theme-hint-box { margin: 0 0 16px; padding: 16px 20px; border: 2px solid #f59e0b; border-radius: 16px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.28)); box-shadow: 0 4px 18px rgba(245, 158, 11, 0.25); text-align: left; }
+.obstacle-theme-hint-label { font-size: 0.82rem; font-weight: 900; letter-spacing: 0.08em; color: #fbbf24 !important; -webkit-text-fill-color: #fbbf24 !important; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.obstacle-theme-hint-text { font-size: 1.05rem; font-weight: 800; line-height: 1.55; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; margin: 0 0 6px 0; }
+.obstacle-theme-hint-sub { display: block; font-size: 0.78rem; color: #fde68a !important; -webkit-text-fill-color: #fde68a !important; }
+.obstacle-theme-badge { margin: 12px 0; padding: 10px 14px; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 12px; background: rgba(245, 158, 11, 0.12); display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.obstacle-theme-badge-title { font-size: 0.78rem; font-weight: 900; color: #fbbf24 !important; -webkit-text-fill-color: #fbbf24 !important; }
+.obstacle-theme-badge .obstacle-theme-hint-text { font-size: 0.88rem; font-weight: 750; color: #e2e8f0 !important; -webkit-text-fill-color: #e2e8f0 !important; margin: 0; }
 .olympia-reading-status,.olympia-intro-timer,.olympia-round-timer { min-height: 34px; color: #a9efff; font-size: 1rem; font-weight: 850; }
 .olympia-intro-timer { display: grid; min-width: 250px; min-height: 66px; place-items: center; border: 1px solid #8e85ff; border-radius: 18px; padding: 10px 24px; color: #fff; background: linear-gradient(110deg,#5b35d8,#1c9ed3); font-size: clamp(1.25rem,3vw,1.7rem); }
 .olympia-round-timer.urgent { color: #ff9aab; }

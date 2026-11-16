@@ -243,25 +243,67 @@
     .tutor-message.assistant { align-self:flex-start; }
     .tutor-mini-avatar { width:30px; height:30px; overflow:hidden; flex:none; }
     .tutor-mini-avatar img { width:100%; height:100%; object-fit:contain; }
-    .tutor-bubble { padding:10px 12px; border:1px solid #ececf4; border-radius:13px 13px 13px 4px;
-      color:var(--tutor-text); background:#f7f7fc; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
-    .tutor-message.user .tutor-bubble { border-color:#635bda; border-radius:13px 13px 4px 13px; color:#fff; background:linear-gradient(105deg,#746cf0,#635bda); }
-    .tutor-message.sad .tutor-bubble { border-color:#f0d7d7; background:#fff4f4; }
-    .study-lesson-note { flex:none; width:min(100%,900px); margin:4px auto; padding:clamp(16px,2vw,24px);
-      border:1px solid #dfe3ef; border-radius:18px; color:#263047; background:#fff; box-shadow:0 6px 20px #272c4b0d; }
-    .study-lesson-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; padding-bottom:10px; border-bottom:1px dashed #e2e8f0; }
-    .study-lesson-note h3 { margin:0; color:#252b42; font-size:1.08rem; }
+    .tutor-bubble {
+      padding: 16px 20px;
+      border: 2px solid #3b82f6 !important;
+      border-radius: 18px 18px 18px 6px !important;
+      color: #0f172a !important;
+      background: #ffffff !important;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .tutor-bubble p {
+      margin: 0 !important;
+      color: #0f172a !important;
+      -webkit-text-fill-color: #0f172a !important;
+      font-size: 1.05rem !important;
+      font-weight: 650 !important;
+      line-height: 1.65 !important;
+    }
+    .tutor-bubble p + p { margin-top: 10px !important; }
+    .tutor-message.user .tutor-bubble { border-color: #4338ca !important; border-radius: 18px 18px 6px 18px !important; color: #fff !important; background: linear-gradient(105deg, #4f46e5, #3730a3) !important; }
+    .tutor-message.user .tutor-bubble p { color: #fff !important; -webkit-text-fill-color: #fff !important; font-weight: 600 !important; }
+    .tutor-message.sad .tutor-bubble { border-color: #ef4444 !important; background: #fff1f2 !important; color: #991b1b !important; }
+    .tutor-message.sad .tutor-bubble p { color: #991b1b !important; -webkit-text-fill-color: #991b1b !important; }
+    .study-lesson-note { flex:none; width:min(100%,900px); margin:8px auto; padding:clamp(18px,2.5vw,28px);
+      border:2px solid #334155; border-radius:20px; color:#0f172a; background:#ffffff; box-shadow:0 8px 24px rgba(0,0,0,0.12);
+      font-family:system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    .study-lesson-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; padding-bottom:12px; border-bottom:2px dashed #cbd5e1; }
+    .study-lesson-note h3 { margin:0; color:#0f172a !important; -webkit-text-fill-color:#0f172a !important; font-size:1.15rem; font-weight:850; }
     .study-micro-controls { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
     .study-micro-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:999px; border:1px solid #cbd5e1; color:#64748b; background:#f8fafc; font-size:.76rem; font-weight:700; }
     .study-micro-pill.active { border-color:#635bda; color:#4338ca; background:#eef2ff; }
     .study-micro-pill.done { border-color:#34d399; color:#065f46; background:#ecfdf5; }
     .study-micro-show-all { min-height:28px !important; padding:3px 10px !important; border-radius:999px !important; border:1px solid #cbd5e1 !important; color:#475569 !important; background:#fff !important; font-size:.75rem !important; font-weight:700 !important; cursor:pointer; }
-    .study-lesson-section + .study-lesson-section { margin-top:14px; padding-top:13px; border-top:1px solid #e6e8f0; }
+    .study-lesson-section + .study-lesson-section { margin-top:16px; padding-top:15px; border-top:1px solid #e2e8f0; }
     .study-lesson-section[hidden] { display:none !important; }
     .study-lesson-section.micro-reveal { animation:micro-fade-in .32s ease-out; }
     @keyframes micro-fade-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-    .study-lesson-section h4 { margin:0 0 5px; color:#4941ae; font-size:.96rem; }
-    .study-lesson-section p { margin:0; color:#30384e; font-size:.94rem; line-height:1.7; white-space:pre-wrap; }
+    .study-section-header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+    .study-lesson-section h4 { margin:0; color:#1e40af !important; -webkit-text-fill-color:#1e40af !important; font-size:1.05rem; font-weight:800; }
+    .study-lesson-section p { margin:0; color:#1e293b !important; -webkit-text-fill-color:#1e293b !important; font-size:1.02rem !important; font-weight:550 !important; line-height:1.75 !important; white-space:pre-wrap; }
+    .study-read-all-button {
+      padding:6px 15px !important; background:linear-gradient(135deg, #1d4ed8, #2563eb) !important;
+      color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; border:1px solid #60a5fa !important; border-radius:999px !important;
+      font-weight:800 !important; font-size:.85rem !important; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+      box-shadow:0 3px 10px rgba(37,99,235,0.35) !important; transition:transform .15s, box-shadow .15s;
+    }
+    .study-read-all-button:hover { transform:translateY(-1px); box-shadow:0 5px 14px rgba(37,99,235,0.5) !important; }
+    .study-read-section-btn {
+      padding:3px 11px !important; background:#eff6ff !important; color:#1d4ed8 !important; -webkit-text-fill-color:#1d4ed8 !important;
+      border:1px solid #bfdbfe !important; border-radius:999px !important; font-size:.78rem !important; font-weight:750 !important; cursor:pointer;
+    }
+    .study-read-section-btn:hover { background:#dbeafe !important; }
+    .study-learning .tutor-message-tools button {
+      min-height:30px; padding:5px 14px; color:#ffffff !important; -webkit-text-fill-color:#ffffff !important;
+      background:linear-gradient(135deg,#4338ca,#3b82f6) !important; border-radius:999px !important;
+      border:1px solid #60a5fa !important; font-size:.82rem !important; font-weight:800 !important; cursor:pointer;
+      box-shadow:0 2px 8px rgba(59,130,246,0.3) !important;
+    }
+    .study-learning .tutor-message-tools button:hover { background:linear-gradient(135deg,#3730a3,#2563eb) !important; }
     .study-code-example { margin-top:12px; overflow:hidden; border:1px solid #29334d; border-radius:12px; background:#111827; }
     .study-code-label { display:block; padding:8px 12px; color:#c7d2fe; background:#202a3e; font-size:.78rem; font-weight:800; }
     .study-code-example pre { max-width:100%; margin:0; overflow:auto; padding:14px; color:#e5e7eb; font:500 .84rem/1.65 ui-monospace,SFMono-Regular,Consolas,monospace; tab-size:4; }
@@ -600,9 +642,9 @@
       .study-ui-actions .study-ui-check,.study-ui-actions .study-ui-next { width:100%; }
     }
   </style>
-  <link rel="stylesheet" href="/bright-theme.css">
-  <link rel="stylesheet" href="/app-theme.css?v=avatar-picker-v4">
-  <link rel="stylesheet" href="/avatar-picker.css?v=avatar-picker-v4">
+  <link rel="stylesheet" href="/bright-theme.css?v=tutor-speech-v9">
+  <link rel="stylesheet" href="/app-theme.css?v=tutor-speech-v9">
+  <link rel="stylesheet" href="/avatar-picker.css?v=tutor-speech-v9">
 </head>
 <body>
   <header>
@@ -1029,6 +1071,14 @@
         if (button.textContent !== "🔊 Nghe Luna đọc") button.textContent = "🔊 Nghe Luna đọc";
         button.disabled = false;
       });
+      document.querySelectorAll(".study-read-all-button").forEach((button) => {
+        button.textContent = "🔊 Nghe Luna giảng toàn bộ bài";
+        button.disabled = false;
+      });
+      document.querySelectorAll(".study-read-section-btn").forEach((button) => {
+        button.textContent = "🔊 Nghe phần này";
+        button.disabled = false;
+      });
     }
 
     function speakTutorText(text, button, queue = false) {
@@ -1038,46 +1088,120 @@
         resetTutorReadButtons();
       }
       const requestToken = tutorSpeechToken;
-      tutorSpeechQueue = tutorSpeechQueue
-        .catch(() => {})
-        .then(() => speakTutorAudio(text, button, requestToken));
+      const cleanText = (typeof text === "string" ? text : "")
+        .replace(/[*#_`~]+/g, "")
+        .replace(/[ \t]+/g, " ")
+        .trim();
+      if (!cleanText) return Promise.resolve();
+
+      // If text <= 1200 chars, speak in one shot
+      if (cleanText.length <= 1200) {
+        tutorSpeechQueue = tutorSpeechQueue
+          .catch(() => {})
+          .then(() => speakTutorAudio(cleanText, button, requestToken));
+        return tutorSpeechQueue;
+      }
+
+      // If text > 1200 chars, chunk naturally by paragraphs or sentences
+      const paragraphs = cleanText.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+      const chunks = [];
+      let cur = "";
+      for (const p of paragraphs) {
+        if ((cur ? cur + "\n\n" + p : p).length <= 1100) {
+          cur = cur ? cur + "\n\n" + p : p;
+        } else {
+          if (cur) chunks.push(cur);
+          if (p.length <= 1100) {
+            cur = p;
+          } else {
+            const sentences = p.split(/(?<=[.?!])\s+/);
+            let sCur = "";
+            for (const s of sentences) {
+              if ((sCur ? sCur + " " + s : s).length <= 1100) {
+                sCur = sCur ? sCur + " " + s : s;
+              } else {
+                if (sCur) chunks.push(sCur);
+                sCur = s;
+              }
+            }
+            cur = sCur;
+          }
+        }
+      }
+      if (cur) chunks.push(cur);
+
+      for (let i = 0; i < chunks.length; i += 1) {
+        const chunk = chunks[i];
+        const progressTag = chunks.length > 1 ? ` (${i + 1}/${chunks.length})` : "";
+        tutorSpeechQueue = tutorSpeechQueue
+          .catch(() => {})
+          .then(() => {
+            if (requestToken !== tutorSpeechToken) return;
+            return speakTutorAudio(chunk, button, requestToken, progressTag, i === chunks.length - 1);
+          });
+      }
       return tutorSpeechQueue;
     }
 
-    async function speakTutorAudio(text, button, requestToken) {
+    async function speakTutorAudio(text, button, requestToken, progressTag = "", isLastChunk = true) {
       if (requestToken !== tutorSpeechToken) return;
-      button.disabled = true;
-      button.textContent = "Đang tạo giọng Việt...";
+      button.disabled = false;
+      button.textContent = `⚡ Đang chuẩn bị giọng Luna${progressTag}...`;
       try {
-        const response = await fetch("/api/speak", {
+        let response = await fetch("/api/elevenlabs/speak", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: text.slice(0, 2_400) }),
-        });
+          body: JSON.stringify({ text: text.slice(0, 3_500) }),
+        }).catch(() => null);
+
+        if (!response || !response.ok) {
+          response = await fetch("/api/speak", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: text.slice(0, 3_500) }),
+          });
+        }
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
-          throw new Error(error.error || "Không tạo được giọng đọc.");
+          throw new Error(error.error || "Không tạo được giọng đọc ElevenLabs.");
         }
         if (requestToken !== tutorSpeechToken) return;
         commentaryAudioUrl = URL.createObjectURL(await response.blob());
         commentaryAudio = new Audio(commentaryAudioUrl);
         const audio = commentaryAudio;
-        button.textContent = "⏸ Đang đọc tiếng Việt";
+        button.textContent = `⏸ Luna đang đọc${progressTag} (bấm để dừng)`;
         await audio.play();
-        status.textContent = "Luna đang đọc lời giải thích cho bạn.";
+        status.textContent = `Luna đang giảng bài cho bạn bằng giọng AI ElevenLabs${progressTag}.`;
         await new Promise((resolve, reject) => {
           audio.addEventListener("ended", resolve, { once: true });
           audio.addEventListener("pause", resolve, { once: true });
-          audio.addEventListener("error", () => reject(new Error("Không phát được tệp giọng đọc tiếng Việt.")), { once: true });
+          audio.addEventListener("error", () => reject(new Error("Không phát được tệp giọng đọc ElevenLabs.")), { once: true });
         });
-        if (requestToken === tutorSpeechToken) {
-          button.textContent = "🔊 Nghe Luna đọc";
-          status.textContent = "Đã đọc xong lời giải thích.";
+        if (requestToken === tutorSpeechToken && isLastChunk) {
+          resetTutorReadButtons();
+          status.textContent = "Đã đọc xong toàn bộ bài giảng.";
         }
       } catch (error) {
         if (requestToken === tutorSpeechToken) {
+          if (window.speechSynthesis && typeof SpeechSynthesisUtterance === "function") {
+            try {
+              button.textContent = `⏸ Đang đọc (trình duyệt)${progressTag}`;
+              const utterance = new SpeechSynthesisUtterance(text);
+              utterance.lang = "vi-VN";
+              await new Promise((resolve) => {
+                utterance.onend = resolve;
+                utterance.onerror = resolve;
+                window.speechSynthesis.speak(utterance);
+              });
+              if (requestToken === tutorSpeechToken && isLastChunk) {
+                resetTutorReadButtons();
+                status.textContent = "Đã đọc xong bài giảng.";
+              }
+              return;
+            } catch {}
+          }
           button.textContent = "🔊 Thử nghe lại";
-          status.textContent = `${error.message} Hãy kiểm tra kết nối mạng hoặc cài Python/gTTS.`;
+          status.textContent = `${error.message}`;
         }
       } finally {
         button.disabled = false;
@@ -1086,7 +1210,7 @@
             URL.revokeObjectURL(commentaryAudioUrl);
             commentaryAudioUrl = null;
           }
-          commentaryAudio = null;
+          if (isLastChunk) commentaryAudio = null;
         }
       }
     }
@@ -1131,16 +1255,29 @@
       if (image) image.src = foxAvatarImage(emotion);
     }
 
-    function appendTutorMessage(log, text, { emotion = "happy", autoRead = false } = {}) {
+    function appendTutorMessage(log, text, { emotion = "happy", autoRead = false, speechText = null } = {}) {
       const message = document.createElement("article");
       message.className = `tutor-message assistant ${emotion}`;
       message.append(createFoxAvatar(emotion, true));
       const content = document.createElement("div");
       const bubble = document.createElement("div");
       bubble.className = "tutor-bubble";
+      bubble.style.setProperty("color", "#0f172a", "important");
+      bubble.style.setProperty("background", "#ffffff", "important");
+      bubble.style.setProperty("border", "2px solid #3b82f6", "important");
+      bubble.style.setProperty("box-shadow", "0 4px 16px rgba(15, 23, 42, 0.08)", "important");
+      bubble.style.setProperty("border-radius", "18px 18px 18px 6px", "important");
+      bubble.style.setProperty("padding", "16px 20px", "important");
+
       text.split(/\n{2,}/).filter(Boolean).forEach((paragraphText) => {
         const paragraph = document.createElement("p");
         paragraph.textContent = paragraphText;
+        paragraph.style.setProperty("color", "#0f172a", "important");
+        paragraph.style.setProperty("-webkit-text-fill-color", "#0f172a", "important");
+        paragraph.style.setProperty("font-weight", "650", "important");
+        paragraph.style.setProperty("font-size", "1.05rem", "important");
+        paragraph.style.setProperty("line-height", "1.65", "important");
+        paragraph.style.setProperty("margin", "0", "important");
         bubble.append(paragraph);
       });
       content.append(bubble);
@@ -1149,14 +1286,22 @@
       const read = document.createElement("button");
       read.type = "button";
       read.textContent = "🔊 Nghe Luna đọc";
-      read.setAttribute("aria-label", "Nghe Luna đọc tin nhắn này");
-      read.addEventListener("click", () => speakTutorText(text, read));
+      read.setAttribute("aria-label", "Nghe Luna đọc bài học này");
+      const textToSpeak = speechText || text;
+      read.addEventListener("click", () => {
+        if (commentaryAudio && !commentaryAudio.paused && tutorSpeechToken) {
+          stopCommentary();
+          resetTutorReadButtons();
+          return;
+        }
+        speakTutorText(textToSpeak, read);
+      });
       tools.append(read);
       content.append(tools);
       message.append(content);
       log.append(message);
       log.scrollTop = log.scrollHeight;
-      if (autoRead && tutorAutoRead) speakTutorText(text, read, true);
+      if (autoRead && tutorAutoRead) speakTutorText(textToSpeak, read, true);
       return message;
     }
 
@@ -2401,9 +2546,9 @@
       let canAdvance = false;
       let nextButton = null;
       let remediationButton = null;
-      const say = (text, emotion = "happy", autoRead = true) => {
-        lastTutorText = text;
-        const message = appendTutorMessage(log, text, { emotion, autoRead });
+      const say = (text, emotion = "happy", autoRead = true, speechText = null) => {
+        lastTutorText = speechText || text;
+        const message = appendTutorMessage(log, text, { emotion, autoRead, speechText: lastTutorText });
         lastReadButton = message.querySelector(".tutor-message-tools button");
         setFoxEmotion(fox, emotion);
       };
@@ -2488,29 +2633,105 @@
         assessmentCheck.disabled = true;
         assessmentNext.hidden = true;
       };
-      const lessonNote = document.createElement("section");
-      lessonNote.className = "study-lesson-note";
-      const lessonHeader = document.createElement("div");
-      lessonHeader.className = "study-lesson-header";
-      const lessonNoteHeading = document.createElement("h3");
-      lessonNoteHeading.textContent = "Bài giảng · học từng bước nhỏ (Micro-learning)";
-      const microControls = document.createElement("div");
-      microControls.className = "study-micro-controls";
-      lessonHeader.append(lessonNoteHeading, microControls);
-      lessonNote.append(lessonHeader);
+      function compileSectionSpeech(sec) {
+        const parts = [];
+        if (sec.title) parts.push(sec.title + ".");
+        if (sec.content) parts.push(sec.content);
+        if (Array.isArray(sec.codeNotes) && sec.codeNotes.length) {
+          parts.push("Điểm lưu ý trong mã nguồn: " + sec.codeNotes.join(". "));
+        }
+        if (sec.codeOutput) {
+          parts.push("Kết quả mong đợi: " + sec.codeOutput);
+        }
+        return parts.join("\n\n");
+      }
+
+      function compileFullLessonSpeech(topic, sections) {
+        const parts = [];
+        parts.push(`Chào bạn! Hôm nay Luna cùng bạn học chủ đề "${topic}". Sau đây là nội dung toàn bộ bài giảng chi tiết.`);
+        sections.forEach((sec, idx) => {
+          parts.push(`Phần ${idx + 1}: ${compileSectionSpeech(sec)}`);
+        });
+        return parts.join("\n\n");
+      }
 
       const rawSections = lesson.sections?.length
         ? lesson.sections
         : [{ title: "Nội dung trọng tâm", content: lesson.theory }];
+      const fullLessonSpeech = compileFullLessonSpeech(lesson.focusTopic, rawSections);
+
+      const lessonNote = document.createElement("section");
+      lessonNote.className = "study-lesson-note";
+      lessonNote.style.setProperty("background", "#ffffff", "important");
+      lessonNote.style.setProperty("color", "#0f172a", "important");
+      lessonNote.style.setProperty("border", "2px solid #cbd5e1", "important");
+      lessonNote.style.setProperty("border-radius", "20px", "important");
+      lessonNote.style.setProperty("box-shadow", "0 10px 28px rgba(0,0,0,0.18)", "important");
+      lessonNote.style.setProperty("padding", "24px", "important");
+      const lessonHeader = document.createElement("div");
+      lessonHeader.className = "study-lesson-header";
+      const lessonNoteHeading = document.createElement("h3");
+      lessonNoteHeading.textContent = "Bài giảng · học từng bước nhỏ (Micro-learning)";
+      lessonNoteHeading.style.setProperty("color", "#0f172a", "important");
+      lessonNoteHeading.style.setProperty("-webkit-text-fill-color", "#0f172a", "important");
+      lessonNoteHeading.style.setProperty("font-weight", "850", "important");
+
+      const readAllBtn = document.createElement("button");
+      readAllBtn.type = "button";
+      readAllBtn.className = "study-read-all-button";
+      readAllBtn.innerHTML = "🔊 Nghe Luna giảng toàn bộ bài";
+      readAllBtn.setAttribute("aria-label", "Nghe Luna giảng toàn bộ bài học này");
+      readAllBtn.addEventListener("click", () => {
+        if (commentaryAudio && !commentaryAudio.paused && tutorSpeechToken) {
+          stopCommentary();
+          resetTutorReadButtons();
+          return;
+        }
+        speakTutorText(fullLessonSpeech, readAllBtn);
+      });
+
+      const microControls = document.createElement("div");
+      microControls.className = "study-micro-controls";
+      lessonHeader.append(lessonNoteHeading, readAllBtn, microControls);
+      lessonNote.append(lessonHeader);
+
       const sectionElements = [];
-      rawSections.forEach((section) => {
+      rawSections.forEach((section, sIdx) => {
           const sectionElement = document.createElement("section");
           sectionElement.className = "study-lesson-section";
+
+          const secHeader = document.createElement("div");
+          secHeader.className = "study-section-header";
           const sectionHeading = document.createElement("h4");
           sectionHeading.textContent = section.title;
+          sectionHeading.style.setProperty("color", "#1e40af", "important");
+          sectionHeading.style.setProperty("-webkit-text-fill-color", "#1e40af", "important");
+          sectionHeading.style.setProperty("font-weight", "800", "important");
+
+          const readSecBtn = document.createElement("button");
+          readSecBtn.type = "button";
+          readSecBtn.className = "study-read-section-btn";
+          readSecBtn.textContent = "🔊 Nghe phần này";
+          readSecBtn.setAttribute("aria-label", `Nghe Luna đọc phần ${section.title}`);
+          const secSpeech = compileSectionSpeech(section);
+          readSecBtn.addEventListener("click", () => {
+            if (commentaryAudio && !commentaryAudio.paused && tutorSpeechToken) {
+              stopCommentary();
+              resetTutorReadButtons();
+              return;
+            }
+            speakTutorText(secSpeech, readSecBtn);
+          });
+
+          secHeader.append(sectionHeading, readSecBtn);
           const sectionText = document.createElement("p");
           sectionText.textContent = section.content;
-          sectionElement.append(sectionHeading, sectionText);
+          sectionText.style.setProperty("color", "#1e293b", "important");
+          sectionText.style.setProperty("-webkit-text-fill-color", "#1e293b", "important");
+          sectionText.style.setProperty("font-weight", "550", "important");
+          sectionText.style.setProperty("font-size", "1.02rem", "important");
+          sectionText.style.setProperty("line-height", "1.75", "important");
+          sectionElement.append(secHeader, sectionText);
           if (section.code) {
             const codeExample = document.createElement("div");
             codeExample.className = "study-code-example";
@@ -2697,8 +2918,11 @@
           const firstNewSecIdx = microSteps[currentMicroStep].indices[0];
           updateMicroStepView(sectionElements[firstNewSecIdx]);
           const newlyOpenedSections = microSteps[currentMicroStep].indices.map((i) => rawSections[i]);
-          lastTutorText = newlyOpenedSections.map((s) => `${s.title}\n${s.content}`).join("\n\n");
+          lastTutorText = newlyOpenedSections.map((s) => compileSectionSpeech(s)).join("\n\n");
           status.textContent = `Đang học ${microSteps[currentMicroStep].label} của chủ đề "${lesson.focusTopic}".`;
+          if (tutorAutoRead) {
+            say(`Tiếp tục sang ${microSteps[currentMicroStep].label}:`, "happy", true, lastTutorText);
+          }
           return;
         }
         comprehension.hidden = true;
@@ -2912,8 +3136,9 @@
         renderAssessmentQuestion();
       });
 
-      say(`Chào bạn! Hôm nay mình cùng học "${lesson.focusTopic}" theo từng bước nhỏ (Micro-learning) để dễ thấm và không bị ngợp nhé. Trước tiên, mình cùng khám phá Bước 1 (Ẩn dụ đời thường & Khái niệm) kèm sơ đồ minh họa bên dưới!`, "happy", true);
-      lastTutorText = rawSections[0] ? `${rawSections[0].title}\n${rawSections[0].content}` : lesson.theory;
+      const initialLectureSpeech = `Chào bạn! Hôm nay mình cùng học "${lesson.focusTopic}" theo từng bước nhỏ (Micro-learning) để dễ thấm và không bị ngợp nhé.\n\nSau đây là toàn bộ bài giảng chi tiết:\n\n${fullLessonSpeech}`;
+      say(`Chào bạn! Hôm nay mình cùng học "${lesson.focusTopic}" theo từng bước nhỏ (Micro-learning) để dễ thấm và không bị ngợp nhé. Trước tiên, mình cùng khám phá Bước 1 (Ẩn dụ đời thường & Khái niệm) kèm sơ đồ minh họa bên dưới! Mình sẽ đọc toàn bộ bài học cho bạn nghe, hoặc bạn có thể bấm nút nghe từng phần bất cứ lúc nào!`, "happy", true, initialLectureSpeech);
+      lastTutorText = initialLectureSpeech;
       hintButton.hidden = true;
       log.append(lessonNote);
       appendStudyIllustration(log, lesson.focusTopic, roadmap.topicId, lesson.phase);
@@ -3683,23 +3908,30 @@
     }
 
     function createCommentaryAudio(text) {
-      return fetch("/api/speak", {
+      return fetch("/api/elevenlabs/speak", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: text.slice(0, 1_200) }),
-      }).then(async (response) => {
-        if (!response.ok) {
-          const error = await response.json().catch(() => ({}));
-          throw new Error(error.error || "Không tạo được giọng đọc.");
-        }
-        return response.blob();
+      }).then((r) => {
+        if (r.ok) return r.blob();
+        return fetch("/api/speak", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: text.slice(0, 1_200) }),
+        }).then(async (fallbackResponse) => {
+          if (!fallbackResponse.ok) {
+            const error = await fallbackResponse.json().catch(() => ({}));
+            throw new Error(error.error || "Không tạo được giọng đọc.");
+          }
+          return fallbackResponse.blob();
+        });
       });
     }
 
     async function speakCommentaryAudio(audioTask, button, playbackStatus) {
       stopCommentary();
       button.disabled = true;
-      playbackStatus.textContent = "Kết quả đã hiển thị; đang tạo giọng đọc song song...";
+      playbackStatus.textContent = "Kết quả đã hiển thị; đang tạo giọng đọc ElevenLabs...";
       try {
         const audioBlob = await audioTask;
         if (audioBlob?.speechError) throw new Error(audioBlob.speechError);
@@ -3707,16 +3939,16 @@
         commentaryAudio = new Audio(commentaryAudioUrl);
         commentaryAudio.addEventListener("ended", () => {
           button.disabled = false;
-          button.textContent = "Nghe lại nhận xét";
+          button.textContent = "🔊 Nghe lại nhận xét (ElevenLabs)";
           playbackStatus.textContent = "Đã đọc xong nhận xét.";
         }, { once: true });
         await commentaryAudio.play();
         button.disabled = false;
-        button.textContent = "Đọc lại nhận xét";
-        playbackStatus.textContent = "Quiz AI đang đọc nhận xét cho bạn.";
+        button.textContent = "⏸ Đang đọc nhận xét";
+        playbackStatus.textContent = "Luna đang đọc nhận xét bằng giọng ElevenLabs.";
       } catch (error) {
         button.disabled = false;
-        button.textContent = "Nghe nhận xét";
+        button.textContent = "🔊 Nghe nhận xét (ElevenLabs)";
         playbackStatus.textContent = `${error.message} Bạn vẫn có thể đọc phần nhận xét bằng chữ bên dưới.`;
       }
     }
@@ -3759,7 +3991,7 @@
       speechControls.className = "commentary-controls";
       const speakButton = document.createElement("button");
       speakButton.type = "button";
-      speakButton.textContent = "Nghe nhận xét";
+      speakButton.textContent = "🔊 Nghe nhận xét (ElevenLabs)";
       const speechStatus = document.createElement("span");
       speechStatus.className = "commentary-status";
       speechStatus.setAttribute("role", "status");

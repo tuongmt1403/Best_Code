@@ -321,6 +321,19 @@ elevenLabsVoiceSelect.addEventListener("change", () => {
 });
 elevenLabsVoiceSelect.style.display = speechEngine === "elevenlabs" ? "block" : "none";
 loadElevenLabsVoices();
+function sanitizePersonaName(text) {
+  if (typeof text !== "string" || !text) return text;
+  return text
+    .replace(/\b(chào|hỏi|gặp|với|cùng|cho|nhắn|kể|từ|bảo|gọi|của|đến|tin|yêu|thích|nhớ)\s+(?:Lụa|Lúa|Lua|Luka|Luca)\b/giu, "$1 Luna")
+    .replace(/\b(?:Lụa|Lúa|Lua|Luka|Luca)\s+(luôn|sẽ|nghĩ|biết|muốn|có|có thể|rất|cũng|đang|đây|nè|nhé|nha|ơi|ạ|hả|à|chúc|hy vọng|sẵn sàng|cảm ơn|xin lỗi)\b/giu, "Luna $1")
+    .replace(/\b((?:mình|tôi|em|bạn)\s+(?:là|tên là)\s+)(?:Mai|Luka|Luca|Lua|Lúa|Lụa)\b/giu, "$1Luna")
+    .replace(/\b(Tên (?:của mình|của tôi|của em|của bạn|bạn) là\s+)(?:Mai|Luka|Luca|Lua|Lúa|Lụa)\b/giu, "$1Luna")
+    .replace(/\b(chào|hỏi|gặp|với|cùng|cho|nhắn|kể|từ|bảo|gọi|của|đến)\s+Mai\b/giu, "$1 Luna")
+    .replace(/\b(?:trợ lý|bot|AI)\s+(?:Mai|Lụa|Lúa|Lua|Luka|Luca)\b/giu, (m) => m.split(/\s+/)[0] + " Luna")
+    .replace(/(?<!\b(?:vải|tơ|dệt|áo|kén|sợi|bằng)\s+)\bLụa\b(?!\s+(?:tơ tằm|vạn phúc|hà đông|bạch đằng))/giu, "Luna")
+    .replace(/\b(?:Lúa|Lua|Luka|Luca)\b/gu, "Luna");
+}
+
 let history = [];
 try {
   const savedHistory = JSON.parse(localStorage.getItem("mai-chat-history") || "[]");
@@ -328,12 +341,13 @@ try {
     const validHistory = savedHistory.filter((message) =>
       message && ["user", "assistant"].includes(message.role) && typeof message.content === "string"
     );
-    history = validHistory.filter((message) =>
+    history = validHistory.map((message) => ({
+      ...message,
+      content: sanitizePersonaName(message.content),
+    })).filter((message) =>
       !(message.role === "assistant" && /^\s*(?:\[wave\]\s*)?chào bạn,\s*mình là mai!?\s*$/i.test(message.content))
     ).slice(-20);
-    if (history.length !== validHistory.length) {
-      localStorage.setItem("mai-chat-history", JSON.stringify(history));
-    }
+    localStorage.setItem("mai-chat-history", JSON.stringify(history));
   }
 } catch {
   history = [];
@@ -362,7 +376,7 @@ function renderHistoryPanel() {
     entry.className = `history-entry ${message.role}`;
     const label = document.createElement("strong");
     label.textContent = message.role === "user" ? "Bạn:" : "Luna:";
-    entry.append(label, document.createTextNode(message.content));
+    entry.append(label, document.createTextNode(sanitizePersonaName(message.content)));
     panel.append(entry);
   }
 }
@@ -373,7 +387,10 @@ async function loadChatHistory() {
     const data = await response.json();
     if (response.ok && Array.isArray(data.messages)) {
       if (data.messages.length) {
-        history = data.messages.slice(-100);
+        history = data.messages.map((m) => ({
+          ...m,
+          content: sanitizePersonaName(m.content),
+        })).slice(-100);
       } else if (history.length) {
         await fetch("/api/chat/history", {
           method: "PUT",
@@ -384,7 +401,7 @@ async function loadChatHistory() {
       localStorage.setItem("mai-chat-history", JSON.stringify(history));
       renderHistoryPanel();
       const lastAssistant = [...history].reverse().find((message) => message.role === "assistant");
-      if (lastAssistant) renderBubbleText(lastAssistant.content);
+      if (lastAssistant) renderBubbleText(sanitizePersonaName(lastAssistant.content));
     }
   } catch {
     renderHistoryPanel();
@@ -392,7 +409,10 @@ async function loadChatHistory() {
 }
 
 async function saveHistory() {
-  history = history.slice(-100);
+  history = history.map((m) => ({
+    ...m,
+    content: sanitizePersonaName(m.content),
+  })).slice(-100);
   localStorage.setItem("mai-chat-history", JSON.stringify(history));
   renderHistoryPanel();
   try {
@@ -467,7 +487,7 @@ function stopMouth() {
 }
 
 function renderBubbleText(text, suggestions = null) {
-  const rawSource = String(text || "");
+  const rawSource = sanitizePersonaName(String(text || ""));
   const cleanText = rawSource.replace(/\[(?:smile|nod|think|wave|surprised|sad|laugh)\]/g, "").trim();
   bubble.textContent = rawSource;
   bubble.dataset.displayMode = "source-hidden";
@@ -701,6 +721,7 @@ async function speakWithGtts(text) {
 }
 
 async function speak(text) {
+  text = sanitizePersonaName(text);
   const generation = speechGeneration;
   if (speechEngine === "browser") {
     await speakWithBrowser(text);

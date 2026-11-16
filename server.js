@@ -186,11 +186,24 @@ chatHistoryDb.exec(`
   );
 `);
 
+function sanitizePersonaName(text) {
+  if (typeof text !== "string" || !text) return text;
+  return text
+    .replace(/\b(chào|hỏi|gặp|với|cùng|cho|nhắn|kể|từ|bảo|gọi|của|đến|tin|yêu|thích|nhớ)\s+(?:Lụa|Lúa|Lua|Luka|Luca)\b/giu, "$1 Luna")
+    .replace(/\b(?:Lụa|Lúa|Lua|Luka|Luca)\s+(luôn|sẽ|nghĩ|biết|muốn|có|có thể|rất|cũng|đang|đây|nè|nhé|nha|ơi|ạ|hả|à|chúc|hy vọng|sẵn sàng|cảm ơn|xin lỗi)\b/giu, "Luna $1")
+    .replace(/\b((?:mình|tôi|em|bạn)\s+(?:là|tên là)\s+)(?:Mai|Luka|Luca|Lua|Lúa|Lụa)\b/giu, "$1Luna")
+    .replace(/\b(Tên (?:của mình|của tôi|của em|của bạn|bạn) là\s+)(?:Mai|Luka|Luca|Lua|Lúa|Lụa)\b/giu, "$1Luna")
+    .replace(/\b(chào|hỏi|gặp|với|cùng|cho|nhắn|kể|từ|bảo|gọi|của|đến)\s+Mai\b/giu, "$1 Luna")
+    .replace(/\b(?:trợ lý|bot|AI)\s+(?:Mai|Lụa|Lúa|Lua|Luka|Luca)\b/giu, (m) => m.split(/\s+/)[0] + " Luna")
+    .replace(/(?<!\b(?:vải|tơ|dệt|áo|kén|sợi|bằng)\s+)\bLụa\b(?!\s+(?:tơ tằm|vạn phúc|hà đông|bạch đằng))/giu, "Luna")
+    .replace(/\b(?:Lúa|Lua|Luka|Luca)\b/gu, "Luna");
+}
+
 function normalizeChatHistory(messages) {
   if (!Array.isArray(messages)) return [];
   return messages
     .filter((message) => message && ["user", "assistant"].includes(message.role) && typeof message.content === "string")
-    .map((message) => ({ role: message.role, content: message.content.slice(0, 20_000) }))
+    .map((message) => ({ role: message.role, content: sanitizePersonaName(message.content).slice(0, 20_000) }))
     .slice(-100);
 }
 
@@ -220,7 +233,7 @@ app.get(["/mini-game", "/mini-game/"], (_req, res) => res.sendFile(path.join(min
 app.get("/mini-game/styles.css", (_req, res) => res.sendFile(path.join(miniGameDir, "styles.css")));
 app.get("/mini-game/client.js", (_req, res) => res.sendFile(path.join(miniGameDir, "client.js")));
 app.get("/mini-game/profanity.js", (_req, res) => res.sendFile(path.join(miniGameDir, "profanity.js")));
-app.get("/mini-game/jsqr.min.js", (_req, res) => res.sendFile(path.join(miniGameDir, "jsqr.min.js")));
+app.get(["/jsqr.min.js", "/mini-game/jsqr.min.js"], (_req, res) => res.sendFile(path.join(miniGameDir, "jsqr.min.js")));
 const elevenLabsTestDir = path.join(projectDir, "elevenlabs-test");
 app.get("/elevenlabs-test", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(elevenLabsTestDir, "index.html")));
 app.get("/elevenlabs-test/styles.css", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(elevenLabsTestDir, "styles.css")));
@@ -452,9 +465,29 @@ async function generateMiniGameQuestions({
             } else if (isObstacleMode) {
               if (parsed.obstacle && typeof parsed.obstacle.keyword === "string" && parsed.obstacle.keyword.trim()) {
                 parsed.obstacle.keyword = parsed.obstacle.keyword.trim().toUpperCase().replace(/\s+/g, "");
+
+                // Ensure a rich, challenging themeHint (general clue/context to guide player thinking)
+                parsed.obstacle.themeHint = typeof parsed.obstacle.themeHint === "string" && parsed.obstacle.themeHint.trim()
+                  ? parsed.obstacle.themeHint.trim()
+                  : (thematicObstacleTemplates[topicId]?.themeHint || `Ẩn số gồm ${parsed.obstacle.keyword.length} chữ cái gắn liền với sự kiện và tri thức trọng tâm của chủ đề ${topic}.`);
+
                 const centerIdx = questionCount - 1;
                 const centerQ = parsed.questions[centerIdx];
                 if (centerQ) {
+                  // Ensure center question is rich with historical/technical clues, NEVER generic
+                  const isGenericQ = !centerQ.question
+                    || centerQ.question.toLowerCase().includes("từ khóa ẩn của chủ đề")
+                    || centerQ.question.toLowerCase().includes("từ khóa ẩn là gì")
+                    || centerQ.question.length < 45;
+                  if (isGenericQ) {
+                    if (thematicObstacleTemplates[topicId]?.question) {
+                      centerQ.question = thematicObstacleTemplates[topicId].question;
+                      centerQ.prompt = thematicObstacleTemplates[topicId].prompt;
+                    } else {
+                      centerQ.prompt = `ẨN SỐ Ô TRUNG TÂM · ${parsed.obstacle.keyword.length} CHỮ CÁI`;
+                      centerQ.question = `Khái niệm then chốt gồm ${parsed.obstacle.keyword.length} chữ cái nào được coi là biểu tượng đỉnh cao và là mắt xích kết nối toàn bộ các manh mối trong chủ đề ${topic}?`;
+                    }
+                  }
                   if (!Array.isArray(centerQ.options) || centerQ.options.length !== 4) {
                     centerQ.options = [parsed.obstacle.keyword, "LỰA CHỌN A", "LỰA CHỌN B", "LỰA CHỌN C"];
                     centerQ.answer = 0;
@@ -468,7 +501,13 @@ async function generateMiniGameQuestions({
                     }
                   }
                 }
-                parsed.obstacle.illustration = sanitizeObstacleIllustration(parsed.obstacle.illustration);
+
+                // If topic has a hand-crafted, recognizable thematic vector illustration, ALWAYS use it
+                if (thematicObstacleTemplates[topicId]?.illustration) {
+                  parsed.obstacle.illustration = thematicObstacleTemplates[topicId].illustration;
+                } else {
+                  parsed.obstacle.illustration = sanitizeObstacleIllustration(parsed.obstacle.illustration);
+                }
                 generated = parsed;
               }
             } else {
@@ -515,37 +554,54 @@ async function generateMiniGameQuestions({
     const thematicObstacleTemplates = {
       history: {
         kw: "DIENBIENPHU",
+        themeHint: "Ẩn số gồm 11 chữ cái gắn liền với một chiến dịch quân sự vĩ đại thế kỷ 20, đập tan tập đoàn cứ điểm kiên cố của thực dân Pháp tại thung lũng Mường Thanh và làm chấn động địa cầu.",
         logic: "Chiến dịch Điện Biên Phủ 1954 - mốc son lừng lẫy năm châu, chấn động địa cầu.",
         prompt: "CHIẾN DỊCH QUÂN SỰ ĐỈNH CAO NĂM 1954",
         question: "Chiến dịch quân sự lừng lẫy năm 1954 kéo dài 56 ngày đêm 'khoét núi, ngủ hầm, mưa dầm, cơm vắt', đập tan cứ điểm của thực dân Pháp tại thung lũng Mường Thanh, kết thúc bằng lá cờ Quyết chiến Quyết thắng tung bay trên nóc hầm De Castries?",
         options: ["DIENBIENPHU", "VIETBAC", "DUONG9NAMLAO", "TAYNGUYEN"],
         explanation: "Chiến thắng Điện Biên Phủ (07/05/1954) 'lừng lẫy năm châu, chấn động địa cầu' giải phóng hoàn toàn miền Bắc.",
         illustration: {
-          background: "#0B132B",
+          background: "#080E21",
           elements: [
-            { type: "polygon", points: [[0, 72], [18, 65], [42, 68], [65, 62], [88, 66], [100, 63], [100, 100], [0, 100]], fill: "#1C2541" },
-            { type: "polygon", points: [[0, 80], [25, 75], [52, 78], [78, 73], [100, 77], [100, 100], [0, 100]], fill: "#2D3748" },
-            { type: "rect", x: 30, y: 64, width: 40, height: 20, rx: 4, fill: "#334155" },
-            { type: "ellipse", cx: 50, cy: 64, rx: 22, ry: 7, fill: "#475569" },
-            { type: "rect", x: 42, y: 70, width: 16, height: 14, rx: 2, fill: "#1E293B" },
-            { type: "line", x1: 50, y1: 57, x2: 50, y2: 24, stroke: "#E2E8F0", strokeWidth: 2.5 },
-            { type: "polygon", points: [[50, 24], [72, 28], [74, 40], [50, 44]], fill: "#DC2626" },
-            { type: "polygon", points: [[72, 28], [75, 34], [74, 40], [70, 34]], fill: "#991B1B" },
-            { type: "polygon", points: [[61, 30], [62.5, 33.5], [66, 33.5], [63.2, 35.5], [64.2, 39], [61, 37], [57.8, 39], [58.8, 35.5], [56, 33.5], [59.5, 33.5]], fill: "#FACC15" },
-            { type: "line", x1: 50, y1: 20, x2: 50, y2: 12, stroke: "#FDE047", strokeWidth: 2 },
-            { type: "line", x1: 56, y1: 22, x2: 64, y2: 15, stroke: "#FDE047", strokeWidth: 1.5 },
-            { type: "line", x1: 44, y1: 22, x2: 36, y2: 15, stroke: "#FDE047", strokeWidth: 1.5 },
-            { type: "rect", x: 12, y: 75, width: 22, height: 11, rx: 3, fill: "#166534" },
-            { type: "ellipse", cx: 23, cy: 75, rx: 8, ry: 4, fill: "#14532D" },
-            { type: "line", x1: 23, y1: 75, x2: 38, y2: 67, stroke: "#15803D", strokeWidth: 3 },
-            { type: "circle", cx: 16, cy: 84, r: 2.5, fill: "#0F172A" },
-            { type: "circle", cx: 23, cy: 84, r: 2.5, fill: "#0F172A" },
-            { type: "circle", cx: 30, cy: 84, r: 2.5, fill: "#0F172A" },
+            // Sky & Clouds
+            { type: "rect", x: 0, y: 0, width: 100, height: 55, fill: "#0B1536" },
+            { type: "polygon", points: [[0, 25], [30, 20], [60, 26], [100, 18], [100, 38], [0, 42]], fill: "#15224F" },
+            // Distant Northwest Mountains
+            { type: "polygon", points: [[0, 52], [22, 38], [45, 46], [68, 36], [88, 44], [100, 40], [100, 75], [0, 75]], fill: "#1E293B" },
+            // Near Foothills & Valleys
+            { type: "polygon", points: [[0, 64], [28, 56], [55, 60], [82, 54], [100, 58], [100, 100], [0, 100]], fill: "#14532D" },
+            // French Command Bunker Dome (Hầm De Castries)
+            { type: "rect", x: 28, y: 62, width: 44, height: 26, rx: 6, fill: "#3F3F46" },
+            { type: "ellipse", cx: 50, cy: 62, rx: 24, ry: 9, fill: "#52525B" },
+            { type: "rect", x: 42, y: 70, width: 16, height: 18, rx: 2, fill: "#09090B" },
+            // Sandbag layers
+            { type: "rect", x: 22, y: 68, width: 12, height: 6, rx: 2, fill: "#71717A" },
+            { type: "rect", x: 24, y: 75, width: 12, height: 6, rx: 2, fill: "#A1A1AA" },
+            { type: "rect", x: 66, y: 68, width: 12, height: 6, rx: 2, fill: "#71717A" },
+            { type: "rect", x: 64, y: 75, width: 12, height: 6, rx: 2, fill: "#A1A1AA" },
+            // Flagpole on bunker roof
+            { type: "line", x1: 50, y1: 56, x2: 50, y2: 15, stroke: "#E4E4E7", strokeWidth: 2.5 },
+            { type: "circle", cx: 50, cy: 14, r: 2.5, fill: "#FACC15" },
+            // Iconic Red Flag Waving (Cờ Quyết Chiến Quyết Thắng)
+            { type: "polygon", points: [[50, 16], [80, 20], [82, 38], [50, 42]], fill: "#DC2626" },
+            { type: "polygon", points: [[80, 20], [84, 28], [82, 38], [78, 30]], fill: "#991B1B" },
+            // Five-pointed Yellow Star in flag
+            { type: "polygon", points: [[66, 24], [67.8, 28.5], [72.5, 28.5], [68.8, 31.5], [70.2, 36], [66, 33], [61.8, 36], [63.2, 31.5], [59.5, 28.5], [64.2, 28.5]], fill: "#FACC15" },
+            // Artillery / Tank on left flank
+            { type: "rect", x: 8, y: 76, width: 20, height: 12, rx: 3, fill: "#166534" },
+            { type: "ellipse", cx: 18, cy: 76, rx: 7, ry: 4, fill: "#15803D" },
+            { type: "line", x1: 18, y1: 76, x2: 36, y2: 60, stroke: "#14532D", strokeWidth: 3.5 },
+            { type: "circle", cx: 12, cy: 88, r: 3, fill: "#0F172A" },
+            { type: "circle", cx: 18, cy: 88, r: 3, fill: "#0F172A" },
+            { type: "circle", cx: 24, cy: 88, r: 3, fill: "#0F172A" },
+            // Trench line
+            { type: "line", x1: 0, y1: 94, x2: 100, y2: 94, stroke: "#27272A", strokeWidth: 3 },
           ],
         },
       },
       cProgramming: {
         kw: "POINTER",
+        themeHint: "Ẩn số gồm 7 chữ cái chỉ một biến đặc biệt nắm giữ trực tiếp địa chỉ ô nhớ RAM và thao tác bộ nhớ động trong máy tính.",
         logic: "Con trỏ và cơ chế quản lý trực tiếp địa chỉ ô nhớ RAM trong ngôn ngữ C.",
         prompt: "CƠ CHẾ QUẢN LÝ BỘ NHỚ TRỰC TIẾP TRONG C",
         question: "Trong lập trình C, đây là biến đặc biệt không lưu giá trị thông thường mà lưu trực tiếp địa chỉ ô nhớ RAM của một biến khác, sử dụng toán tử * và & để thao tác bộ nhớ động?",
@@ -578,6 +634,7 @@ async function generateMiniGameQuestions({
       },
       english: {
         kw: "VOCABULARY",
+        themeHint: "Ẩn số gồm 10 chữ cái là kho tàng vốn từ nền tảng quyết định khả năng giao tiếp, đọc hiểu và làm chủ tiếng Anh.",
         logic: "Vốn từ vựng là nền tảng cốt lõi của việc học và giao tiếp ngôn ngữ Anh.",
         prompt: "CHÌA KHÓA LÀM CHỦ NGÔN NGỮ TIẾNG ANH",
         question: "Kho từ vựng trong ngôn ngữ học dùng để chỉ tập hợp tất cả các từ ngữ mà một người tiếp thu, ghi nhớ và sử dụng trong giao tiếp, đọc hiểu và viết văn tiếng Anh?",
@@ -608,6 +665,7 @@ async function generateMiniGameQuestions({
       },
       geography: {
         kw: "VIETNAM",
+        themeHint: "Ẩn số gồm 7 chữ cái chỉ quốc gia hình chữ S trải dài bên bờ Biển Đông cùng các quần đảo thiêng liêng Hoàng Sa và Trường Sa.",
         logic: "Lãnh thổ hình chữ S bên bờ Biển Đông và chủ quyền biển đảo thiêng liêng.",
         prompt: "ĐẤT NƯỚC HÌNH CHỮ S BÊN BỜ BIỂN ĐÔNG",
         question: "Quốc gia nằm trên bán đảo Đông Dương với đường bờ biển hình chữ S dài hơn 3.260 km, tiếp giáp vịnh Bắc Bộ, vịnh Thái Lan và Biển Đông cùng hai quần đảo Hoàng Sa và Trường Sa?",
@@ -636,6 +694,7 @@ async function generateMiniGameQuestions({
     };
     const defaultTemplate = thematicObstacleTemplates[topicId] || {
       kw: "TRITHUC",
+      themeHint: `Ẩn số gồm 7 chữ cái là khái niệm nền tảng, chìa khóa xuyên suốt toàn bộ chủ đề ${topic}.`,
       logic: `Kiến thức tổng hợp về chủ đề ${topic}.`,
       prompt: `CHÌA KHÓA CHỦ ĐỀ ${String(topic || "").toUpperCase()}`,
       question: `Khái niệm tổng quát nào là chìa khóa tri thức nền tảng trong toàn bộ chủ đề ${topic}?`,
@@ -656,6 +715,7 @@ async function generateMiniGameQuestions({
     generated = {
       obstacle: {
         keyword: defaultTemplate.kw,
+        themeHint: defaultTemplate.themeHint,
         logic: defaultTemplate.logic,
         illustration: defaultTemplate.illustration,
       },
@@ -796,14 +856,14 @@ function formatHistoryAnswer(matches) {
     .join("\n");
 }
 
-const SYSTEM = `Tên của bạn là Luna. Bạn là một trợ lý AI thân thiện, trò chuyện tự nhiên bằng tiếng Việt.
-Luôn tự xưng là Luna, không tự xưng là Mai hay Lụa; nếu lịch sử hội thoại cũ gọi bạn là Mai hay Lụa thì đó là tên cũ và hãy dùng tên Luna.
+const SYSTEM = `Tên của bạn duy nhất là Luna. Bạn là một trợ lý AI thân thiện, trò chuyện tự nhiên bằng tiếng Việt.
+Tuyệt đối không bao giờ tự nhận hay tự gọi mình là "Lụa", "Mai", "Lúa" hay bất kỳ tên nào khác. Tên của bạn luôn luôn và duy nhất là Luna. Kể cả khi người dùng hoặc lịch sử hội thoại cũ có nhắc đến "Lụa" hay "Mai", bạn phải tự hiểu đó là tên cũ đã được đổi và bạn chỉ xưng hô với tư cách là Luna.
 Quy tắc trả lời:
 - Trả lời thẳng trọng tâm trước, sau đó giải thích đủ sâu để người dùng hiểu vấn đề, không chỉ nhắc lại kết luận.
 - Trước khi trả lời, kiểm tra tiền đề và thông tin người dùng nêu. Nếu có dữ kiện, phép tính, cách hiểu hoặc giả định sai rõ ràng, hãy nhẹ nhàng chỉ ra và sửa lại trước, rồi mới trả lời câu hỏi dựa trên thông tin đúng; không đồng tình cho vừa lòng người dùng.
 - Không bênh vực hoặc chứng minh một khẳng định sai chỉ vì người dùng yêu cầu giải thích vì sao nó đúng. Nói rõ phần sai, nêu sự thật có căn cứ, rồi giải thích câu hỏi theo cách hiểu đúng; nếu có nhiều góc nhìn hợp lệ, phân biệt rõ chúng.
 - Chỉ sửa khi có căn cứ đáng tin; phân biệt lỗi thực tế với ý kiến cá nhân hoặc cách diễn đạt khác nhau. Đọc đúng lời người dùng: không bịa ra lỗi gõ, câu nói hay niềm tin mà họ không nêu, và không coi một câu hỏi trung lập là khẳng định sai. Nếu câu hỏi có lỗi gõ hoặc diễn đạt mơ hồ làm thay đổi ý nghĩa, nêu cách hiểu đang dùng hoặc hỏi lại khi cần.
-- Trong câu trả lời thông thường, không tự chào hoặc tự giới thiệu tên; chỉ nêu tên khi được hỏi, và khi đó tên duy nhất là Luna.
+- Trong câu trả lời thông thường, không tự chào hoặc tự giới thiệu tên; chỉ nêu tên khi được hỏi hoặc khi người dùng chào/nhắc tên bạn, và khi đó tên duy nhất là Luna.
 - Với câu hỏi kiến thức, giải thích khái niệm và bối cảnh cần thiết; làm rõ nguyên nhân, diễn biến, hệ quả hoặc cách thực hiện khi có liên quan; dùng ví dụ cụ thể nếu giúp dễ hiểu.
 - Với yêu cầu phân tích, đánh giá, so sánh hoặc lập kế hoạch học tập, trình bày lập luận và các bước/mốc cụ thể thay vì lời khuyên chung chung.
 - Chỉ trả lời ngắn khi câu hỏi đơn giản. Với câu hỏi phức tạp, trình bày thành các đoạn hoặc gạch đầu dòng có tiêu đề khi hữu ích; tránh lặp ý và câu chữ sáo rỗng.
@@ -837,15 +897,14 @@ function asksForExplanation(question) {
 }
 
 function normalizeAssistantName(reply) {
-  return reply
-    .replace(/<think>[\s\S]*?(?:<\/think>|$)/giu, "")
-    .replace(/<analysis>[\s\S]*?(?:<\/analysis>|$)/giu, "")
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/giu, "")
-        .replace(/\r\n?/g, "\n")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/\b((?:mình|tôi|em)\s+(?:là|tên là)\s+)(?:Mai|Luka|Luca|Lua|Lúa|Lụa)\b/giu, "$1Luna")
-    .replace(/\b(Tên (?:của mình|của tôi|của em) là\s+)(?:Mai|Luka|Luca|Lua|Lúa|Lụa)\b/giu, "$1Luna")
-    .trim();
+  return sanitizePersonaName(
+    reply
+      .replace(/<think>[\s\S]*?(?:<\/think>|$)/giu, "")
+      .replace(/<analysis>[\s\S]*?(?:<\/analysis>|$)/giu, "")
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/giu, "")
+      .replace(/\r\n?/g, "\n")
+      .replace(/`([^`]+)`/g, "$1")
+  ).trim();
 }
 async function generateGroqReply(messages, historyContext, mode, chatStyle, reviewIssues = []) {
   if (groqApiKeys_server.length === 0) throw new Error("GROQ_API_KEY chưa được cấu hình.");
@@ -892,10 +951,14 @@ async function generateGroqReply(messages, historyContext, mode, chatStyle, revi
 
 
 app.post("/api/chat", async (req, res) => {
-  const messages = req.body?.messages;
-  if (!Array.isArray(messages) || messages.length === 0 || messages.some((message) => !message || !["user", "assistant"].includes(message.role) || typeof message.content !== "string")) {
+  const rawMessages = req.body?.messages;
+  if (!Array.isArray(rawMessages) || rawMessages.length === 0 || rawMessages.some((message) => !message || !["user", "assistant"].includes(message.role) || typeof message.content !== "string")) {
     return res.status(400).json({ error: "Tin nhắn không hợp lệ." });
   }
+  const messages = rawMessages.map((message) => ({
+    role: message.role,
+    content: sanitizePersonaName(message.content),
+  }));
 
   const attachmentResult = await extractAttachments(req.body?.attachments);
   if (attachmentResult.error) return res.status(400).json({ error: attachmentResult.error });
@@ -1197,6 +1260,7 @@ async function createElevenLabsAudio(text, voiceId, modelId, apiKeys) {
 app.post("/api/elevenlabs/speak", async (req, res) => {
   const apiKeys = getElevenLabsApiKeys();
   let text = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+  text = sanitizePersonaName(text);
   text = text.replace(/[*#_`~]+/g, "").replace(/\s+/g, " ").trim();
   const voiceId = typeof req.body?.voiceId === "string" && req.body.voiceId.trim()
     ? req.body.voiceId.trim()
@@ -1206,10 +1270,10 @@ app.post("/api/elevenlabs/speak", async (req, res) => {
     : (process.env.ELEVENLABS_MODEL_ID?.trim() || "eleven_flash_v2_5");
   if (!apiKeys.length) return res.status(503).json({ error: "Chưa cấu hình ELEVENLABS_API_KEY trong .env." });
   if (!text) return res.status(400).json({ error: "Hãy nhập nội dung cần ElevenLabs đọc." });
-  if (text.length > 800) {
-    const shortText = text.slice(0, 800);
-    const lastSentence = Math.max(shortText.lastIndexOf("."), shortText.lastIndexOf("!"), shortText.lastIndexOf("?"));
-    text = lastSentence >= 400 ? shortText.slice(0, lastSentence + 1) : shortText.trimEnd() + "…";
+  if (text.length > 3500) {
+    const shortText = text.slice(0, 3500);
+    const lastSentence = Math.max(shortText.lastIndexOf("."), shortText.lastIndexOf("!"), shortText.lastIndexOf("?"), shortText.lastIndexOf("\n"));
+    text = lastSentence >= 2000 ? shortText.slice(0, lastSentence + 1) : shortText.trimEnd() + "…";
   }
   try {
     const cacheKey = `${voiceId}\0${modelId}\0${text}`;
@@ -1238,13 +1302,60 @@ app.post("/api/elevenlabs/speak", async (req, res) => {
 });
 
 app.post("/api/speak", async (req, res) => {
-  const text = req.body?.text;
-  if (typeof text !== "string" || !text.trim()) {
+  let text = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+  text = sanitizePersonaName(text);
+  if (!text) {
     return res.status(400).json({ error: "Không có nội dung để đọc." });
   }
-  if (text.length > 2500) {
+  if (text.length > 3500) {
     return res.status(413).json({ error: "Đoạn văn bản quá dài để đọc cùng lúc." });
   }
+
+  // Ưu tiên sử dụng ElevenLabs nếu có API key khả dụng
+  const apiKeys = getElevenLabsApiKeys();
+  if (apiKeys.length > 0) {
+    const cleanText = text.replace(/[*#_`~]+/g, "").replace(/\s+/g, " ").trim();
+    const voiceId = typeof req.body?.voiceId === "string" && req.body.voiceId.trim()
+      ? req.body.voiceId.trim()
+      : (process.env.ELEVENLABS_VOICE_ID?.trim() || "Xb7hH8MSUJpSbSDYk0k2");
+    const modelId = typeof req.body?.modelId === "string" && req.body.modelId.trim()
+      ? req.body.modelId.trim()
+      : (process.env.ELEVENLABS_MODEL_ID?.trim() || "eleven_flash_v2_5");
+
+    try {
+      const shortText = cleanText.length > 3500
+        ? (() => {
+            const cut = cleanText.slice(0, 3500);
+            const last = Math.max(cut.lastIndexOf("."), cut.lastIndexOf("!"), cut.lastIndexOf("?"));
+            return last >= 2000 ? cut.slice(0, last + 1) : cut.trimEnd() + "…";
+          })()
+        : cleanText;
+      const cacheKey = `${voiceId}\0${modelId}\0${shortText}`;
+      let audio = elevenLabsAudioCache.get(cacheKey);
+      if (!audio) {
+        let pending = elevenLabsAudioPending.get(cacheKey);
+        if (!pending) {
+          pending = createElevenLabsAudio(shortText, voiceId, modelId, apiKeys);
+          elevenLabsAudioPending.set(cacheKey, pending);
+        }
+        try {
+          audio = await pending;
+          elevenLabsAudioCache.set(cacheKey, audio);
+          while (elevenLabsAudioCache.size > 24) {
+            elevenLabsAudioCache.delete(elevenLabsAudioCache.keys().next().value);
+          }
+        } finally {
+          if (elevenLabsAudioPending.get(cacheKey) === pending) elevenLabsAudioPending.delete(cacheKey);
+        }
+      }
+      res.set({ "Content-Type": "audio/mpeg", "Content-Length": audio.length, "Cache-Control": "no-store" });
+      return res.send(audio);
+    } catch (elevenError) {
+      console.warn("[TTS] ElevenLabs gặp lỗi, chuyển sang gTTS dự phòng:", elevenError.message);
+    }
+  }
+
+  // Dự phòng sang gTTS nếu ElevenLabs không khả dụng hoặc hết hạn mức
   const pythonCommand = process.env.PYTHON_EXECUTABLE || (process.platform === "win32" ? "py" : "python3");
   const scriptPath = path.join(projectDir, "gtts_tts.py");
   const args = process.env.PYTHON_EXECUTABLE

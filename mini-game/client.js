@@ -1334,17 +1334,34 @@ function renderObstaclePuzzle(snapshot, canChoose) {
   const keyword = node("div", "obstacle-keyword", obstacle.keyword
     ? `TỪ KHÓA: ${obstacle.keyword}`
     : `ẨN SỐ · ${obstacle.keywordLength} CHỮ CÁI`);
+  
+  if (obstacle.themeHint) {
+    const hintBadge = node("div", "obstacle-theme-badge");
+    hintBadge.append(
+      node("span", "obstacle-theme-badge-title", "💡 GỢI Ý CHỦ ĐỀ CHUNG:"),
+      node("p", "obstacle-theme-hint-text", obstacle.themeHint),
+    );
+    panel.append(heading, board, hintBadge, keyword);
+  } else {
+    panel.append(heading, board, keyword);
+  }
+
   const rowList = node("div", "obstacle-row-list");
   obstacle.completedRows.forEach((completed, index) => {
     const row = node("button", `obstacle-row-status${obstacle.revealedRows[index] ? " revealed" : completed ? " closed" : ""}`);
     row.type = "button";
     row.disabled = !canChoose || completed;
+    const rowName = node("span", "obstacle-row-name", `Hàng ngang ${index + 1}`);
+    rowName.style.setProperty("color", "#0f172a", "important");
+    rowName.style.setProperty("-webkit-text-fill-color", "#0f172a", "important");
+    rowName.style.setProperty("font-weight", "800", "important");
+    const rowAnswer = node("strong", "obstacle-row-answer", obstacle.revealedRows[index]
+      ? obstacle.revealedAnswers[index]
+      : completed ? "Đã khép lại" : "Chưa mở");
     row.append(
       node("span", "obstacle-tile-label", String(index + 1)),
-      node("span", "", `Hàng ngang ${index + 1}`),
-      node("strong", "", obstacle.revealedRows[index]
-        ? obstacle.revealedAnswers[index]
-        : completed ? "Đã khép lại" : "Chưa mở"),
+      rowName,
+      rowAnswer,
     );
     row.addEventListener("click", async () => {
       row.disabled = true;
@@ -1358,7 +1375,7 @@ function renderObstaclePuzzle(snapshot, canChoose) {
     });
     rowList.append(row);
   });
-  panel.append(heading, board, keyword, rowList);
+  panel.append(rowList);
   return panel;
 }
 
@@ -1367,11 +1384,20 @@ function renderObstacleQuestion(snapshot) {
   const question = snapshot.currentQuestion;
   const area = node("section", "obstacle-question-area");
   if (!question) {
+    if (obstacle.themeHint) {
+      const hintBox = node("div", "obstacle-theme-hint-box");
+      hintBox.append(
+        node("div", "obstacle-theme-hint-label", "💡 GỢI Ý ĐỊNH HƯỚNG TƯ DUY (CHỦ ĐỀ CHUNG)"),
+        node("p", "obstacle-theme-hint-text", obstacle.themeHint),
+        node("small", "obstacle-theme-hint-sub", "Thông tin khái quát để cả nhóm định hướng suy đoán trước khi mở các mảnh ghép."),
+      );
+      area.append(hintBox);
+    }
     area.append(
       node("h2", "obstacle-question-title", "Chọn hàng ngang để bắt đầu"),
       node("p", "obstacle-question-help", obstacle.canSelectCenter
-        ? "Bốn hàng ngang đã hoàn tất. Cùng mở ô đỏ số 5 để nhận gợi ý cuối."
-        : "Chọn một ô số 1–4 trên tranh hoặc danh sách để nghe câu hỏi."),
+        ? "Tất cả hàng ngang đã hoàn tất! Cùng mở ô trung tâm để nhận câu đố quyết định."
+        : "Chọn một ô số trên tranh hoặc danh sách bên trái để nghe câu hỏi."),
     );
     return area;
   }
@@ -1560,7 +1586,12 @@ function revealQuestionText(speechKey, text, progress) {
   speechRevealProgress.set(speechKey, characters.slice(0, count).join(""));
   const captionText = [...document.querySelectorAll(".olympia-caption-text")]
     .find((element) => element.dataset.speechKey === speechKey);
-  if (captionText) captionText.textContent = speechRevealProgress.get(speechKey);
+  if (captionText) {
+    captionText.textContent = speechRevealProgress.get(speechKey);
+    captionText.style.setProperty("color", "#0f172a", "important");
+    captionText.style.setProperty("-webkit-text-fill-color", "#0f172a", "important");
+    captionText.style.setProperty("font-weight", "850", "important");
+  }
 }
 
 function speakAiQuestion(snapshot, text, speechKey) {
@@ -1637,12 +1668,21 @@ function renderOlympiaCaption(text, speechKey = "") {
   caption.setAttribute("aria-label", "Chữ câu hỏi đang được AI đọc");
   caption.setAttribute("aria-live", "polite");
   caption.setAttribute("aria-atomic", "true");
+  caption.style.setProperty("background", "#fff8df", "important");
+  caption.style.setProperty("border", "3px solid #0f172a", "important");
+  caption.style.setProperty("color", "#0f172a", "important");
+  const captionLabel = node("span", "olympia-caption-label", "CÂU HỎI HIỂN THỊ");
+  captionLabel.style.setProperty("color", "#0369a1", "important");
+  captionLabel.style.setProperty("font-weight", "900", "important");
   const captionText = node("p", "olympia-caption-text", speechKey
     ? speechRevealProgress.get(speechKey) || ""
     : text);
   if (speechKey) captionText.dataset.speechKey = speechKey;
+  captionText.style.setProperty("color", "#0f172a", "important");
+  captionText.style.setProperty("-webkit-text-fill-color", "#0f172a", "important");
+  captionText.style.setProperty("font-weight", "850", "important");
   caption.append(
-    node("span", "olympia-caption-label", "CÂU HỎI HIỂN THỊ"),
+    captionLabel,
     captionText,
   );
   return caption;
