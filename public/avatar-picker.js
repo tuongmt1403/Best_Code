@@ -90,7 +90,7 @@ if (avatarPicker) {
       button.classList.toggle("selected", selected);
       button.querySelector("[data-avatar-choice-status]").textContent = selected ? "Đang dùng" : "Chọn avatar này";
     }
-    document.querySelectorAll("[data-player-avatar]").forEach((image) => {
+    document.querySelectorAll("[data-player-avatar]:not(#stage *):not(#avatar-human-img)").forEach((image) => {
       image.src = avatarSources[selectedAvatarId];
       image.dataset.avatarId = selectedAvatarId;
       image.alt = `Avatar của bạn: ${selectedAvatarId === "knight" ? "Hiệp sĩ" : "Cáo Luna"}`;

@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Luna - bạn trò chuyện AI</title>
 <link rel="stylesheet" href="/dangKy_dangNhap/auth.css">
-<script src="/app-shell.js?v=avatar-picker-v4" defer></script>
-<script src="/avatar-picker.js?v=avatar-picker-v4" defer></script>
+<script src="/app-shell.js?v=human-real-v11" defer></script>
+<script src="/avatar-picker.js?v=human-real-v11" defer></script>
 <script src="/dangKy_dangNhap/session.js" defer></script>
 <style>
   :root { --bg:#f7f8fc; --ink:#20243b; --muted:#70758a; --line:#e7e9f2; --surface:#fff;
@@ -37,7 +37,7 @@
   .mode-btn.active { color:#fff; background:linear-gradient(105deg,#746cf0,#635bda 62%,#574fc9); box-shadow:0 5px 13px #635bda35,inset 0 1px 0 #ffffff40; }
   #style-panel { display:flex; align-items:center; gap:8px; margin-left:auto; }
   #style-panel label { margin:0; color:var(--muted); font-size:.86rem; font-weight:700; }
-  #chat-style, #speech-engine, #elevenlabs-voice { max-width:230px; padding:10px 12px; border:1px solid var(--line); border-radius:11px;
+  #chat-style, #avatar-mode, #speech-engine, #elevenlabs-voice { max-width:280px; padding:10px 12px; border:1px solid var(--line); border-radius:11px;
     color:var(--ink); background:#fff; font:inherit; }
   .chat-layout { display:grid; grid-template-columns:minmax(260px,.78fr) minmax(0,1.22fr); gap:18px; align-items:stretch; }
   .character-card,.conversation-card { min-width:0; border:1px solid #e4e6f0; border-radius:22px;
@@ -130,25 +130,26 @@
     .chat-brand small { display:none; }
     .home-link { font-size:.82rem; }
     #style-panel { align-items:flex-start; flex-direction:column; gap:5px; }
-    #chat-style, #speech-engine, #elevenlabs-voice { width:100%; max-width:none; }
+    #chat-style, #avatar-mode, #speech-engine, #elevenlabs-voice { width:100%; max-width:none; }
     #controls button { flex:1; }
     #controls #camera-toggle { flex:0 0 100%; }
   }
   @media (prefers-reduced-motion:reduce) { button { transition:none; } }
 
   /* ---- Cáo Luna: trạng thái trò chuyện ---- */
-  #stage { position:relative; isolation:isolate; aspect-ratio:1; }
-  .fox-avatar { position:relative; z-index:1; display:block; width:100%; height:100%; object-fit:contain;
+  #stage { position:relative; isolation:isolate; aspect-ratio:1; max-width:320px; margin:0 auto; }
+  .fox-avatar { position:relative; z-index:1; display:block; width:100%; height:100%; object-fit:cover;
+    border-radius:28px; box-shadow:0 12px 28px rgba(0,0,0,0.28); border:3px solid rgba(165,180,252,0.4);
     filter:drop-shadow(0 16px 18px #3d34732e); transform-origin:50% 82%; }
-  .idle .fox-avatar { animation:fox-idle 3.8s ease-in-out infinite; }
-  .speaking .fox-avatar { animation:fox-talk .42s ease-in-out infinite alternate; }
-  .listening .fox-avatar { animation:fox-listen 1s ease-in-out infinite alternate; }
-  .think .fox-avatar { animation:fox-think .65s ease-in-out 2; }
-  .nod .fox-avatar { animation:fox-nod .45s ease-in-out 2; }
-  .wave .fox-avatar { animation:fox-wave .55s ease-in-out 4; }
-  .surprised .fox-avatar { animation:fox-surprise .55s ease-out 1; }
-  .sad .fox-avatar { animation:fox-sad .55s ease-in-out 1; }
-  .laugh .fox-avatar { animation:fox-laugh .24s ease-in-out 6; }
+  .idle .fox-avatar { animation:human-idle 3.8s ease-in-out infinite; }
+  .speaking .fox-avatar { animation:human-talk .42s ease-in-out infinite alternate; }
+  .listening .fox-avatar { animation:human-listen 1s ease-in-out infinite alternate; }
+  .think .fox-avatar { animation:human-think .65s ease-in-out 2; }
+  .nod .fox-avatar { animation:human-nod .45s ease-in-out 2; }
+  .wave .fox-avatar { animation:human-wave .55s ease-in-out 4; }
+  .surprised .fox-avatar { animation:human-surprise .55s ease-out 1; }
+  .sad .fox-avatar { animation:human-sad .55s ease-in-out 1; }
+  .laugh .fox-avatar { animation:human-laugh .24s ease-in-out 6; }
   .fox-orbit { position:absolute; z-index:0; inset:8%; border:1px solid #9887ef42; border-radius:50%;
     background:radial-gradient(circle,#fff4 0,#e8e4ff18 54%,transparent 72%); }
   .fox-orbit::before,.fox-orbit::after { position:absolute; border:1px solid #a798ef35; border-radius:50%; content:""; }
@@ -166,23 +167,35 @@
   .speaking .fox-soundwave.wave-two { animation-delay:.36s; }
   .listening .fox-orbit { animation:listen-glow 1s ease-in-out infinite alternate; }
   .face-smile .fox-spark,.face-laugh .fox-spark { opacity:1; animation:spark-twinkle .8s ease-in-out infinite alternate; }
-  @keyframes fox-idle { 0%,100% { transform:translateY(0) rotate(-1deg); } 50% { transform:translateY(-7px) rotate(1deg); } }
-  @keyframes fox-talk { from { transform:translateY(0) rotate(-1deg) scale(1); } to { transform:translateY(-5px) rotate(1deg) scale(1.035); } }
-  @keyframes fox-listen { from { transform:rotate(-3deg) translateY(1px); } to { transform:rotate(3deg) translateY(-3px); } }
-  @keyframes fox-think { 50% { transform:rotate(-5deg) translateY(-4px); } }
-  @keyframes fox-nod { 50% { transform:translateY(8px) rotate(2deg); } }
-  @keyframes fox-wave { 50% { transform:rotate(5deg) translateY(-4px); } }
-  @keyframes fox-surprise { 45% { transform:scale(1.08) translateY(-9px); } }
-  @keyframes fox-sad { 50% { transform:translateY(5px) rotate(3deg) scale(.98); } }
-  @keyframes fox-laugh { 50% { transform:translateY(-7px) rotate(3deg); } }
+  @keyframes human-idle { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-4px); } }
+  @keyframes human-talk { from { transform:scale(1); } to { transform:scale(1.018); } }
+  @keyframes human-listen { from { transform:translateY(1px); } to { transform:translateY(-3px); } }
+  @keyframes human-think { 50% { transform:translateY(-4px) scale(0.99); } }
+  @keyframes human-nod { 50% { transform:translateY(6px); } }
+  @keyframes human-wave { 50% { transform:scale(1.02); } }
+  @keyframes human-surprise { 45% { transform:scale(1.03) translateY(-6px); } }
+  @keyframes human-sad { 50% { transform:translateY(4px) scale(.99); } }
+  @keyframes human-laugh { 50% { transform:translateY(-4px) scale(1.015); } }
   @keyframes soundwave { 0% { opacity:.65; transform:translateX(-50%) scale(.78); } 100% { opacity:0; transform:translateX(-50%) scale(1.25); } }
   @keyframes listen-glow { to { box-shadow:0 0 30px #77dce46b,inset 0 0 25px #8f7cf235; } }
   @keyframes spark-twinkle { to { transform:translateY(-5px) scale(1.25); } }
-  @media (prefers-reduced-motion:reduce) { .fox-avatar,.fox-orbit,.fox-spark,.fox-soundwave { animation:none !important; } }
+  .audio-visualizer-bar { display:flex; align-items:center; justify-content:center; gap:4px; height:24px; margin-top:8px; }
+  .audio-bar { width:4px; height:6px; background:#818cf8; border-radius:2px; transition:height 0.1s ease; }
+  .speaking .audio-bar:nth-child(1) { animation:soundBar 0.5s infinite alternate; }
+  .speaking .audio-bar:nth-child(2) { animation:soundBar 0.7s infinite alternate 0.1s; }
+  .speaking .audio-bar:nth-child(3) { animation:soundBar 0.4s infinite alternate 0.2s; }
+  .speaking .audio-bar:nth-child(4) { animation:soundBar 0.6s infinite alternate 0.15s; }
+  .speaking .audio-bar:nth-child(5) { animation:soundBar 0.8s infinite alternate 0.25s; }
+  @keyframes soundBar { 0% { height:4px; } 100% { height:22px; } }
+  .word-token { opacity: 0; display: inline; transition: opacity 0.15s ease-out, color 0.2s ease, text-shadow 0.2s ease; }
+  .word-token.revealed { opacity: 1; }
+  .word-token.just-spoken { color: #a5b4fc !important; text-shadow: 0 0 8px rgba(165, 180, 252, 0.7); font-weight: 600; }
+  .suggestions-card { transition: opacity 0.4s ease-in; }
+  @media (prefers-reduced-motion:reduce) { .fox-avatar,.fox-orbit,.fox-spark,.fox-soundwave,.audio-bar,.word-token { animation:none !important; transition:none !important; opacity:1 !important; } }
 </style>
 <link rel="stylesheet" href="/bright-theme.css">
-<link rel="stylesheet" href="/app-theme.css?v=avatar-picker-v4">
-<link rel="stylesheet" href="/avatar-picker.css?v=avatar-picker-v4">
+<link rel="stylesheet" href="/app-theme.css?v=human-real-v12">
+<link rel="stylesheet" href="/avatar-picker.css?v=human-real-v12">
 </head>
 <body class="chat-mode">
 <div class="chat-shell">
@@ -209,6 +222,11 @@
     <option value="normal">Bình thường</option>
     <option value="genz">Vui nhộn kiểu Gen Z</option>
   </select>
+  <label for="avatar-mode">Avatar:</label>
+  <select id="avatar-mode">
+    <option value="local" selected>⚡ AI RTX 3050 (Nhép chuẩn từng từ - Không giật lag)</option>
+    <option value="did">🎬 Video Cloud D-ID</option>
+  </select>
   <label for="speech-engine">Giọng đọc:</label>
   <select id="speech-engine">
     <option value="elevenlabs">ElevenLabs</option>
@@ -216,8 +234,9 @@
     <option value="browser">Trình duyệt</option>
   </select>
   <select id="elevenlabs-voice" aria-label="Chọn giọng ElevenLabs">
-    <option value="Xb7hH8MSUJpSbSDYk0k2">Đang tải giọng...</option>
+    <option value="iP95p4xoKVk53GoZ742B">Chris - Charming (Đang tải...)</option>
   </select>
+  <button id="btn-did-key-toggle" type="button" style="padding:4px 10px; border-radius:6px; border:1px solid #6366f1; background:rgba(99,102,241,0.15); color:#a5b4fc; font-size:0.8rem; cursor:pointer;" title="Cài đặt D-ID Key">🔑 D-ID Key</button>
 </div>
  </div>
 <main class="chat-layout">
@@ -230,9 +249,21 @@
     <span class="fox-soundwave wave-one"></span>
     <span class="fox-soundwave wave-two"></span>
   </div>
-  <img class="fox-avatar" data-player-avatar src="/images/lua-fox.png" alt="Avatar của bạn">
+  <img id="avatar-human-img" class="fox-avatar" src="/images/ai-human-avatar.jpg" alt="Gia sư AI 3D" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:28px; z-index:1; display:block;">
+  <video id="avatar-human-video" class="avatar-human-video" playsinline preload="auto" src="/videos/luna_greeting_synced.mp4" style="position:relative; z-index:2; width:100%; height:100%; object-fit:cover; border-radius:28px; box-shadow:0 12px 28px rgba(0,0,0,0.28); border:3px solid rgba(165,180,252,0.4); display:none;"></video>
+  <div id="human-avatar-badge" style="position:absolute; top:12px; left:12px; background:rgba(15,23,42,0.88); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.18); padding:5px 12px; border-radius:20px; font-size:0.75rem; color:#a5b4fc; z-index:5; white-space:nowrap; display:flex; align-items:center; gap:6px; pointer-events:none;">
+    <span id="human-status-dot" style="width:7px; height:7px; border-radius:50%; background:#6366f1;"></span>
+    <span id="human-status-label">Gia sư AI 3D</span>
+  </div>
 </div>
-<p class="character-caption">Avatar đại diện của bạn trong ứng dụng và phòng chơi.</p>
+<div class="audio-visualizer-bar" id="visualizer">
+  <div class="audio-bar"></div>
+  <div class="audio-bar"></div>
+  <div class="audio-bar"></div>
+  <div class="audio-bar"></div>
+  <div class="audio-bar"></div>
+</div>
+<p class="character-caption" style="margin-top:6px;">Gia sư AI 3D đồng hành cùng bạn.</p>
 </section>
 <section class="conversation-card" aria-labelledby="conversation-heading">
 <h1 id="conversation-heading">Cuộc trò chuyện</h1>
@@ -297,7 +328,14 @@ async function loadElevenLabsVoices() {
     }
     if (!voicesResponse.ok) throw new Error(voicesData.error || "Không tải được giọng ElevenLabs.");
     elevenLabsVoiceSelect.replaceChildren();
-    let selectedVoice = localStorage.getItem("luna-elevenlabs-voice") || status.voiceId;
+    const CHRIS_VOICE_ID = "iP95p4xoKVk53GoZ742B";
+    let savedVoice = localStorage.getItem("luna-elevenlabs-voice");
+    if (!localStorage.getItem("luna-voice-chris-default") || savedVoice === "Xb7hH8MSUJpSbSDYk0k2") {
+      savedVoice = CHRIS_VOICE_ID;
+      localStorage.setItem("luna-elevenlabs-voice", CHRIS_VOICE_ID);
+      localStorage.setItem("luna-voice-chris-default", "1");
+    }
+    let selectedVoice = savedVoice || status.voiceId || CHRIS_VOICE_ID;
     let hasSelectedVoice = false;
     for (const voice of voicesData.voices || []) {
       elevenLabsVoiceSelect.add(new Option(voice.name || voice.voice_id, voice.voice_id));
@@ -443,6 +481,15 @@ function updateSpeechControls() {
 
 function stopSpeaking() {
   speechGeneration++;
+  if (typeof activeVideoPoll !== "undefined" && activeVideoPoll) {
+    clearInterval(activeVideoPoll);
+    activeVideoPoll = null;
+  }
+  const vid = $("avatar-human-video");
+  if (vid) {
+    vid.pause();
+    vid.currentTime = 0;
+  }
   if (currentAudio) currentAudio.pause();
   if (finishCurrentSpeech) finishCurrentSpeech();
   stopTextReveal();
@@ -478,15 +525,35 @@ function playGesture(tag) {
   if (tag === "smile") stage.classList.add("face-smile");
 }
 
-/* ---------- Hiệu ứng cáo khi Luna nói ---------- */
+/* ---------- Hiệu ứng khi Luna nói ---------- */
 function startMouth() {
   stage.className = "speaking";
+  const viz = $("visualizer");
+  if (viz) viz.classList.add("speaking");
+  const badgeDot = $("human-status-dot");
+  const badgeLabel = $("human-status-label");
+  if (badgeDot) badgeDot.style.background = "#10b981";
+  if (badgeLabel) badgeLabel.textContent = "Luna đang trình bày...";
 }
 function stopMouth() {
   clearState();
+  const viz = $("visualizer");
+  if (viz) viz.classList.remove("speaking");
+  const badgeDot = $("human-status-dot");
+  const badgeLabel = $("human-status-label");
+  if (badgeDot) badgeDot.style.background = "#6366f1";
+  if (badgeLabel) badgeLabel.textContent = "Gia sư AI 3D";
+  if (typeof setViseme === "function") setViseme("REST");
+  const vid = $("avatar-human-video");
+  if (vid) {
+    vid.pause();
+    vid.currentTime = 0;
+  }
 }
 
-function renderBubbleText(text, suggestions = null) {
+let textRevealTimer = null;
+
+function renderBubbleText(text, suggestions = null, animate = false) {
   const rawSource = sanitizePersonaName(String(text || ""));
   const cleanText = rawSource.replace(/\[(?:smile|nod|think|wave|surprised|sad|laugh)\]/g, "").trim();
   bubble.textContent = rawSource;
@@ -494,6 +561,23 @@ function renderBubbleText(text, suggestions = null) {
   answerDisplay.replaceChildren();
   answerDisplay.dataset.rawSource = rawSource;
   answerDisplay.dataset.displayMode = "formatted";
+
+  let wordIdx = 0;
+  function appendTokens(container, str) {
+    const parts = str.split(/(\s+)/);
+    for (const part of parts) {
+      if (!part) continue;
+      if (/^\s+$/.test(part)) {
+        container.append(document.createTextNode(part));
+      } else {
+        const span = document.createElement("span");
+        span.className = animate ? "word-token" : "word-token revealed";
+        span.dataset.wordIdx = String(wordIdx++);
+        span.textContent = part;
+        container.append(span);
+      }
+    }
+  }
 
   for (const line of cleanText.split(/\r?\n/)) {
     const trimmed = line.trim();
@@ -520,16 +604,18 @@ function renderBubbleText(text, suggestions = null) {
       const bold = part.match(/^\*\*([^*]+)\*\*$/);
       if (bold) {
         const strong = document.createElement("strong");
-        strong.textContent = bold[1];
+        appendTokens(strong, bold[1]);
         row.append(strong);
       } else if (part) {
         const colonLabel = part.match(/^([^:]{1,80}:)(\s*)(.*)$/);
         if (colonLabel && !part.includes("http")) {
           const label = document.createElement("strong");
-          label.textContent = colonLabel[1];
-          row.append(label, document.createTextNode(colonLabel[2] + colonLabel[3]));
+          appendTokens(label, colonLabel[1]);
+          row.append(label);
+          if (colonLabel[2]) row.append(document.createTextNode(colonLabel[2]));
+          if (colonLabel[3]) appendTokens(row, colonLabel[3]);
         } else {
-          row.append(document.createTextNode(part));
+          appendTokens(row, part);
         }
       }
     }
@@ -538,6 +624,8 @@ function renderBubbleText(text, suggestions = null) {
 
   if (suggestions && Array.isArray(suggestions.links) && suggestions.links.length) {
     const card = document.createElement("div");
+    card.className = "suggestions-card";
+    if (animate) card.style.display = "none";
     card.style.marginTop = "14px";
     card.style.paddingTop = "10px";
     card.style.borderTop = "1px solid #e3e1ef";
@@ -572,11 +660,250 @@ function renderBubbleText(text, suggestions = null) {
 function stopTextReveal(_text = null) {
   cancelAnimationFrame(textRevealFrame);
   textRevealFrame = 0;
+  if (textRevealTimer) {
+    clearInterval(textRevealTimer);
+    textRevealTimer = null;
+  }
+  document.querySelectorAll("#answer-display .word-token").forEach(el => el.classList.add("revealed"));
+  const card = document.querySelector(".suggestions-card");
+  if (card) card.style.display = "block";
 }
 
-function revealTextWithAudio(_text, _audio) {
+let audioCtx = null;
+let analyserNode = null;
+let currentAudioSource = null;
+
+const VISEME_MAP = {
+  REST: "/images/ai-human-avatar.jpg",
+  A: "/images/visemes/frame_01_0_25s.jpg",
+  O: "/images/visemes/frame_12_3_00s.jpg",
+  E: "/images/visemes/frame_23_5_75s.jpg",
+  M: "/images/visemes/frame_20_5_00s.jpg"
+};
+
+// Preload tất cả hình ảnh visemes ngay khi khởi động trang để chuyển đổi 0ms không độ trễ
+const preloadedVisemes = {};
+for (const [vKey, vUrl] of Object.entries(VISEME_MAP)) {
+  const vImg = new Image();
+  vImg.src = vUrl;
+  preloadedVisemes[vKey] = vImg;
+}
+
+let activeViseme = "REST";
+function setViseme(target) {
+  activeViseme = target;
+  // Không đổi ảnh tĩnh toàn khung hình để chống rung lắc, giật lag
+}
+
+// Bộ phân tích ngữ âm tiếng Việt để ánh xạ từ sang khẩu hình chính xác
+function getVisemeForVietnameseWord(word) {
+  if (!word) return "REST";
+  const w = word.toLowerCase().replace(/[^a-zàáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/g, "");
+  if (!w) return "REST";
+
+  // 1. Nhóm O (Tròn môi: u, ú, ù, ô, ố, ồ, o, ó, ò, ơ)
+  if (/[uùúủũụưừứửữựoòóỏõọôồốổỗộơờớởỡợ]/.test(w)) {
+    if (/[aàáảãạăằắẳẵặâầấẩẫậ]/.test(w) && !/oa|oà|oá|ua|uà|uá/.test(w)) {
+      return "A";
+    }
+    return "O";
+  }
+
+  // 2. Nhóm A (Mở rộng hàm: a, ă, â)
+  if (/[aàáảãạăằắẳẵặâầấẩẫậ]/.test(w)) {
+    return "A";
+  }
+
+  // 3. Nhóm E (Bè ngang/Cười/Nhe răng: e, ê, i, y)
+  if (/[eèéẻẽẹêềếểễệiìíỉĩịyỳýỷỹỵ]/.test(w)) {
+    return "E";
+  }
+
+  // 4. Nhóm M/P/B (Khép môi)
+  if (/^[mbp]/.test(w) || /[mp]$/.test(w)) {
+    return "M";
+  }
+
+  return "A";
+}
+
+function getAudioAnalyser(audioEl) {
+  if (!window.AudioContext && !window.webkitAudioContext) return null;
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    if (!analyserNode) {
+      analyserNode = audioCtx.createAnalyser();
+      analyserNode.fftSize = 128;
+      analyserNode.smoothingTimeConstant = 0.3;
+    }
+    if (!currentAudioSource || currentAudioSource.mediaElement !== audioEl) {
+      if (currentAudioSource) {
+        try { currentAudioSource.disconnect(); } catch {}
+      }
+      currentAudioSource = audioCtx.createMediaElementSource(audioEl);
+      currentAudioSource.connect(analyserNode);
+      analyserNode.connect(audioCtx.destination);
+      currentAudioSource.mediaElement = audioEl;
+    }
+    return analyserNode;
+  } catch (err) {
+    console.warn("AudioContext setup:", err);
+    return null;
+  }
+}
+
+function revealTextWithAudio(text, audio) {
   cancelAnimationFrame(textRevealFrame);
-  textRevealFrame = 0;
+  if (textRevealTimer) {
+    clearInterval(textRevealTimer);
+    textRevealTimer = null;
+  }
+  const tokens = Array.from(document.querySelectorAll("#answer-display .word-token"));
+  const total = tokens.length;
+  if (!total) return;
+
+  const vid = $("avatar-human-video");
+  const img = $("avatar-human-img");
+
+  if (audio === vid) {
+    if (vid) vid.style.display = "block";
+    if (img) img.style.display = "none";
+  }
+
+  const analyser = (audio instanceof HTMLAudioElement) ? getAudioAnalyser(audio) : null;
+  const freqData = analyser ? new Uint8Array(analyser.frequencyBinCount) : null;
+
+  let lastRevealed = -1;
+  let lastSpokenTime = 0;
+  let currentTargetViseme = "REST";
+
+  // Trọng số ký tự & độ trễ nghỉ hơi để chữ chạy khớp 100% từng từ với âm thanh thực tế
+  const tokenWeights = tokens.map((tok) => {
+    const w = (tok.textContent || "").trim();
+    let weight = Math.max(w.length, 1);
+    if (/[,;:]$/.test(w)) weight += 4; // Độ trễ nghỉ dấu phẩy
+    if (/[.!?]$/.test(w)) weight += 8; // Độ trễ nghỉ kết câu
+    return weight;
+  });
+  const totalWeight = tokenWeights.reduce((a, b) => a + b, 0) || 1;
+  const cumWeights = [];
+  let curCum = 0;
+  for (let i = 0; i < tokenWeights.length; i++) {
+    curCum += tokenWeights[i];
+    cumWeights.push(curCum);
+  }
+
+  function syncTokens(currentTime, duration) {
+    const dur = (isFinite(duration) && duration > 0) ? duration : Math.max(text.length * 0.055, 1);
+    // Bù độ trễ ban đầu ~180ms trước khi âm tiết đầu tiên phát ra
+    const leadIn = 0.18;
+    const effectiveTime = Math.max(0, currentTime - leadIn);
+    const effectiveDur = Math.max(0.1, dur - leadIn);
+    const progress = Math.min(Math.max(effectiveTime / effectiveDur, 0), 1);
+    const targetWeight = progress * totalWeight;
+
+    let target = 0;
+    while (target < cumWeights.length - 1 && cumWeights[target] < targetWeight) {
+      target++;
+    }
+
+    if (target > lastRevealed) {
+      for (let i = lastRevealed + 1; i <= target; i++) {
+        if (tokens[i]) {
+          tokens[i].classList.add("revealed");
+          tokens[i].classList.add("just-spoken");
+          lastSpokenTime = performance.now();
+          const t = tokens[i];
+          setTimeout(() => t.classList.remove("just-spoken"), 240);
+
+          // Cập nhật khẩu hình chuẩn theo âm tiết của từ vừa phát âm
+          const wordText = tokens[i].textContent || "";
+          currentTargetViseme = getVisemeForVietnameseWord(wordText);
+        }
+      }
+      lastRevealed = target;
+      startMouth(); // Nhép khẩu hình khớp khi từng từ hiện lên
+    }
+  }
+
+  function onFrame() {
+    if (!audio || audio.ended) {
+      stopTextReveal();
+      stopMouth();
+      return;
+    }
+    if (audio.paused) {
+      setViseme("REST");
+      if (vid && !vid.paused) vid.pause();
+      if (speaking) textRevealFrame = requestAnimationFrame(onFrame);
+      return;
+    }
+
+    // Nhịp mở miệng chuẩn xác theo âm lượng thực tế của giọng nói
+    let isSpeakingActive = false;
+    if (analyser && freqData) {
+      analyser.getByteFrequencyData(freqData);
+      let sum = 0;
+      for (let i = 0; i < freqData.length; i++) sum += freqData[i];
+      const avgVol = sum / freqData.length;
+      isSpeakingActive = avgVol > 8 || (performance.now() - lastSpokenTime < 180);
+    } else {
+      isSpeakingActive = (performance.now() - lastSpokenTime < 240);
+    }
+
+    if (vid && audio === vid) {
+      // Video AI tự phát âm và hình của chính nó, 100% khớp khẩu hình tuyệt đối
+    } else if (vid && audio !== vid) {
+      // Khi phát audio rời, giữ video chạy êm hoặc ảnh tĩnh ổn định, không ngắt quãng
+      if (vid.paused && isSpeakingActive) vid.play().catch(() => {});
+    }
+
+    syncTokens(audio.currentTime, audio.duration);
+    textRevealFrame = requestAnimationFrame(onFrame);
+  }
+
+  audio.ontimeupdate = () => {
+    if (!audio || audio.paused || audio.ended) return;
+    syncTokens(audio.currentTime, audio.duration);
+  };
+
+  textRevealFrame = requestAnimationFrame(onFrame);
+}
+
+function revealTextWithTimer(durationMs) {
+  cancelAnimationFrame(textRevealFrame);
+  if (textRevealTimer) clearInterval(textRevealTimer);
+
+  const tokens = Array.from(document.querySelectorAll("#answer-display .word-token"));
+  const total = tokens.length;
+  if (!total) return;
+
+  const interval = Math.max(Math.floor(durationMs / total), 45);
+  let idx = 0;
+  startMouth();
+
+  textRevealTimer = setInterval(() => {
+    if (tokens[idx]) {
+      tokens[idx].classList.add("revealed");
+      tokens[idx].classList.add("just-spoken");
+      const t = tokens[idx];
+      setTimeout(() => t.classList.remove("just-spoken"), 220);
+      startMouth();
+    }
+    idx++;
+    if (idx >= total) {
+      clearInterval(textRevealTimer);
+      textRevealTimer = null;
+      stopMouth();
+      const card = document.querySelector(".suggestions-card");
+      if (card) card.style.display = "block";
+    }
+  }, interval);
 }
 
 /* ---------- Giọng đọc Google gTTS ---------- */
@@ -651,7 +978,7 @@ function speakWithBrowser(text) {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "vi-VN";
-    utterance.rate = 1.02;
+    utterance.rate = 1.10;
     utterance.pitch = 1.08;
     const vietnameseVoice = speechSynthesis.getVoices().find((voice) => voice.lang.toLowerCase().startsWith("vi"));
     if (vietnameseVoice) utterance.voice = vietnameseVoice;
@@ -673,7 +1000,25 @@ function speakWithBrowser(text) {
       updateSpeechControls();
       startMouth();
     };
-    utterance.onboundary = null;
+    utterance.onboundary = (e) => {
+      if (e.name === "word") {
+        const tokens = Array.from(document.querySelectorAll("#answer-display .word-token"));
+        if (!tokens.length) return;
+        const progress = Math.min(e.charIndex / (text.length || 1), 1);
+        const target = Math.min(Math.floor(progress * tokens.length), tokens.length - 1);
+        for (let i = 0; i <= target; i++) {
+          if (tokens[i]) {
+            tokens[i].classList.add("revealed");
+            if (i === target) {
+              tokens[i].classList.add("just-spoken");
+              const t = tokens[i];
+              setTimeout(() => t.classList.remove("just-spoken"), 250);
+            }
+          }
+        }
+        startMouth();
+      }
+    };
     utterance.onend = () => {
       finish();
     };
@@ -690,7 +1035,7 @@ async function speakWithElevenLabs(text) {
   const response = await fetch("/api/elevenlabs/speak", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, voiceId }),
+    body: JSON.stringify({ text, voiceId, speed: 1.10 }),
   });
   if (generation !== speechGeneration) return;
   if (!response.ok) {
@@ -756,14 +1101,290 @@ async function speak(text) {
   }
 }
 
-/* ---------- Xử lý câu trả lời có thẻ ---------- */
+/* ---------- Xử lý Video Người Thật & Câu trả lời ---------- */
+const avatarHumanImg = $("avatar-human-img");
+const avatarHumanVideo = $("avatar-human-video");
+const btnDidKeyToggle = $("btn-did-key-toggle");
+const avatarModeSelect = $("avatar-mode");
+
+if (avatarModeSelect) {
+  const savedMode = localStorage.getItem("luna-avatar-mode") || "local";
+  avatarModeSelect.value = (savedMode === "did" ? "did" : "local");
+  avatarModeSelect.addEventListener("change", () => {
+    localStorage.setItem("luna-avatar-mode", avatarModeSelect.value);
+  });
+}
+
+// Cập nhật số credit D-ID lên nút
+async function refreshDidCredits() {
+  if (!btnDidKeyToggle) return;
+  try {
+    const customKey = localStorage.getItem("saved_did_key") || "";
+    const res = await fetch("/api/did/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ apiKey: customKey }),
+    });
+    const data = await res.json();
+    if (data.configured) {
+      const cr = data.remainingCredits ?? "?";
+      btnDidKeyToggle.textContent = `🔑 D-ID (${cr} cr)`;
+      btnDidKeyToggle.title = `D-ID còn ${cr} credits. Bấm để đổi key mới.`;
+    }
+  } catch {}
+}
+refreshDidCredits();
+
+if (btnDidKeyToggle) {
+  btnDidKeyToggle.addEventListener("click", async () => {
+    const current = localStorage.getItem("saved_did_key") || "";
+    const key = prompt(
+      "Nhập D-ID API Key để Người Thật trả lời bằng video (Lấy miễn phí tại studio.d-id.com):\n" +
+      "Tài khoản miễn phí mới được tặng 20 credits tạo video khẩu hình AI.",
+      current
+    );
+    if (key !== null) {
+      const trimmed = key.trim();
+      localStorage.setItem("saved_did_key", trimmed);
+      if (trimmed) {
+        statusEl.textContent = "Đang kiểm tra và lưu D-ID Key...";
+        try {
+          const res = await fetch("/api/did/save-key", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ apiKey: trimmed }),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            btnDidKeyToggle.textContent = `🔑 D-ID (${data.remainingCredits ?? "?"} cr)`;
+            alert(`✓ Đã lưu D-ID Key thành công! Còn lại ${data.remainingCredits} credits.`);
+          } else {
+            alert(`⚠️ Key không hợp lệ: ${data.error}`);
+          }
+        } catch {
+          alert(`Đã lưu key vào trình duyệt: ${trimmed.slice(0, 8)}...`);
+        }
+      }
+    }
+  });
+}
+
+let activeVideoPoll = null;
+
+function extractVideoSpeechText(fullText, maxLength = 3500) {
+  if (!fullText) return "";
+  const clean = fullText
+    .replace(/\[(?:smile|nod|think|wave|surprised|sad|laugh)\]/g, "")
+    .replace(/^#+\s+/gm, "")
+    .replace(/\*\*/g, "")
+    .replace(/^\d+[\.)]\s+/gm, "")
+    .replace(/^[-*•]\s+/gm, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/https?:\/\/\S+/g, "")
+    .trim();
+
+  if (clean.length <= maxLength) return clean;
+
+  // Tách câu hoàn chỉnh đầy đủ ngữ pháp, không cắt cụt giữa chừng
+  const sentences = clean.split(/(?<=[.?!;:\n])\s+/);
+  let summary = "";
+  for (const s of sentences) {
+    const trimmed = s.trim();
+    if (!trimmed) continue;
+    if ((summary + " " + trimmed).trim().length <= maxLength) {
+      summary = (summary ? summary + " " + trimmed : trimmed);
+    } else {
+      if (!summary) summary = trimmed.slice(0, maxLength); // Luôn đảm bảo trọn vẹn câu
+      break;
+    }
+  }
+  return summary || clean.slice(0, maxLength);
+}
+
+async function playRealVideo(videoUrl, spokenText) {
+  const vid = $("avatar-human-video");
+  const img = $("avatar-human-img");
+  if (!vid) return;
+
+  vid.src = videoUrl;
+  vid.muted = false; // Video D-ID phát tiếng của chính nó, miệng khớp 100%!
+  vid.style.display = "block";
+  if (img) img.style.display = "none";
+
+  const badgeDot = $("human-status-dot");
+  const badgeLabel = $("human-status-label");
+  if (badgeDot) badgeDot.style.background = "#10b981";
+  if (badgeLabel) badgeLabel.textContent = "Luna đang giảng bài...";
+  statusEl.textContent = "Luna đang giảng bài";
+
+  const viz = $("visualizer");
+  if (viz) viz.classList.add("speaking");
+
+  vid.onplay = () => {
+    speaking = true;
+    updateSpeechControls();
+    revealTextWithAudio(spokenText, vid);
+  };
+
+  return new Promise((resolve) => {
+    const finish = () => {
+      speaking = false;
+      stopTextReveal();
+      if (viz) viz.classList.remove("speaking");
+      if (badgeDot) badgeDot.style.background = "#6366f1";
+      if (badgeLabel) badgeLabel.textContent = "Gia sư AI 3D";
+      vid.pause();
+      vid.currentTime = 0; // Giữ video ở khung hình miệng khép, mỉm cười tự nhiên
+      updateSpeechControls();
+      resolve();
+    };
+
+    vid.onended = finish;
+    vid.onerror = () => {
+      vid.currentTime = 0;
+      resolve();
+    };
+    vid.play().catch(() => resolve());
+  });
+}
+
+async function generateAndPlayDidVideo(text) {
+  if (activeVideoPoll) {
+    clearInterval(activeVideoPoll);
+    activeVideoPoll = null;
+  }
+
+  const spokenSnippet = extractVideoSpeechText(text, 750);
+  if (!spokenSnippet) return false;
+
+  const badgeDot = $("human-status-dot");
+  const badgeLabel = $("human-status-label");
+  if (badgeDot) badgeDot.style.background = "#f59e0b";
+  if (badgeLabel) badgeLabel.textContent = "AI đang tạo video Người Thật (D-ID)...";
+  statusEl.textContent = "Đang tạo video Người Thật nhép chuẩn câu trả lời...";
+
+  try {
+    const customKey = localStorage.getItem("saved_did_key") || "";
+    const res = await fetch("/api/did/generate-talk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: spokenSnippet, apiKey: customKey }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "D-ID không khả dụng.");
+
+    // Nếu video đã được render trước đó (Instant Cache)
+    if (data.cached && data.resultUrl) {
+      await playRealVideo(data.resultUrl, spokenSnippet);
+      refreshDidCredits();
+      return true;
+    }
+
+    // Polling chờ D-ID render
+    const talkId = data.talkId;
+    if (!talkId) throw new Error("Không nhận được mã video từ D-ID.");
+
+    const pollStartTime = Date.now();
+    return await new Promise((resolve) => {
+      activeVideoPoll = setInterval(async () => {
+        try {
+          const sRes = await fetch(`/api/did/talk-status/${encodeURIComponent(talkId)}?apiKey=${encodeURIComponent(customKey)}`);
+          const sData = await sRes.json();
+          if (sData.status === "done" && sData.resultUrl) {
+            clearInterval(activeVideoPoll);
+            activeVideoPoll = null;
+            await playRealVideo(sData.resultUrl, spokenSnippet);
+            refreshDidCredits();
+            resolve(true);
+          } else if (sData.status === "error" || Date.now() - pollStartTime > 45000) {
+            clearInterval(activeVideoPoll);
+            activeVideoPoll = null;
+            resolve(false);
+          }
+        } catch {
+          clearInterval(activeVideoPoll);
+          activeVideoPoll = null;
+          resolve(false);
+        }
+      }, 1500);
+    });
+  } catch (err) {
+    console.warn("D-ID generation fallback:", err);
+    return false;
+  }
+}
+
+async function generateAndPlayLocalAiVideo(text) {
+  const spokenSnippet = extractVideoSpeechText(text, 3500);
+  if (!spokenSnippet) return false;
+
+  const badgeDot = $("human-status-dot");
+  const badgeLabel = $("human-status-label");
+  if (badgeDot) badgeDot.style.background = "#10b981";
+  if (badgeLabel) badgeLabel.textContent = "AI RTX 3050 đang tạo video...";
+  statusEl.textContent = "Luna đang đồng bộ video nhép miệng qua card RTX 3050...";
+
+  try {
+    const voiceId = elevenLabsVoiceSelect ? elevenLabsVoiceSelect.value : "";
+    const res = await fetch("/api/avatar/generate-video", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: spokenSnippet, voiceId, speed: 1.10 }),
+    });
+
+    const data = await res.json();
+    if (res.ok && data.ok && data.videoUrl) {
+      await playRealVideo(data.videoUrl, spokenSnippet);
+      return true;
+    }
+  } catch (err) {
+    console.warn("[LocalVideo] Lỗi tạo video AI cục bộ:", err);
+  }
+  return false;
+}
+
 async function performReply(text, suggestions = null) {
   const visibleText = answerDisplay.innerText.replace(/\s+/g, " ").trim();
   const spokenText = visibleText || text.replace(/\[(?:smile|nod|think|wave|surprised|sad|laugh)\]/g, "").replace(/\s+/g, " ").trim();
+
+  const avatarMode = avatarModeSelect ? avatarModeSelect.value : (localStorage.getItem("luna-avatar-mode") || "local");
   const shouldSpeak = spokenText && (interactionMode === "voice" || chatSpeechEnabled);
+
   for (const match of text.matchAll(/\[(smile|nod|think|wave|surprised|sad|laugh)\]/g)) {
     playGesture(match[1]);
   }
+
+  const vid = $("avatar-human-video");
+  const img = $("avatar-human-img");
+
+  // 1. Chế độ AI Cục bộ chạy RTX 3050 (Mặc định - Nhép chuẩn 100%, mượt mà, miễn phí vĩnh viễn)
+  if (avatarMode === "local" && shouldSpeak) {
+    const videoPlayed = await generateAndPlayLocalAiVideo(spokenText);
+    if (videoPlayed) {
+      stopTextReveal();
+      setTimeout(clearState, 600);
+      return true;
+    }
+    // Tự động fallback sang phát âm thanh trực tiếp nếu có lỗi
+  }
+
+  // 2. Chế độ Video Cloud D-ID (nếu người dùng chủ động chọn)
+  if (avatarMode === "did" && shouldSpeak) {
+    const videoPlayed = await generateAndPlayDidVideo(spokenText);
+    if (videoPlayed) {
+      stopTextReveal();
+      setTimeout(clearState, 600);
+      return true;
+    }
+    statusEl.textContent = "D-ID không khả dụng; tự động phát âm thanh trực tiếp.";
+  }
+
+  const badgeDot = $("human-status-dot");
+  const badgeLabel = $("human-status-label");
+  if (badgeDot) badgeDot.style.background = "#10b981";
+  if (badgeLabel) badgeLabel.textContent = "Luna đang giảng bài...";
+
   if (shouldSpeak) {
     try {
       await speak(spokenText);
@@ -771,7 +1392,14 @@ async function performReply(text, suggestions = null) {
     } catch (error) {
       statusEl.textContent = error.message;
       return false;
+    } finally {
+      stopMouth();
+      stopTextReveal();
     }
+  } else {
+    // Nếu tắt giọng đọc, chữ hiện dần theo nhịp gõ
+    const duration = Math.min(Math.max(spokenText.length * 40, 2500), 7000);
+    revealTextWithTimer(duration);
   }
   setTimeout(clearState, 600);
   return true;
@@ -863,8 +1491,8 @@ async function send(userText, attachments = pendingAttachments) {
     history.push({ role: "assistant", content: data.reply });
     saveHistory();
     const verificationStatus = data.verification?.status;
-    renderBubbleText(data.reply, data.suggestions);
-    statusEl.textContent = chatSpeechEnabled || interactionMode === "voice" ? "Luna đang nói" : "";
+    renderBubbleText(data.reply, data.suggestions, true);
+    statusEl.textContent = chatSpeechEnabled || interactionMode === "voice" ? "Luna đang chuẩn bị..." : "";
     keepStatus = !(await performReply(data.reply, data.suggestions));
     if (verificationStatus === "verified") {
       statusEl.textContent = data.verification.fallback

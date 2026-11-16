@@ -4,6 +4,7 @@ import Database from "better-sqlite3";
 import { spawn } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
+import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { createAuth } from "./dangKy_dangNhap/auth.js";
 import { createAvatarProfile } from "./avatar-profile.js";
@@ -15,6 +16,7 @@ import { fetchWithGeminiKeyFallback, getGeminiApiKeys } from "./gemini-api.js";
 import { fetchWithGroqKeyFallback, getGroqApiKeys } from "./groq-api.js";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
+import { createHeyGenRouter } from "./test HeyGen/router.js";
 
 const app = express();
 const projectDir = path.dirname(fileURLToPath(import.meta.url));
@@ -158,7 +160,13 @@ async function findRelatedResources(question) {
 }
 if (process.env.TRUST_PROXY === "true" || true) app.set("trust proxy", 1);
 app.use(express.json({ limit: "15mb" }));
-app.use(express.static(path.join(projectDir, "public")));
+app.use(express.static(path.join(projectDir, "public"), {
+  setHeaders: (res) => {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+  }
+}));
 const auth = createAuth({ projectDir });
 const authPagesDir = path.join(projectDir, "dangKy_dangNhap");
 app.get(["/dangKy_dangNhap", "/dangKy_dangNhap/"], (_req, res) =>
@@ -169,7 +177,9 @@ app.get("/dangKy_dangNhap/session.js", (_req, res) => res.sendFile(path.join(aut
 app.use(auth.sessionMiddleware);
 app.use(auth.router);
 app.use("/api", (req, res, next) => {
-  if (req.path.startsWith("/minigame")) return next();
+  const url = req.originalUrl || req.url || "";
+  console.log("CHECK AUTH API URL:", url);
+  if (url.includes("minigame") || url.includes("heygen") || url.includes("did") || url.includes("avatar")) return next();
   return auth.requireApiAuth(req, res, next);
 });
 const avatarProfile = createAvatarProfile({ projectDir });
@@ -238,6 +248,7 @@ const elevenLabsTestDir = path.join(projectDir, "elevenlabs-test");
 app.get("/elevenlabs-test", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(elevenLabsTestDir, "index.html")));
 app.get("/elevenlabs-test/styles.css", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(elevenLabsTestDir, "styles.css")));
 app.get("/elevenlabs-test/client.js", auth.requirePageAuth, (_req, res) => res.sendFile(path.join(elevenLabsTestDir, "client.js")));
+app.use(createHeyGenRouter({ projectDir }));
 app.use(createMiniGame({
   projectDir,
   generateQuestions: generateMiniGameQuestions,
@@ -1175,7 +1186,7 @@ app.get("/api/elevenlabs/status", (_req, res) => {
     configured: elevenLabsApiKeys.length > 0,
     keyCount: elevenLabsApiKeys.length,
     activeKey: Math.min(elevenLabsKeyCursor + 1, elevenLabsApiKeys.length) || 0,
-    voiceId: process.env.ELEVENLABS_VOICE_ID?.trim() || "",
+    voiceId: process.env.ELEVENLABS_VOICE_ID?.trim() || "iP95p4xoKVk53GoZ742B",
     modelId: process.env.ELEVENLABS_MODEL_ID?.trim() || "eleven_flash_v2_5",
   });
 });
@@ -1184,14 +1195,15 @@ app.get("/api/elevenlabs/voices", async (_req, res) => {
   const apiKeys = getElevenLabsApiKeys();
   if (!apiKeys.length) return res.status(503).json({ error: "Chưa cấu hình ELEVENLABS_API_KEY trong .env." });
   // Chỉ hiển thị các giọng đa ngôn ngữ có phát âm rõ và phù hợp đọc tiếng Việt.
-  // Danh sách được giới hạn cố định để tránh lộ các giọng không phù hợp trong giao diện.
-  const vietnameseCompatibleVoiceIds = new Set([
+  // Đặt Chris lên đầu làm giọng mặc định
+  const preferredVoiceOrder = [
+    "iP95p4xoKVk53GoZ742B", // Chris - Charming
     "Xb7hH8MSUJpSbSDYk0k2", // Alice
     "EXAVITQu4vr4xnSDxMaL", // Sarah
     "XrExE9yKIg1WjnnlVkGX", // Matilda
-    "iP95p4xoKVk53GoZ742B", // Chris
     "nPczCjzI2devNBz1zQrb", // Brian
-  ]);
+  ];
+  const vietnameseCompatibleVoiceIds = new Set(preferredVoiceOrder);
   try {
     let detail = "";
     let response = null;
@@ -1209,18 +1221,26 @@ app.get("/api/elevenlabs/voices", async (_req, res) => {
     const data = JSON.parse(detail);
     const voices = (data.voices || [])
       .filter((voice) => vietnameseCompatibleVoiceIds.has(voice.voice_id))
-      .map(({ voice_id, name, category, labels }) => ({ voice_id, name, category, labels, vietnameseCompatible: true }));
+      .map(({ voice_id, name, category, labels }) => ({ voice_id, name, category, labels, vietnameseCompatible: true }))
+      .sort((a, b) => {
+        const orderA = preferredVoiceOrder.indexOf(a.voice_id);
+        const orderB = preferredVoiceOrder.indexOf(b.voice_id);
+        return (orderA === -1 ? 999 : orderA) - (orderB === -1 ? 999 : orderB);
+      });
     res.json({ voices });
   } catch (error) {
     res.status(502).json({ error: `Không kết nối được ElevenLabs: ${error.message}` });
   }
 });
 
-async function createElevenLabsAudio(text, voiceId, modelId, apiKeys) {
+async function createElevenLabsAudio(text, voiceId, modelId, apiKeys, speed = null) {
   let lastResponse = null;
   let lastDetail = "";
+  const audioSpeed = typeof speed === "number" && speed > 0
+    ? speed
+    : (parseFloat(process.env.ELEVENLABS_SPEED || "1.10") || 1.10);
   for (let index = 0; index < apiKeys.length; index += 1) {
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`, {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}?optimize_streaming_latency=3&output_format=mp3_22050_32`, {
       method: "POST",
       headers: {
         "xi-api-key": apiKeys[index],
@@ -1235,6 +1255,7 @@ async function createElevenLabsAudio(text, voiceId, modelId, apiKeys) {
           similarity_boost: 0.75,
           style: 0.35,
           use_speaker_boost: true,
+          speed: audioSpeed,
         },
       }),
     });
@@ -1264,10 +1285,13 @@ app.post("/api/elevenlabs/speak", async (req, res) => {
   text = text.replace(/[*#_`~]+/g, "").replace(/\s+/g, " ").trim();
   const voiceId = typeof req.body?.voiceId === "string" && req.body.voiceId.trim()
     ? req.body.voiceId.trim()
-    : (process.env.ELEVENLABS_VOICE_ID?.trim() || "Xb7hH8MSUJpSbSDYk0k2");
+    : (process.env.ELEVENLABS_VOICE_ID?.trim() || "iP95p4xoKVk53GoZ742B");
   const modelId = typeof req.body?.modelId === "string" && req.body.modelId.trim()
     ? req.body.modelId.trim()
     : (process.env.ELEVENLABS_MODEL_ID?.trim() || "eleven_flash_v2_5");
+  const speed = typeof req.body?.speed === "number" && req.body.speed > 0
+    ? req.body.speed
+    : (parseFloat(process.env.ELEVENLABS_SPEED || "1.10") || 1.10);
   if (!apiKeys.length) return res.status(503).json({ error: "Chưa cấu hình ELEVENLABS_API_KEY trong .env." });
   if (!text) return res.status(400).json({ error: "Hãy nhập nội dung cần ElevenLabs đọc." });
   if (text.length > 3500) {
@@ -1276,12 +1300,12 @@ app.post("/api/elevenlabs/speak", async (req, res) => {
     text = lastSentence >= 2000 ? shortText.slice(0, lastSentence + 1) : shortText.trimEnd() + "…";
   }
   try {
-    const cacheKey = `${voiceId}\0${modelId}\0${text}`;
+    const cacheKey = `${voiceId}\0${modelId}\0${speed}\0${text}`;
     let audio = elevenLabsAudioCache.get(cacheKey);
     if (!audio) {
       let pending = elevenLabsAudioPending.get(cacheKey);
       if (!pending) {
-        pending = createElevenLabsAudio(text, voiceId, modelId, apiKeys);
+        pending = createElevenLabsAudio(text, voiceId, modelId, apiKeys, speed);
         elevenLabsAudioPending.set(cacheKey, pending);
       }
       try {
@@ -1317,10 +1341,13 @@ app.post("/api/speak", async (req, res) => {
     const cleanText = text.replace(/[*#_`~]+/g, "").replace(/\s+/g, " ").trim();
     const voiceId = typeof req.body?.voiceId === "string" && req.body.voiceId.trim()
       ? req.body.voiceId.trim()
-      : (process.env.ELEVENLABS_VOICE_ID?.trim() || "Xb7hH8MSUJpSbSDYk0k2");
+      : (process.env.ELEVENLABS_VOICE_ID?.trim() || "iP95p4xoKVk53GoZ742B");
     const modelId = typeof req.body?.modelId === "string" && req.body.modelId.trim()
       ? req.body.modelId.trim()
       : (process.env.ELEVENLABS_MODEL_ID?.trim() || "eleven_flash_v2_5");
+    const speed = typeof req.body?.speed === "number" && req.body.speed > 0
+      ? req.body.speed
+      : (parseFloat(process.env.ELEVENLABS_SPEED || "1.10") || 1.10);
 
     try {
       const shortText = cleanText.length > 3500
@@ -1330,12 +1357,12 @@ app.post("/api/speak", async (req, res) => {
             return last >= 2000 ? cut.slice(0, last + 1) : cut.trimEnd() + "…";
           })()
         : cleanText;
-      const cacheKey = `${voiceId}\0${modelId}\0${shortText}`;
+      const cacheKey = `${voiceId}\0${modelId}\0${speed}\0${shortText}`;
       let audio = elevenLabsAudioCache.get(cacheKey);
       if (!audio) {
         let pending = elevenLabsAudioPending.get(cacheKey);
         if (!pending) {
-          pending = createElevenLabsAudio(shortText, voiceId, modelId, apiKeys);
+          pending = createElevenLabsAudio(shortText, voiceId, modelId, apiKeys, speed);
           elevenLabsAudioPending.set(cacheKey, pending);
         }
         try {
@@ -1424,6 +1451,120 @@ app.post("/api/speak", async (req, res) => {
     }
   });
   processHandle.stdin.end(JSON.stringify({ text: text.trim() }));
+});
+
+function generateGttsAudioBuffer(text) {
+  return new Promise((resolve, reject) => {
+    const pythonExe = fs.existsSync(path.join(projectDir, "ai_avatar_env", "Scripts", "python.exe"))
+      ? path.join(projectDir, "ai_avatar_env", "Scripts", "python.exe")
+      : (process.env.PYTHON_EXECUTABLE || (process.platform === "win32" ? "py" : "python3"));
+    const scriptPath = path.join(projectDir, "gtts_tts.py");
+    const proc = spawn(pythonExe, [scriptPath], { stdio: ["pipe", "pipe", "pipe"] });
+    const chunks = [];
+    let err = "";
+    proc.stdout.on("data", (c) => chunks.push(c));
+    proc.stderr.on("data", (c) => { err += c.toString(); });
+    proc.on("close", (code) => {
+      if (code === 0 && chunks.length > 0) resolve(Buffer.concat(chunks));
+      else reject(new Error(err || `gTTS exited with code ${code}`));
+    });
+    proc.on("error", reject);
+    proc.stdin.write(JSON.stringify({ text }));
+    proc.stdin.end();
+  });
+}
+
+app.post("/api/avatar/generate-video", async (req, res) => {
+  let text = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+  text = sanitizePersonaName(text);
+  if (!text) {
+    return res.status(400).json({ ok: false, error: "Không có nội dung để sinh video." });
+  }
+
+  const cleanText = text.replace(/[*#_`~]+/g, "").replace(/\s+/g, " ").trim();
+  const voiceId = typeof req.body?.voiceId === "string" && req.body.voiceId.trim()
+    ? req.body.voiceId.trim()
+    : (process.env.ELEVENLABS_VOICE_ID?.trim() || "iP95p4xoKVk53GoZ742B");
+  const modelId = typeof req.body?.modelId === "string" && req.body.modelId.trim()
+    ? req.body.modelId.trim()
+    : (process.env.ELEVENLABS_MODEL_ID?.trim() || "eleven_flash_v2_5");
+  const speed = typeof req.body?.speed === "number" && req.body.speed > 0
+    ? req.body.speed
+    : (parseFloat(process.env.ELEVENLABS_SPEED || "1.10") || 1.10);
+
+  // Instant Disk/Memory Cache by text & voice & speed: 0ms response for repeated/prefetched requests!
+  const textKey = crypto.createHash("md5").update(`${cleanText}__${voiceId}__${speed}`).digest("hex");
+  const cachedVideoName = `luna_txt_${textKey.slice(0, 16)}.mp4`;
+  const cachedVideoPath = path.join(projectDir, "public", "videos", "generated", cachedVideoName);
+
+  if (fs.existsSync(cachedVideoPath) && fs.statSync(cachedVideoPath).size > 1000) {
+    return res.json({
+      ok: true,
+      videoUrl: `/videos/generated/${cachedVideoName}`,
+      duration: 3.0,
+      cached: true,
+    });
+  }
+
+  try {
+    let audioBuffer = null;
+    const apiKeys = getElevenLabsApiKeys();
+    if (apiKeys.length > 0) {
+      try {
+        const shortText = cleanText.length > 3500
+          ? (() => {
+              const cut = cleanText.slice(0, 3500);
+              const last = Math.max(cut.lastIndexOf("."), cut.lastIndexOf("!"), cut.lastIndexOf("?"));
+              return last >= 2000 ? cut.slice(0, last + 1) : cut.trimEnd() + "…";
+            })()
+          : cleanText;
+        audioBuffer = await createElevenLabsAudio(shortText, voiceId, modelId, apiKeys, speed);
+      } catch (elevenErr) {
+        console.warn("[AvatarVideo] ElevenLabs lỗi, chuyển sang gTTS:", elevenErr.message);
+      }
+    }
+
+    if (!audioBuffer) {
+      audioBuffer = await generateGttsAudioBuffer(cleanText);
+    }
+
+    if (!audioBuffer || audioBuffer.length === 0) {
+      return res.status(500).json({ ok: false, error: "Không thể tạo giọng đọc cho video." });
+    }
+
+    const audioHash = crypto.createHash("md5").update(audioBuffer).digest("hex");
+    const tempAudioPath = path.join(projectDir, "temp", `speech_${audioHash}.mp3`);
+    fs.mkdirSync(path.join(projectDir, "temp"), { recursive: true });
+    fs.writeFileSync(tempAudioPath, audioBuffer);
+
+    // Gửi request tới microservice Wav2Lip RTX 3050 (port 5005)
+    const genRes = await fetch("http://127.0.0.1:5005/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ audio_path: tempAudioPath.replace(/\\/g, "/"), text: cleanText }),
+    });
+
+    if (!genRes.ok) {
+      const errData = await genRes.json().catch(() => ({}));
+      throw new Error(errData.error || `Wav2Lip HTTP ${genRes.status}`);
+    }
+
+    const genData = await genRes.json();
+    const rawVideoRel = genData.video_url ? genData.video_url.replace(/^\//, "") : "";
+    const rawVideoPath = path.join(projectDir, "public", rawVideoRel);
+    if (fs.existsSync(rawVideoPath)) {
+      try { fs.copyFileSync(rawVideoPath, cachedVideoPath); } catch {}
+    }
+    return res.json({
+      ok: true,
+      videoUrl: `/videos/generated/${cachedVideoName}`,
+      duration: genData.duration,
+      cached: genData.cached,
+    });
+  } catch (err) {
+    console.error("[AvatarVideo] Lỗi tạo video nhép miệng:", err.message);
+    return res.status(500).json({ ok: false, error: err.message });
+  }
 });
 
 app.post("/api/transcribe", async (req, res) => {

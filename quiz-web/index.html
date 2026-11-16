@@ -218,8 +218,10 @@
       padding:20px; border:1px solid var(--tutor-line); border-radius:21px; transition:padding .32s ease;
       background:radial-gradient(ellipse at 50% 38%,#eeecff 0,#faf9ff 48%,#fff 75%); box-shadow:0 8px 24px #272c4b08; text-align:center; }
     .tutor-avatar-stage .fox-avatar { position:relative; flex:none; width:clamp(245px,31vw,370px); height:clamp(235px,30vw,350px);
-      border-radius:50%; background:radial-gradient(circle,#ffe5d9 0,#ffdccc 58%,#fff5ef 72%); border:1px solid #f8dfd2; transition:width .32s ease,height .32s ease,max-width .32s ease; }
-    .fox-avatar img { display:block; width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 5px 8px #4b352326); }
+      border-radius:50%; overflow:hidden; background:radial-gradient(circle,#ffe5d9 0,#ffdccc 58%,#fff5ef 72%); border:1px solid #f8dfd2; transition:width .32s ease,height .32s ease,max-width .32s ease; }
+    .fox-avatar { position:relative; overflow:hidden; }
+    .fox-avatar img, .fox-avatar video { display:block; width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .fox-avatar video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:50%; z-index:2; display:none; background:#242838; }
     .fox-expression { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
     .fox-avatar.sad .fox-expression { display:none; }
     .tutor-mini-avatar { position:relative; }
@@ -1081,6 +1083,23 @@
       });
     }
 
+    const avatarPrefetchMap = new Map();
+    function prefetchAvatarVideo(text) {
+      if (!text) return Promise.resolve(null);
+      const clean = text.replace(/[*#_`~]+/g, "").replace(/\s+/g, " ").trim().slice(0, 3500);
+      if (!clean) return Promise.resolve(null);
+      if (avatarPrefetchMap.has(clean)) return avatarPrefetchMap.get(clean);
+      const p = fetch("/api/avatar/generate-video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: clean, speed: 1.10 }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
+      avatarPrefetchMap.set(clean, p);
+      return p;
+    }
+
     function speakTutorText(text, button, queue = false) {
       if (!queue) {
         tutorSpeechToken += 1;
@@ -1094,117 +1113,157 @@
         .trim();
       if (!cleanText) return Promise.resolve();
 
-      // If text <= 1200 chars, speak in one shot
-      if (cleanText.length <= 1200) {
-        tutorSpeechQueue = tutorSpeechQueue
-          .catch(() => {})
-          .then(() => speakTutorAudio(cleanText, button, requestToken));
-        return tutorSpeechQueue;
-      }
-
-      // If text > 1200 chars, chunk naturally by paragraphs or sentences
-      const paragraphs = cleanText.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+      // Split into bite-sized conversational units (100 - 180 chars) for instant start (<0.5s)
+      const paragraphs = cleanText.split(/\n+/).map((p) => p.trim()).filter(Boolean);
       const chunks = [];
-      let cur = "";
       for (const p of paragraphs) {
-        if ((cur ? cur + "\n\n" + p : p).length <= 1100) {
-          cur = cur ? cur + "\n\n" + p : p;
+        if (p.length <= 180) {
+          chunks.push(p);
         } else {
-          if (cur) chunks.push(cur);
-          if (p.length <= 1100) {
-            cur = p;
-          } else {
-            const sentences = p.split(/(?<=[.?!])\s+/);
-            let sCur = "";
-            for (const s of sentences) {
-              if ((sCur ? sCur + " " + s : s).length <= 1100) {
-                sCur = sCur ? sCur + " " + s : s;
-              } else {
-                if (sCur) chunks.push(sCur);
-                sCur = s;
-              }
+          const sentences = p.split(/(?<=[.?!:])\s+/);
+          let cur = "";
+          for (const s of sentences) {
+            if ((cur ? cur + " " + s : s).length <= 170) {
+              cur = cur ? cur + " " + s : s;
+            } else {
+              if (cur) chunks.push(cur);
+              cur = s;
             }
-            cur = sCur;
           }
+          if (cur) chunks.push(cur);
         }
       }
-      if (cur) chunks.push(cur);
+
+      // Immediately prefetch the first 2 chunks right away in parallel!
+      if (chunks[0]) prefetchAvatarVideo(chunks[0]);
+      if (chunks[1]) prefetchAvatarVideo(chunks[1]);
 
       for (let i = 0; i < chunks.length; i += 1) {
         const chunk = chunks[i];
+        const nextChunk = chunks[i + 1] || null;
         const progressTag = chunks.length > 1 ? ` (${i + 1}/${chunks.length})` : "";
         tutorSpeechQueue = tutorSpeechQueue
           .catch(() => {})
           .then(() => {
             if (requestToken !== tutorSpeechToken) return;
+            // While chunk i is preparing/playing, prefetch next chunk i+1 in parallel!
+            if (nextChunk) prefetchAvatarVideo(nextChunk);
             return speakTutorAudio(chunk, button, requestToken, progressTag, i === chunks.length - 1);
           });
       }
       return tutorSpeechQueue;
     }
 
+    function isTutorSpeaking() {
+      const stageVideo = document.querySelector(".tutor-avatar-stage .fox-avatar-video, .study-ui-tutor .fox-avatar-video");
+      const isVideoPlaying = stageVideo && !stageVideo.paused && stageVideo.style.display !== "none";
+      const isAudioPlaying = commentaryAudio && !commentaryAudio.paused;
+      return Boolean(isVideoPlaying || isAudioPlaying);
+    }
+
     async function speakTutorAudio(text, button, requestToken, progressTag = "", isLastChunk = true) {
       if (requestToken !== tutorSpeechToken) return;
       button.disabled = false;
-      button.textContent = `⚡ Đang chuẩn bị giọng Luna${progressTag}...`;
-      try {
-        let response = await fetch("/api/elevenlabs/speak", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: text.slice(0, 3_500) }),
-        }).catch(() => null);
+      button.textContent = `⚡ AI đang đồng bộ cử động miệng${progressTag}...`;
+      const stageVideo = document.querySelector(".tutor-avatar-stage .fox-avatar-video, .study-ui-tutor .fox-avatar-video");
+      const stageImg = document.querySelector(".tutor-avatar-stage .fox-avatar-img, .study-ui-tutor .fox-avatar-img");
 
-        if (!response || !response.ok) {
-          response = await fetch("/api/speak", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: text.slice(0, 3_500) }),
-          });
+      try {
+        let videoPlayed = false;
+        if (stageVideo) {
+          try {
+            const vData = await prefetchAvatarVideo(text);
+            if (vData && vData.ok && vData.videoUrl && requestToken === tutorSpeechToken) {
+              stageVideo.src = vData.videoUrl;
+              stageVideo.muted = false;
+              stageVideo.style.display = "block";
+              if (stageImg) stageImg.style.display = "none";
+              button.textContent = `⏸ Luna đang đọc${progressTag} (bấm để dừng)`;
+              status.textContent = `Luna đang giảng bài và đồng bộ cử động miệng${progressTag}.`;
+
+              await stageVideo.play();
+              await new Promise((resolve) => {
+                stageVideo.addEventListener("ended", resolve, { once: true });
+                stageVideo.addEventListener("pause", resolve, { once: true });
+                stageVideo.addEventListener("error", resolve, { once: true });
+              });
+              videoPlayed = true;
+            }
+          } catch (vErr) {
+            console.warn("[TutorVideo] Lỗi đồng bộ video, chuyển sang phát âm thanh trực tiếp:", vErr);
+          }
         }
-        if (!response.ok) {
-          const error = await response.json().catch(() => ({}));
-          throw new Error(error.error || "Không tạo được giọng đọc ElevenLabs.");
+
+        if (!videoPlayed && requestToken === tutorSpeechToken) {
+          button.textContent = `⚡ Đang chuẩn bị giọng Luna${progressTag}...`;
+          try {
+            let response = await fetch("/api/elevenlabs/speak", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: text.slice(0, 3_500), speed: 1.10 }),
+            }).catch(() => null);
+
+            if (!response || !response.ok) {
+              response = await fetch("/api/speak", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: text.slice(0, 3_500) }),
+              });
+            }
+            if (!response.ok) {
+              const error = await response.json().catch(() => ({}));
+              throw new Error(error.error || "Không tạo được giọng đọc ElevenLabs.");
+            }
+            if (requestToken !== tutorSpeechToken) return;
+            commentaryAudioUrl = URL.createObjectURL(await response.blob());
+            commentaryAudio = new Audio(commentaryAudioUrl);
+            const audio = commentaryAudio;
+            button.textContent = `⏸ Luna đang đọc${progressTag} (bấm để dừng)`;
+            await audio.play();
+            status.textContent = `Luna đang giảng bài cho bạn bằng giọng AI ElevenLabs${progressTag}.`;
+            await new Promise((resolve, reject) => {
+              audio.addEventListener("ended", resolve, { once: true });
+              audio.addEventListener("pause", resolve, { once: true });
+              audio.addEventListener("error", () => reject(new Error("Không phát được tệp giọng đọc ElevenLabs.")), { once: true });
+            });
+          } catch (error) {
+            if (requestToken === tutorSpeechToken) {
+              if (window.speechSynthesis && typeof SpeechSynthesisUtterance === "function") {
+                try {
+                  button.textContent = `⏸ Đang đọc (trình duyệt)${progressTag}`;
+                  const utterance = new SpeechSynthesisUtterance(text);
+                  utterance.lang = "vi-VN";
+                  await new Promise((resolve) => {
+                    utterance.onend = resolve;
+                    utterance.onerror = resolve;
+                    window.speechSynthesis.speak(utterance);
+                  });
+                  if (requestToken === tutorSpeechToken && isLastChunk) {
+                    resetTutorReadButtons();
+                    status.textContent = "Đã đọc xong bài giảng.";
+                  }
+                  return;
+                } catch {}
+              }
+              button.textContent = "🔊 Thử nghe lại";
+              status.textContent = `${error.message}`;
+            }
+          }
         }
-        if (requestToken !== tutorSpeechToken) return;
-        commentaryAudioUrl = URL.createObjectURL(await response.blob());
-        commentaryAudio = new Audio(commentaryAudioUrl);
-        const audio = commentaryAudio;
-        button.textContent = `⏸ Luna đang đọc${progressTag} (bấm để dừng)`;
-        await audio.play();
-        status.textContent = `Luna đang giảng bài cho bạn bằng giọng AI ElevenLabs${progressTag}.`;
-        await new Promise((resolve, reject) => {
-          audio.addEventListener("ended", resolve, { once: true });
-          audio.addEventListener("pause", resolve, { once: true });
-          audio.addEventListener("error", () => reject(new Error("Không phát được tệp giọng đọc ElevenLabs.")), { once: true });
-        });
+
         if (requestToken === tutorSpeechToken && isLastChunk) {
           resetTutorReadButtons();
           status.textContent = "Đã đọc xong toàn bộ bài giảng.";
         }
-      } catch (error) {
-        if (requestToken === tutorSpeechToken) {
-          if (window.speechSynthesis && typeof SpeechSynthesisUtterance === "function") {
-            try {
-              button.textContent = `⏸ Đang đọc (trình duyệt)${progressTag}`;
-              const utterance = new SpeechSynthesisUtterance(text);
-              utterance.lang = "vi-VN";
-              await new Promise((resolve) => {
-                utterance.onend = resolve;
-                utterance.onerror = resolve;
-                window.speechSynthesis.speak(utterance);
-              });
-              if (requestToken === tutorSpeechToken && isLastChunk) {
-                resetTutorReadButtons();
-                status.textContent = "Đã đọc xong bài giảng.";
-              }
-              return;
-            } catch {}
-          }
-          button.textContent = "🔊 Thử nghe lại";
-          status.textContent = `${error.message}`;
-        }
       } finally {
         button.disabled = false;
+        if (stageVideo && isLastChunk) {
+          stageVideo.style.display = "none";
+          try { stageVideo.pause(); } catch {}
+        }
+        if (stageImg && isLastChunk) {
+          stageImg.style.display = "block";
+        }
         if (requestToken === tutorSpeechToken) {
           if (commentaryAudioUrl) {
             URL.revokeObjectURL(commentaryAudioUrl);
@@ -1220,32 +1279,35 @@
       avatar.className = `fox-avatar ${emotion}${compact ? " tutor-mini-avatar" : ""}`;
       const image = document.createElement("img");
       image.src = foxAvatarImage(emotion);
-      image.alt = compact ? "" : "Luna, gia sư cáo";
+      image.alt = compact ? "" : "Luna, gia sư AI Người Thật";
+      image.className = "fox-avatar-img";
       image.setAttribute("aria-hidden", compact ? "true" : "false");
       image.addEventListener("error", () => {
-        if (image.src.endsWith("/images/lua-fox-sad.png")) {
-          image.src = "/images/lua-fox.png";
-          return;
-        }
-        image.removeAttribute("src");
-        image.alt = compact ? "" : "Không tải được ảnh đại diện Luna";
+        image.src = "/images/ai-human-avatar.jpg";
       });
-      const expression = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      expression.setAttribute("class", "fox-expression");
-      expression.setAttribute("viewBox", "0 0 840 768");
-      expression.setAttribute("aria-hidden", "true");
-      expression.innerHTML = `<g class="fox-sad-face">
-        <path d="M277 238 Q313 232 352 199" fill="none" stroke="#573426" stroke-width="16" stroke-linecap="round"/>
-        <path d="M477 190 Q510 220 548 207" fill="none" stroke="#573426" stroke-width="16" stroke-linecap="round"/>
-        <path d="M382 367 Q439 345 496 367 Q480 412 439 412 Q398 412 382 367 Z" fill="#fff5ed"/>
-        <path d="M418 393 Q439 369 460 393" fill="none" stroke="#704032" stroke-width="8" stroke-linecap="round"/>
-      </g>`;
-      avatar.append(image, expression);
+      avatar.append(image);
+
+      if (!compact) {
+        const video = document.createElement("video");
+        video.className = "fox-avatar-video";
+        video.setAttribute("playsinline", "true");
+        video.setAttribute("preload", "auto");
+        video.src = "/videos/cartoon_greeting_synced.mp4";
+        video.style.position = "absolute";
+        video.style.inset = "0";
+        video.style.width = "100%";
+        video.style.height = "100%";
+        video.style.objectFit = "cover";
+        video.style.borderRadius = "50%";
+        video.style.display = "none";
+        video.style.zIndex = "2";
+        avatar.append(video);
+      }
       return avatar;
     }
 
     function foxAvatarImage(emotion) {
-      return emotion === "sad" ? "/images/lua-fox-sad.png" : "/images/lua-fox.png";
+      return "/images/ai-human-avatar.jpg";
     }
 
     function setFoxEmotion(avatar, emotion) {
@@ -1289,7 +1351,7 @@
       read.setAttribute("aria-label", "Nghe Luna đọc bài học này");
       const textToSpeak = speechText || text;
       read.addEventListener("click", () => {
-        if (commentaryAudio && !commentaryAudio.paused && tutorSpeechToken) {
+        if (isTutorSpeaking()) {
           stopCommentary();
           resetTutorReadButtons();
           return;
@@ -2648,7 +2710,6 @@
 
       function compileFullLessonSpeech(topic, sections) {
         const parts = [];
-        parts.push(`Chào bạn! Hôm nay Luna cùng bạn học chủ đề "${topic}". Sau đây là nội dung toàn bộ bài giảng chi tiết.`);
         sections.forEach((sec, idx) => {
           parts.push(`Phần ${idx + 1}: ${compileSectionSpeech(sec)}`);
         });
@@ -2682,12 +2743,13 @@
       readAllBtn.innerHTML = "🔊 Nghe Luna giảng toàn bộ bài";
       readAllBtn.setAttribute("aria-label", "Nghe Luna giảng toàn bộ bài học này");
       readAllBtn.addEventListener("click", () => {
-        if (commentaryAudio && !commentaryAudio.paused && tutorSpeechToken) {
+        if (isTutorSpeaking()) {
           stopCommentary();
           resetTutorReadButtons();
           return;
         }
-        speakTutorText(fullLessonSpeech, readAllBtn);
+        const speechText = `Sau đây là bài giảng chủ đề "${lesson.focusTopic}":\n\n${fullLessonSpeech}`;
+        speakTutorText(speechText, readAllBtn);
       });
 
       const microControls = document.createElement("div");
@@ -2715,7 +2777,7 @@
           readSecBtn.setAttribute("aria-label", `Nghe Luna đọc phần ${section.title}`);
           const secSpeech = compileSectionSpeech(section);
           readSecBtn.addEventListener("click", () => {
-            if (commentaryAudio && !commentaryAudio.paused && tutorSpeechToken) {
+            if (isTutorSpeaking()) {
               stopCommentary();
               resetTutorReadButtons();
               return;
@@ -3136,8 +3198,10 @@
         renderAssessmentQuestion();
       });
 
-      const initialLectureSpeech = `Chào bạn! Hôm nay mình cùng học "${lesson.focusTopic}" theo từng bước nhỏ (Micro-learning) để dễ thấm và không bị ngợp nhé.\n\nSau đây là toàn bộ bài giảng chi tiết:\n\n${fullLessonSpeech}`;
-      say(`Chào bạn! Hôm nay mình cùng học "${lesson.focusTopic}" theo từng bước nhỏ (Micro-learning) để dễ thấm và không bị ngợp nhé. Trước tiên, mình cùng khám phá Bước 1 (Ẩn dụ đời thường & Khái niệm) kèm sơ đồ minh họa bên dưới! Mình sẽ đọc toàn bộ bài học cho bạn nghe, hoặc bạn có thể bấm nút nghe từng phần bất cứ lúc nào!`, "happy", true, initialLectureSpeech);
+      const introGreeting = `Chào bạn! Hôm nay mình cùng học "${lesson.focusTopic}" theo từng bước nhỏ nhé. Chúng ta cùng bắt đầu với Bước 1:`;
+      const initialLectureSpeech = `${introGreeting}\n\n${fullLessonSpeech}`;
+      prefetchAvatarVideo(introGreeting);
+      say(`Chào bạn! Hôm nay mình cùng học "${lesson.focusTopic}" theo từng bước nhỏ (Micro-learning) nhé. Trước tiên, mình cùng khám phá Bước 1 kèm sơ đồ bên dưới. Bạn có thể nghe mình giảng bài hoặc bấm nút nghe từng phần bất cứ lúc nào!`, "happy", true, initialLectureSpeech);
       lastTutorText = initialLectureSpeech;
       hintButton.hidden = true;
       log.append(lessonNote);
@@ -3153,7 +3217,12 @@
         say(`Gợi ý: ${lesson.focusTopic} — hãy quay lại phần ý chính ở trên, xác định từ khóa trong câu hỏi và giải thích mối liên hệ bằng lời của bạn.`, "happy", false);
       });
       replayButton.addEventListener("click", () => {
-        if (lastReadButton) speakTutorText(lastTutorText, lastReadButton, true);
+        if (isTutorSpeaking()) {
+          stopCommentary();
+          resetTutorReadButtons();
+          return;
+        }
+        if (lastReadButton) speakTutorText(lastTutorText, lastReadButton, false);
       });
       autoReadButton.addEventListener("click", () => {
         tutorAutoRead = !tutorAutoRead;
@@ -3847,8 +3916,18 @@
     function stopCommentary() {
       tutorSpeechToken += 1;
       resetTutorReadButtons();
+      const stageVideo = document.querySelector(".tutor-avatar-stage .fox-avatar-video, .study-ui-tutor .fox-avatar-video");
+      const stageImg = document.querySelector(".tutor-avatar-stage .fox-avatar-img, .study-ui-tutor .fox-avatar-img");
+      if (stageVideo) {
+        try { stageVideo.pause(); } catch {}
+        stageVideo.src = "";
+        stageVideo.style.display = "none";
+      }
+      if (stageImg) {
+        stageImg.style.display = "block";
+      }
       if (commentaryAudio) {
-        commentaryAudio.pause();
+        try { commentaryAudio.pause(); } catch {}
         commentaryAudio.src = "";
         commentaryAudio = null;
       }

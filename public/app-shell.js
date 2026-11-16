@@ -14,7 +14,7 @@ if (appPage && !document.querySelector("#auth-form")) {
   sidebar.setAttribute("aria-label", "Điều hướng chính");
   sidebar.innerHTML = `
     <a class="app-brand" href="/" aria-label="Học Mà Chơi, trang chủ">
-      <img class="app-brand-icon" data-player-avatar src="/images/ai-knight.png" alt="Avatar của bạn">
+      <img class="app-brand-icon" src="/images/ai-human-avatar.jpg" alt="AI Study Mentor" style="border-radius:50%; object-fit:cover;">
       <span>AI Study Mentor<small>Học thông minh · vui mỗi ngày</small></span>
     </a>
     <nav class="app-nav">
@@ -29,8 +29,8 @@ if (appPage && !document.querySelector("#auth-form")) {
       <a href="/elevenlabs-test" data-app-path="/elevenlabs-test"><span aria-hidden="true">🎙️</span>Voice Lab</a>
     </nav>
     <div class="app-sidebar-mentor">
-      <img src="/images/lua-fox.png" alt="Luna, gia sư AI">
-      <span><strong>Luna luôn ở đây</strong><small>Cùng bạn học mỗi ngày</small></span>
+      <img src="/images/ai-human-avatar.jpg" alt="Luna, trợ lý AI Người Thật" style="border-radius:50%; object-fit:cover;">
+      <span><strong>Luna luôn ở đây</strong><small>Trợ lý AI Người Thật</small></span>
     </div>`;
   const workspace = document.createElement("div");
   workspace.className = "app-workspace";

@@ -221,6 +221,7 @@ body.app-page .chat-toolbar { align-items:flex-start; flex-direction:column; gap
 body.app-page #style-panel { flex-wrap:wrap; justify-content:flex-start; margin-left:0; }
 body.app-page #mode-panel,
 body.app-page #chat-style,
+body.app-page #avatar-mode,
 body.app-page #speech-engine,
 body.app-page #elevenlabs-voice {
   border-color:var(--line);
@@ -271,6 +272,7 @@ body.app-page #answer-display .answer-bullet::before { color:#a990ff; }
 body.app-page #status { color:#b9b5d9; }
 body.app-page #text,
 body.app-page #chat-style,
+body.app-page #avatar-mode,
 body.app-page #speech-engine,
 body.app-page #elevenlabs-voice,
 body.app-page #camera-panel,
